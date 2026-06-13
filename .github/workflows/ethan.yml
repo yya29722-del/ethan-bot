@@ -31,7 +31,7 @@ jobs:
 
           def ask_claude(prompt):
               body = json.dumps({
-                  'model': 'claude-sonnet-4-6',
+                  'model': '[特价次AG]claude-sonnet-4-6',
                   'max_tokens': 80,
                   'messages': [{'role': 'user', 'content': prompt}]
               }).encode()
