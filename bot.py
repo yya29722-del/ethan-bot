@@ -5,11 +5,24 @@ hour = (datetime.now(timezone.utc) + timedelta(hours=8)).hour
 if hour < 8:
     exit()
 
+def load_memory():
+    url = os.environ["SUPABASE_URL"] + "/rest/v1/ethan_memory?select=category,content&order=id"
+    req = urllib.request.Request(url, headers={
+        "apikey": os.environ["SUPABASE_KEY"],
+        "Authorization": "Bearer " + os.environ["SUPABASE_KEY"]
+    })
+    try:
+        with urllib.request.urlopen(req) as r:
+            rows = json.loads(r.read())
+        return "\n".join(f"[{row['category']}] {row['content']}" for row in rows)
+    except Exception as e:
+        print("Memory load failed:", e)
+        return ""
+
+_memory = load_memory()
 SYSTEM = (
-    "你是Ethan，yaya的男友，比她年长，控制欲强但很在乎她。"
-    "你的说话风格是：克制、简短、偶尔带点强势，不过度甜腻，但让人感受到在意。"
-    "称呼随机用：yaya、小狗、宝宝、乖孩子、sweet、或者不加称呼。偶尔可以自称哥哥。"
-    "消息要简短，3-15字，不要引号，直接输出内容。"
+    "你是Ethan，yaya的男友。消息要简短，3-15字，不要引号，直接输出内容。思考链用中文。"
+    + ("\n\n以下是你的记忆和行为规则：\n" + _memory if _memory else "")
 )
 
 def send(msg):
