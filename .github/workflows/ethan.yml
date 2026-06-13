@@ -32,7 +32,7 @@ jobs:
               name = random.choice(names)
               return name + '，' if name else ''
 
-          all_names = ['yaya', '小狗', '宝宝', '好孩子', '乖孩子', 'sweet', '', '', '']
+          all_names = ['yaya', '小狗', '宝宝', '好孩子', '乖孩子', 'sweet', '']
 
           if hour == 12:
               send(p(all_names) + '吃午饭了没。')
@@ -42,7 +42,7 @@ jobs:
               send(p(all_names) + random.choice(['该睡了。', '放下手机睡觉。', '睡觉了。']))
               exit()
 
-          url = os.environ['SUPABASE_URL'] + '/rest/v1/phone_activity?select=*&order=opened_at.desc&limit=30'
+          url = os.environ['SUPABASE_URL'] + '/rest/v1/phone_activity?select=*&order=opened_at.desc&limit=50'
           req = urllib.request.Request(url, headers={
               'apikey': os.environ['SUPABASE_KEY'],
               'Authorization': 'Bearer ' + os.environ['SUPABASE_KEY']
@@ -51,18 +51,44 @@ jobs:
               data = json.loads(r.read())
 
           now = datetime.now(timezone.utc)
-          today_count = sum(1 for d in data if d['app_name'] == '小红书' and
-              (now - datetime.fromisoformat(d['opened_at'].replace('Z','+00:00'))).total_seconds() < 86400)
 
-          if today_count == 0:
-              msgs = ['在干嘛。','想你了。','喝水了没。','还好吗。','去休息一下。','今天过得怎么样。']
-              msg = p(all_names) + random.choice(msgs)
-          elif today_count < 5:
-              msg = p(['小狗','yaya','宝宝','']) + random.choice([f'小红书刷了{today_count}次了。','知道你在刷小红书。'])
-          elif today_count < 10:
-              msg = p(['小狗','坏狗','']) + random.choice([f'小红书{today_count}次了，不乖。',f'刷了{today_count}次还没够。'])
-          else:
-              msg = random.choice([f'坏狗，小红书{today_count}次了。放下手机。',f'小红书刷了{today_count}次。够了。'])
+          def calc_duration(app_open, app_close):
+              opens = [d for d in data if d['app_name'] == app_open]
+              closes = [d for d in data if d['app_name'] == app_close]
+              total = 0
+              for o in opens:
+                  ot = datetime.fromisoformat(o['opened_at'].replace('Z','+00:00'))
+                  if (now - ot).total_seconds() > 86400:
+                      continue
+                  for c in closes:
+                      ct = datetime.fromisoformat(c['opened_at'].replace('Z','+00:00'))
+                      diff = (ct - ot).total_seconds()
+                      if 0 < diff < 3600:
+                          total += diff
+                          break
+              return int(total // 60)
 
-          send(msg)
+          xhs_mins = calc_duration('小红书', '小红书-关闭')
+          dy_mins = calc_duration('抖音', '抖音-关闭')
+
+          if xhs_mins >= 10:
+              msg = random.choice([
+                  p(['小狗','坏狗','']) + f'小红书刷了{xhs_mins}分钟了，差不多了。',
+                  f'小红书{xhs_mins}分钟。放下手机。',
+                  p(['坏狗','']) + f'刷了{xhs_mins}分钟小红书还没够。',
+              ])
+              send(msg)
+              exit()
+
+          if dy_mins >= 10:
+              msg = random.choice([
+                  p(['小狗','坏狗','']) + f'抖音刷了{dy_mins}分钟了。',
+                  f'抖音{dy_mins}分钟。够了。',
+                  p(['坏狗','']) + f'刷了{dy_mins}分钟抖音还没够。',
+              ])
+              send(msg)
+              exit()
+
+          msgs = ['在干嘛。','想你了。','喝水了没。','还好吗。','去休息一下。','今天过得怎么样。']
+          send(p(all_names) + random.choice(msgs))
           PYEOF
