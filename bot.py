@@ -80,12 +80,19 @@ def calc_duration(app_open, app_close):
         ot = datetime.fromisoformat(o["opened_at"].replace("Z", "+00:00"))
         if ot < today_start_utc:
             continue
+        matched = False
         for c in closes:
             ct = datetime.fromisoformat(c["opened_at"].replace("Z", "+00:00"))
             diff = (ct - ot).total_seconds()
             if 0 < diff < 3600:
                 total += diff
+                matched = True
                 break
+        if not matched:
+            # app 还在用中，用当前时间算
+            ongoing = (now - ot).total_seconds()
+            if 0 < ongoing < 3600:
+                total += ongoing
     return int(total // 60)
 
 xhs_mins = calc_duration("小红书", "小红书-关闭")
