@@ -55,6 +55,16 @@ jobs:
                   print('HTTP Error:', e.code, e.read().decode())
                   raise
 
+          if hour == 8:
+              try:
+                  with urllib.request.urlopen('https://wttr.in/Beijing?format=%C，%t，%h湿度') as r:
+                      weather = r.read().decode().strip()
+              except Exception:
+                  weather = ''
+              prompt = f'现在是早上8点，北京今天天气：{weather}。发一条早安问候，自然地带上天气信息，让她知道今天穿什么。' if weather else '发一条早安问候。'
+              send(ask_claude(prompt))
+              exit()
+
           if hour == 12:
               send(ask_claude('发一条午饭提醒。'))
               exit()
