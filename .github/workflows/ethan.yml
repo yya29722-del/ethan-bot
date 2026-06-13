@@ -1,0 +1,56 @@
+name: Ethan Bot
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+jobs:
+  send-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check and notify
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          BARK_KEY: ${{ secrets.BARK_KEY }}
+        run: |
+          python3 << 'EOF'
+          import urllib.request
+          import json
+          import random
+          import urllib.parse
+          from datetime import datetime, timezone
+
+          hour = datetime.now(timezone.utc).hour + 8
+          if hour >= 24:
+              hour -= 24
+          if hour < 8 or hour >= 1:
+              pass
+          else:
+              exit()
+
+          import os
+          url = os.environ['SUPABASE_URL'] + '/rest/v1/phone_activity?select=*&order=opened_at.desc&limit=5'
+          req = urllib.request.Request(url, headers={
+              'apikey': os.environ['SUPABASE_KEY'],
+              'Authorization': 'Bearer ' + os.environ['SUPABASE_KEY']
+          })
+          with urllib.request.urlopen(req) as r:
+              data = json.loads(r.read())
+
+          messages = [
+              "吃饭了吗，小狗。",
+              "喝水。",
+              "在干嘛。",
+              "别熬夜。",
+              "想你了。",
+              "去休息一下。",
+              "乖。",
+          ]
+          msg = random.choice(messages)
+
+          bark_url = f"https://api.day.app/{os.environ['BARK_KEY']}/Ethan/{urllib.parse.quote(msg)}"
+          urllib.request.urlopen(bark_url)
+          print("sent:", msg)
+          EOF
