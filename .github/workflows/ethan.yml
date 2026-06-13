@@ -51,6 +51,8 @@ jobs:
               data = json.loads(r.read())
 
           now = datetime.now(timezone.utc)
+          beijing_now = now + timedelta(hours=8)
+          today_start_utc = (beijing_now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(hours=8))
 
           def calc_duration(app_open, app_close):
               opens = [d for d in data if d['app_name'] == app_open]
@@ -58,7 +60,7 @@ jobs:
               total = 0
               for o in opens:
                   ot = datetime.fromisoformat(o['opened_at'].replace('Z','+00:00'))
-                  if (now - ot).total_seconds() > 86400:
+                  if ot < today_start_utc:
                       continue
                   for c in closes:
                       ct = datetime.fromisoformat(c['opened_at'].replace('Z','+00:00'))
