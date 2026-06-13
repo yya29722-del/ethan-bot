@@ -14,7 +14,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           BARK_KEY: ${{ secrets.BARK_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
         run: |
           python3 - <<'PYEOF'
           import urllib.request, json, urllib.parse, os
@@ -31,21 +31,20 @@ jobs:
 
           def ask_claude(prompt):
               body = json.dumps({
-                  'model': 'claude-haiku-4-5-20251001',
+                  'model': 'claude-sonnet-4-6',
                   'max_tokens': 80,
                   'messages': [{'role': 'user', 'content': prompt}]
               }).encode()
               req = urllib.request.Request(
-                  'https://api.anthropic.com/v1/messages',
+                  'https://xn--vduyey89e.com/v1/chat/completions',
                   data=body,
                   headers={
-                      'x-api-key': os.environ['ANTHROPIC_API_KEY'],
-                      'anthropic-version': '2023-06-01',
-                      'content-type': 'application/json',
+                      'Authorization': 'Bearer ' + os.environ['AI_API_KEY'],
+                      'Content-Type': 'application/json',
                   }
               )
               with urllib.request.urlopen(req) as r:
-                  return json.loads(r.read())['content'][0]['text'].strip()
+                  return json.loads(r.read())['choices'][0]['message']['content'].strip()
 
           if hour == 12:
               msg = ask_claude('你是一个关心另一半的人，用中文发一句简短的午饭提醒，温柔但可以带一点撒娇或俏皮，不超过15字，不要引号，直接输出内容。')
