@@ -75,25 +75,19 @@ today_start_utc = beijing_now.replace(hour=0, minute=0, second=0, microsecond=0)
 def calc_duration(app_open, app_close):
     opens = [d for d in data if d["app_name"] == app_open]
     closes = [d for d in data if d["app_name"] == app_close]
-    total = 0
-    for o in opens:
+    close_times = set(c["opened_at"] for c in closes)
+    for o in sorted(opens, key=lambda x: x["opened_at"], reverse=True):
         ot = datetime.fromisoformat(o["opened_at"].replace("Z", "+00:00"))
         if ot < today_start_utc:
-            continue
-        matched = False
-        for c in closes:
-            ct = datetime.fromisoformat(c["opened_at"].replace("Z", "+00:00"))
-            diff = (ct - ot).total_seconds()
-            if 0 < diff < 3600:
-                total += diff
-                matched = True
-                break
-        if not matched:
-            # app 还在用中，用当前时间算
-            ongoing = (now - ot).total_seconds()
-            if 0 < ongoing < 3600:
-                total += ongoing
-    return int(total // 60)
+            break
+        # 找这次打开之后有没有关闭记录
+        has_close = any(
+            datetime.fromisoformat(c["opened_at"].replace("Z", "+00:00")) > ot
+            for c in closes
+        )
+        if not has_close:
+            return int((now - ot).total_seconds() // 60)
+    return 0
 
 xhs_mins = calc_duration("小红书", "小红书-关闭")
 dy_mins = calc_duration("抖音", "抖音-关闭")
