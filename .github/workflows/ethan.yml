@@ -43,8 +43,12 @@ jobs:
                       'Content-Type': 'application/json',
                   }
               )
-              with urllib.request.urlopen(req) as r:
-                  return json.loads(r.read())['choices'][0]['message']['content'].strip()
+              try:
+                  with urllib.request.urlopen(req) as r:
+                      return json.loads(r.read())['choices'][0]['message']['content'].strip()
+              except urllib.error.HTTPError as e:
+                  print('HTTP Error:', e.code, e.read().decode())
+                  raise
 
           if hour == 12:
               msg = ask_claude('你是一个关心另一半的人，用中文发一句简短的午饭提醒，温柔但可以带一点撒娇或俏皮，不超过15字，不要引号，直接输出内容。')
