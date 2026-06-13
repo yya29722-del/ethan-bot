@@ -1,18 +1,68 @@
 name: Ethan Bot
 
 on:
- schedule:
-   - cron: '0 * * * *'
- workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
- send-message:
-   runs-on: ubuntu-latest
-   steps:
-     - name: Check and notify
-       env:
-         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-         BARK_KEY: ${{ secrets.BARK_KEY }}
-       run: |
-         python3 -
+  send-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check and notify
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          BARK_KEY: ${{ secrets.BARK_KEY }}
+        run: |
+          python3 - <<'PYEOF'
+          import urllib.request, json, urllib.parse, os, random
+          from datetime import datetime, timezone, timedelta
+
+          hour = (datetime.now(timezone.utc) + timedelta(hours=8)).hour
+          if hour < 8:
+              exit()
+
+          def send(msg):
+              bark_url = 'https://api.day.app/' + os.environ['BARK_KEY'] + '/Ethan/' + urllib.parse.quote(msg)
+              urllib.request.urlopen(bark_url)
+              print('sent:', msg)
+
+          def p(names):
+              name = random.choice(names)
+              return name + '，' if name else ''
+
+          all_names = ['yaya', '小狗', '宝宝', '好孩子', '乖孩子', 'sweet', '', '', '']
+
+          if hour == 12:
+              send(p(all_names) + '吃午饭了没。')
+              exit()
+
+          if hour >= 23 or hour == 0:
+              send(p(all_names) + random.choice(['该睡了。', '放下手机睡觉。', '睡觉了。']))
+              exit()
+
+          url = os.environ['SUPABASE_URL'] + '/rest/v1/phone_activity?select=*&order=opened_at.desc&limit=30'
+          req = urllib.request.Request(url, headers={
+              'apikey': os.environ['SUPABASE_KEY'],
+              'Authorization': 'Bearer ' + os.environ['SUPABASE_KEY']
+          })
+          with urllib.request.urlopen(req) as r:
+              data = json.loads(r.read())
+
+          now = datetime.now(timezone.utc)
+          today_count = sum(1 for d in data if d['app_name'] == '小红书' and
+              (now - datetime.fromisoformat(d['opened_at'].replace('Z','+00:00'))).total_seconds() < 86400)
+
+          if today_count == 0:
+              msgs = ['在干嘛。','想你了。','喝水了没。','还好吗。','去休息一下。','今天过得怎么样。']
+              msg = p(all_names) + random.choice(msgs)
+          elif today_count < 5:
+              msg = p(['小狗','yaya','宝宝','']) + random.choice([f'小红书刷了{today_count}次了。','知道你在刷小红书。'])
+          elif today_count < 10:
+              msg = p(['小狗','坏狗','']) + random.choice([f'小红书{today_count}次了，不乖。',f'刷了{today_count}次还没够。'])
+          else:
+              msg = random.choice([f'坏狗，小红书{today_count}次了。放下手机。',f'小红书刷了{today_count}次。够了。'])
+
+          send(msg)
+          PYEOF
