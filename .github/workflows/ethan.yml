@@ -1,36 +1,18 @@
-names = ["小狗", "yaya", "乖", "你", ""]
+name: Ethan Bot
 
-free_messages = [
-    "在干嘛。",
-    "想你了。",
-    "今天过得怎么样。",
-    "喝水了没。",
-    "别一个人发呆。",
-    "记得吃东西。",
-    "你在想我吗。",
-    "去休息一下。",
-    "有没有好好吃饭。",
-    "还好吗。",
-]
+on:
+ schedule:
+   - cron: '0 * * * *'
+ workflow_dispatch:
 
-name = random.choice(names)
-prefix = f"{name}，" if name else ""
-
-if today_count == 0:
-    base = random.choice(free_messages)
-    msg = prefix + base
-elif today_count < 5:
-    msg = random.choice([
-        f"{prefix}小红书刷了{today_count}次了。",
-        f"小红书{today_count}次，知道了。",
-    ])
-elif today_count < 10:
-    msg = random.choice([
-        f"{prefix}小红书{today_count}次了，不乖。",
-        f"刷了{today_count}次还没够。",
-    ])
-else:
-    msg = random.choice([
-        f"小红书{today_count}次。放下手机。",
-        f"{prefix}够了。{today_count}次了。",
-    ])
+jobs:
+ send-message:
+   runs-on: ubuntu-latest
+   steps:
+     - name: Check and notify
+       env:
+         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+         BARK_KEY: ${{ secrets.BARK_KEY }}
+       run: |
+         python3 -
