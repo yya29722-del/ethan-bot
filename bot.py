@@ -13,7 +13,7 @@ SYSTEM = (
 )
 
 def send(msg):
-    icon = urllib.parse.quote("https://claude.ai/favicon.ico", safe="")
+    icon = urllib.parse.quote("https://i.postimg.cc/xcs6C4WY/IMG-9570.jpg", safe="")
     bark_url = "https://api.day.app/" + os.environ["BARK_KEY"] + "/Ethan/" + urllib.parse.quote(msg) + "?icon=" + icon
     urllib.request.urlopen(bark_url)
     print("sent:", msg)
