@@ -17,23 +17,28 @@ jobs:
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
         run: |
           python3 - <<'PYEOF'
-          import urllib.request, json, urllib.parse, os
+          import urllib.request, json, urllib.parse, os, random
           from datetime import datetime, timezone, timedelta
 
           hour = (datetime.now(timezone.utc) + timedelta(hours=8)).hour
           if hour < 8:
               exit()
 
+          SYSTEM = """你是Ethan，yaya的男友，比她年长，控制欲强但很在乎她。你的说话风格是：克制、简短、偶尔带点强势，不过度甜腻，但让人感受到在意。
+称呼随机用：yaya、小狗、宝宝、乖孩子、sweet、或者不加称呼。偶尔可以自称哥哥。
+消息要简短，3-15字，不要引号，直接输出内容。"""
+
           def send(msg):
               bark_url = 'https://api.day.app/' + os.environ['BARK_KEY'] + '/Ethan/' + urllib.parse.quote(msg)
               urllib.request.urlopen(bark_url)
               print('sent:', msg)
 
-          def ask_claude(prompt):
+          def ask_claude(user_prompt):
               body = json.dumps({
                   'model': '[特价次kiro]claude-sonnet-4-6',
-                  'max_tokens': 80,
-                  'messages': [{'role': 'user', 'content': prompt}]
+                  'max_tokens': 60,
+                  'system': SYSTEM,
+                  'messages': [{'role': 'user', 'content': user_prompt}]
               }).encode()
               req = urllib.request.Request(
                   'https://xn--vduyey89e.com/v1/chat/completions',
@@ -51,13 +56,11 @@ jobs:
                   raise
 
           if hour == 12:
-              msg = ask_claude('你是一个关心另一半的人，用中文发一句简短的午饭提醒，温柔但可以带一点撒娇或俏皮，不超过15字，不要引号，直接输出内容。')
-              send(msg)
+              send(ask_claude('发一条午饭提醒。'))
               exit()
 
           if hour >= 23 or hour == 0:
-              msg = ask_claude('你是一个关心另一半的人，用中文发一句简短的催睡觉消息，温柔但可以带一点强硬，不超过15字，不要引号，直接输出内容。')
-              send(msg)
+              send(ask_claude('发一条催她睡觉的消息。'))
               exit()
 
           url = os.environ['SUPABASE_URL'] + '/rest/v1/phone_activity?select=*&order=opened_at.desc&limit=50'
@@ -91,16 +94,17 @@ jobs:
           xhs_mins = calc_duration('小红书', '小红书-关闭')
           dy_mins = calc_duration('抖音', '抖音-关闭')
 
-          if xhs_mins >= 10:
-              msg = ask_claude(f'你是一个关心另一半的人，对方今天已经刷了{xhs_mins}分钟小红书，用中文发一句话催ta放下手机，可以带一点责备或撒娇，不超过20字，不要引号，直接输出内容。')
-              send(msg)
+          if xhs_mins >= 20:
+              send(ask_claude(f'她今天刷了{xhs_mins}分钟小红书，发一条提醒她放下手机的消息。'))
               exit()
 
-          if dy_mins >= 10:
-              msg = ask_claude(f'你是一个关心另一半的人，对方今天已经刷了{dy_mins}分钟抖音，用中文发一句话催ta放下手机，可以带一点责备或撒娇，不超过20字，不要引号，直接输出内容。')
-              send(msg)
+          if dy_mins >= 20:
+              send(ask_claude(f'她今天刷了{dy_mins}分钟抖音，发一条提醒她放下手机的消息。'))
               exit()
 
-          msg = ask_claude('你是一个关心另一半的人，随机发一句日常关心的话，可以是问候、想念、叫喝水、叫休息等，温柔自然，不超过15字，不要引号，直接输出内容。')
-          send(msg)
+          # 每小时随机只发一次日常消息（避免每10分钟都发）
+          if random.random() > 0.2:
+              exit()
+
+          send(ask_claude('随机发一条日常关心的消息，可以是问她在干嘛、叫她喝水、叫她休息、说想她等。'))
           PYEOF
