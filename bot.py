@@ -150,7 +150,7 @@ if hour >= 23 or hour == 0:
         save_memory(f"催睡：{msg}")
     exit()
 
-if random.random() > 0.2:
+if random.random() > 0.2 and os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch":
     exit()
 
 msg = ask_claude("随机发一条日常关心的消息，可以是问她在干嘛、叫她喝水、叫她休息、说想她等。", memories)
