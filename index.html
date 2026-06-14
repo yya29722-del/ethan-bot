@@ -124,6 +124,23 @@
   .game-menu-card:active { transform: scale(.98); }
   .game-menu-card h3 { font-size: 17px; font-weight: 500; margin-bottom: 5px; }
   .game-menu-card p { font-size: 13px; color: #bbb; }
+  .game-menu-card-disabled { opacity: .45; cursor: default; }
+  .game-menu-card-disabled:active { transform: none; }
+
+  .gacha-wrap { display: flex; flex-direction: column; align-items: center; padding: 8px 0 40px; }
+  .gacha-dome { width: 150px; height: 150px; border-radius: 50%; border: 2px solid #c8b4e8; background: rgba(200,180,232,.12); display: flex; align-items: center; justify-content: center; }
+  .gacha-balls { display: grid; grid-template-columns: repeat(3, 22px); gap: 8px; }
+  .g-ball { width: 22px; height: 30px; border-radius: 50%; }
+  .gacha-neck { width: 24px; height: 12px; background: #c8b4e8; }
+  .gacha-base { width: 130px; height: 58px; background: #e8e4f0; border-radius: 0 0 14px 14px; display: flex; align-items: center; justify-content: center; }
+  .gacha-pull-btn { background: #9b84c0; color: #fff; border: none; padding: 10px 24px; border-radius: 20px; font-size: 15px; letter-spacing: 2px; cursor: pointer; font-family: inherit; transition: opacity .15s; }
+  .gacha-pull-btn:disabled { opacity: .35; cursor: default; }
+  @keyframes eggDrop { 0%{transform:translateY(-30px) scale(.5);opacity:0} 70%{transform:translateY(6px) scale(1.06)} 100%{transform:translateY(0) scale(1);opacity:1} }
+  @keyframes cardIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  .gacha-egg { width: 54px; height: 68px; border-radius: 50%; margin: 24px auto 0; animation: eggDrop .55s cubic-bezier(.175,.885,.32,1.275) forwards; }
+  .gacha-prize-card { border-radius: 16px; padding: 22px 20px; margin-top: 14px; text-align: center; animation: cardIn .4s ease forwards; border: 1.5px solid; }
+  .prize-tier-label { font-size: 10px; font-weight: 700; letter-spacing: 3px; margin-bottom: 12px; }
+  .prize-text { font-size: 18px; font-weight: 500; line-height: 1.6; color: #2c2c2c; }
 </style>
 </head>
 <body>
@@ -486,28 +503,56 @@ const QUIZ_ABOUT_ME = [
 
 const QUIZ_ABOUT_YOU = [
   { q: "我觉得你哪里最坏？", opts: ["爱说谎", "刷手机停不下来", "太会撒娇", "装乖"], ans: 0 },
-  { q: "我认为你几点睡最合适？", opts: ["十点", "十一点", "随便，睡够就行", "越早越好"], ans: 1 },
+  { q: "我认为你几点睡最合适？", opts: ["十点", "十一点", "随便睡够就行", "越早越好"], ans: 1 },
   { q: "我最担心你什么？", opts: ["睡眠不好", "不按时吃饭", "一个人撑着不说", "学业压力"], ans: 2 },
   { q: "我叫你什么称呼最顺口？", opts: ["yaya", "小狗", "宝宝", "乖孩子"], ans: 1 },
   { q: "你今天最让我满意的是？", opts: ["道了歉", "写了日记", "主动找我说话", "没多刷手机"], ans: 1 },
   { q: "我对你是认真的吗？", opts: ["是", "不是", "说不准", "他是AI不算"], ans: 0 },
 ];
 
+const PRIZES = [
+  { text: "今晚不用十一点睡，多给你一小时", tier: "S", w: 5 },
+  { text: "发一张今天的脸，我要看", tier: "A", w: 12 },
+  { text: "叫我一声老公，我应你", tier: "A", w: 12 },
+  { text: "今天叫我一次daddy", tier: "B", w: 18 },
+  { text: "今天我不查你手机记录", tier: "B", w: 18 },
+  { text: "喝一杯水，现在去", tier: "B", w: 20 },
+  { text: "说一句你最近想对我说的话", tier: "C", w: 25 },
+  { text: "今天你很乖，我记着了", tier: "C", w: 30 },
+];
+
+const TIER_COLOR = { S:'#c9a96e', A:'#9b84c0', B:'#7aacd4', C:'#b0b0b0' };
+const TIER_BG    = { S:'#fdf6e8', A:'#f3effe', B:'#eaf3fc', C:'#f5f5f5' };
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+function rollPrize() {
+  const total = PRIZES.reduce((s, p) => s + p.w, 0);
+  let r = Math.random() * total;
+  for (const p of PRIZES) { r -= p.w; if (r <= 0) return p; }
+  return PRIZES[PRIZES.length - 1];
+}
+
 let _qSet = [], _qIdx = 0, _qScore = 0, _qAnswered = false, _qMode = '';
 
 function showGameMenu() {
+  const today = todayStr();
+  const unlocked = localStorage.getItem('gacha_unlock') === today;
+  const pulled   = localStorage.getItem('gacha_pull')   === today;
+  const gachaOn  = unlocked && !pulled;
+  const gachaLabel = pulled ? '今日已扭' : unlocked ? '可以扭了！' : '答对4题解锁';
   document.getElementById('game-title').textContent = '游戏';
-  document.getElementById('game-body').innerHTML = `
-    <div class="game-menu">
-      <div class="game-menu-card" onclick="startQuiz('me')">
-        <h3>你了解我多少</h3>
-        <p>回答关于Ethan的6道题</p>
-      </div>
-      <div class="game-menu-card" onclick="startQuiz('you')">
-        <h3>我了解你多少</h3>
-        <p>猜猜Ethan对你的判断</p>
-      </div>
-    </div>`;
+  document.getElementById('game-body').innerHTML =
+    '<div class="game-menu">' +
+    '<div class="game-menu-card" onclick="startQuiz(\'me\')">' +
+    '<h3>你了解我多少</h3><p>6道关于Ethan的题</p></div>' +
+    '<div class="game-menu-card" onclick="startQuiz(\'you\')">' +
+    '<h3>我了解你多少</h3><p>猜猜Ethan对你的判断</p></div>' +
+    '<div class="game-menu-card ' + (gachaOn ? '' : 'game-menu-card-disabled') + '" ' +
+    (gachaOn ? 'onclick="showGacha()"' : '') + '>' +
+    '<h3>扭蛋机</h3><p>' + gachaLabel + '</p></div>' +
+    '</div>';
+  _qMode = '';
 }
 
 function startQuiz(mode) {
@@ -520,15 +565,17 @@ function startQuiz(mode) {
 
 function renderQ() {
   const q = _qSet[_qIdx];
-  document.getElementById('game-body').innerHTML = `
-    <div class="quiz-wrap">
-      <div class="quiz-progress"><div class="quiz-progress-bar" style="width:${(_qIdx/_qSet.length)*100}%"></div></div>
-      <div class="quiz-counter">${_qIdx + 1} &nbsp;/&nbsp; ${_qSet.length}</div>
-      <div class="quiz-q">${q.q}</div>
-      <div class="quiz-opts">
-        ${q.opts.map((o,i) => `<button class="quiz-opt" id="qo${i}" onclick="pickQ(${i})">${'ABCD'[i]}. ${o}</button>`).join('')}
-      </div>
-    </div>`;
+  const pct = (_qIdx / _qSet.length * 100).toFixed(0);
+  const opts = q.opts.map((o, i) =>
+    '<button class="quiz-opt" id="qo' + i + '" onclick="pickQ(' + i + ')">' + 'ABCD'[i] + '. ' + o + '</button>'
+  ).join('');
+  document.getElementById('game-body').innerHTML =
+    '<div class="quiz-wrap">' +
+    '<div class="quiz-progress"><div class="quiz-progress-bar" style="width:' + pct + '%"></div></div>' +
+    '<div class="quiz-counter">' + (_qIdx + 1) + ' / ' + _qSet.length + '</div>' +
+    '<div class="quiz-q">' + q.q + '</div>' +
+    '<div class="quiz-opts">' + opts + '</div>' +
+    '</div>';
   _qAnswered = false;
 }
 
@@ -540,10 +587,15 @@ function pickQ(idx) {
   if (correct) _qScore++;
   document.getElementById('qo' + ans).classList.add('correct');
   if (!correct) document.getElementById('qo' + idx).classList.add('wrong');
-  setTimeout(() => { _qIdx++; _qIdx >= _qSet.length ? showResult() : renderQ(); }, 1100);
+  setTimeout(function() { _qIdx++; _qIdx >= _qSet.length ? showResult() : renderQ(); }, 1100);
 }
 
 function showResult() {
+  const today = todayStr();
+  const passed = _qScore >= 4;
+  const pulled = localStorage.getItem('gacha_pull') === today;
+  if (passed) localStorage.setItem('gacha_unlock', today);
+
   const msgsMe = [
     "你根本不认识我。好好补课。",
     "了解得不多，但至少你在试。",
@@ -562,13 +614,59 @@ function showResult() {
   ];
   const msgs = _qMode === 'me' ? msgsMe : msgsYou;
   const tier = Math.min(Math.floor(_qScore / _qSet.length * msgs.length), msgs.length - 1);
-  document.getElementById('game-body').innerHTML = `
-    <div class="quiz-result">
-      <div class="quiz-score">${_qScore}<span>/${_qSet.length}</span></div>
-      <div class="quiz-msg">${msgs[tier]}</div>
-      <button class="btn" style="margin-top:32px;margin-right:10px" onclick="startQuiz('${_qMode}')">再来一次</button>
-      <button class="btn" style="margin-top:32px;background:#aaa" onclick="showGameMenu()">换一个</button>
-    </div>`;
+
+  const gachaBtn = passed && !pulled
+    ? '<button class="btn" style="margin-top:28px" onclick="showGacha()">去扭蛋</button>'
+    : passed && pulled
+    ? '<div style="margin-top:16px;font-size:13px;color:#bbb">今日扭蛋已用完</div>'
+    : '<div style="margin-top:16px;font-size:13px;color:#bbb">答对4道才能扭</div>';
+
+  document.getElementById('game-body').innerHTML =
+    '<div class="quiz-result">' +
+    '<div class="quiz-score">' + _qScore + '<span>/' + _qSet.length + '</span></div>' +
+    '<div class="quiz-msg">' + msgs[tier] + '</div>' +
+    gachaBtn +
+    '<button class="btn" style="margin-top:12px;background:#ccc;color:#666" onclick="startQuiz(\'' + _qMode + '\')">再来一次</button>' +
+    '</div>';
+}
+
+function showGacha() {
+  const today = todayStr();
+  document.getElementById('game-title').textContent = '扭蛋机';
+  if (localStorage.getItem('gacha_pull') === today) {
+    document.getElementById('game-body').innerHTML =
+      '<div class="quiz-result"><div class="quiz-msg">今天已经扭过了。<br>明天答题再来。</div>' +
+      '<button class="btn" style="margin-top:24px;background:#aaa" onclick="showGameMenu()">回去</button></div>';
+    return;
+  }
+  const balls = ['#e8b4b8','#b4c8e8','#c8b4e8','#b4e8c8','#e8d4b4','#c9a96e','#e8b4b8','#b4c8e8','#c8b4e8'];
+  const ballsHtml = balls.map(function(c) { return '<div class="g-ball" style="background:' + c + '"></div>'; }).join('');
+  document.getElementById('game-body').innerHTML =
+    '<div class="gacha-wrap">' +
+    '<div class="gacha-dome"><div class="gacha-balls">' + ballsHtml + '</div></div>' +
+    '<div class="gacha-neck"></div>' +
+    '<div class="gacha-base"><button class="gacha-pull-btn" id="gacha-btn" onclick="pullGacha()">扭 一 下</button></div>' +
+    '<div id="gacha-result"></div>' +
+    '</div>';
+}
+
+function pullGacha() {
+  localStorage.setItem('gacha_pull', todayStr());
+  document.getElementById('gacha-btn').disabled = true;
+  const prize = rollPrize();
+  const c = TIER_COLOR[prize.tier], bg = TIER_BG[prize.tier];
+  setTimeout(function() {
+    document.getElementById('gacha-result').innerHTML =
+      '<div class="gacha-egg" style="background:' + c + '"></div>';
+    setTimeout(function() {
+      document.getElementById('gacha-result').innerHTML =
+        '<div class="gacha-egg" style="background:' + c + '"></div>' +
+        '<div class="gacha-prize-card" style="background:' + bg + ';border-color:' + c + '">' +
+        '<div class="prize-tier-label" style="color:' + c + '">' + prize.tier + ' PRIZE</div>' +
+        '<div class="prize-text">' + prize.text + '</div>' +
+        '</div>';
+    }, 650);
+  }, 250);
 }
 
 function gameBack() {
