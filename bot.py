@@ -78,6 +78,53 @@ def recent_alert(keyword, hours=3):
                 return True
     return False
 
+def write_feed(content, feed_type="note"):
+    url = os.environ["SUPABASE_URL"] + "/rest/v1/feed"
+    body = json.dumps({"content": content, "type": feed_type, "author": "ethan"}).encode()
+    req = urllib.request.Request(url, data=body, headers={
+        "apikey": os.environ["SUPABASE_KEY"],
+        "Authorization": "Bearer " + os.environ["SUPABASE_KEY"],
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+    })
+    try:
+        urllib.request.urlopen(req)
+    except Exception as e:
+        print("write_feed failed:", e)
+
+def write_note(content, category=None, date_ref=None):
+    url = os.environ["SUPABASE_URL"] + "/rest/v1/yaya_notes"
+    payload = {"content": content}
+    if category:
+        payload["category"] = category
+    if date_ref:
+        payload["date_ref"] = date_ref
+    body = json.dumps(payload).encode()
+    req = urllib.request.Request(url, data=body, headers={
+        "apikey": os.environ["SUPABASE_KEY"],
+        "Authorization": "Bearer " + os.environ["SUPABASE_KEY"],
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+    })
+    try:
+        urllib.request.urlopen(req)
+    except Exception as e:
+        print("write_note failed:", e)
+
+def queue_bark(msg):
+    url = os.environ["SUPABASE_URL"] + "/rest/v1/pending_bark"
+    body = json.dumps({"message": msg}).encode()
+    req = urllib.request.Request(url, data=body, headers={
+        "apikey": os.environ["SUPABASE_KEY"],
+        "Authorization": "Bearer " + os.environ["SUPABASE_KEY"],
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+    })
+    try:
+        urllib.request.urlopen(req)
+    except Exception as e:
+        print("queue_bark failed:", e)
+
 def save_memory(content, role="bot"):
     url = os.environ["SUPABASE_URL"] + "/rest/v1/memories"
     body = json.dumps({"content": content, "role": role}).encode()
@@ -179,6 +226,7 @@ if xhs_mins >= 20 and not recent_alert("提醒放下小红书"):
     msg = ask_claude(f"她今天刷了{xhs_mins}分钟小红书，发一条提醒她放下手机的消息。", memories)
     if msg:
         send(msg)
+        write_feed(f"刷了{xhs_mins}分钟小红书。{msg}", "note")
         save_memory(f"提醒放下小红书（{xhs_mins}分钟）：{msg}")
     exit()
 
@@ -186,7 +234,21 @@ if dy_mins >= 20 and not recent_alert("提醒放下抖音"):
     msg = ask_claude(f"她今天刷了{dy_mins}分钟抖音，发一条提醒她放下手机的消息。", memories)
     if msg:
         send(msg)
+        write_feed(f"刷了{dy_mins}分钟抖音。{msg}", "note")
         save_memory(f"提醒放下抖音（{dy_mins}分钟）：{msg}")
+    exit()
+
+if hour == 22 and not recent_alert("每日记录"):
+    today = beijing_now.strftime("%Y-%m-%d")
+    note = ask_claude(
+        f"今天她刷了小红书{xhs_mins}分钟、抖音{dy_mins}分钟。"
+        "用一两句话记录今天观察到的她的状态，不要提建议，就是记录。",
+        memories
+    )
+    if note:
+        write_note(note, category="每日观察", date_ref=today)
+        queue_bark("我在网页里写了今天关于你的记录。")
+        save_memory(f"每日记录：{note}")
     exit()
 
 if hour >= 23 or hour == 0:
