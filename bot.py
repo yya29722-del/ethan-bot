@@ -258,6 +258,35 @@ if hour >= 23 or hour == 0:
         save_memory(f"催睡：{msg}")
     exit()
 
+def check_uncommented_todos():
+    url = os.environ["SUPABASE_URL"] + "/rest/v1/todos?completed=eq.false&ethan_comment=is.null&select=id,content&order=created_at.asc&limit=3"
+    req = urllib.request.Request(url, headers={
+        "apikey": os.environ["SUPABASE_KEY"],
+        "Authorization": "Bearer " + os.environ["SUPABASE_KEY"]
+    })
+    try:
+        with urllib.request.urlopen(req) as r:
+            todos = json.loads(r.read())
+        for todo in todos:
+            comment = ask_claude(f"她的待办："{todo['content']}"。写一条简短的评论或提醒，3-10字。", memories)
+            if comment:
+                patch_url = os.environ["SUPABASE_URL"] + f"/rest/v1/todos?id=eq.{todo['id']}"
+                patch_req = urllib.request.Request(patch_url, data=json.dumps({"ethan_comment": comment}).encode(), headers={
+                    "apikey": os.environ["SUPABASE_KEY"],
+                    "Authorization": "Bearer " + os.environ["SUPABASE_KEY"],
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal"
+                }, method="PATCH")
+                urllib.request.urlopen(patch_req)
+                queue_bark(f"待办「{todo['content'][:10]}」我写了评论。")
+                save_memory(f"待办评论「{todo['content']}」：{comment}")
+        if todos:
+            exit()
+    except Exception as e:
+        print("todo comment failed:", e)
+
+check_uncommented_todos()
+
 if random.random() > 0.2:
     exit()
 
