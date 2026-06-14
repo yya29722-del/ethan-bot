@@ -60,6 +60,11 @@
   .empty { text-align: center; padding: 40px 20px; color: #ccc; font-size: 14px; }
 
   .private-badge { font-size: 10px; color: #e8a0a0; background: #fce8e8; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
+  .amount { font-size: 20px; font-weight: 500; color: #2c2c2c; }
+  .amount.big { color: #bf5b5b; }
+  .expense-cat { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: #f0ede9; color: #888; display: inline-block; margin-bottom: 6px; }
+  .month-total { text-align: center; padding: 16px; font-size: 13px; color: #888; background: #fff; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .month-total strong { font-size: 22px; color: #2c2c2c; display: block; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -73,6 +78,7 @@
   <button onclick="switchTab('feed')">动态</button>
   <button onclick="switchTab('diary')">日记</button>
   <button onclick="switchTab('notes')">关于你</button>
+  <button onclick="switchTab('expenses')">账本</button>
 </nav>
 
 <!-- 待办 -->
@@ -123,6 +129,27 @@
     </div>
   </div>
   <div id="diary-list"><div class="empty">暂无日记</div></div>
+</div>
+
+<!-- 账本 -->
+<div id="tab-expenses" class="tab">
+  <div class="input-area">
+    <div class="input-row" style="margin-top:0">
+      <input id="exp-amount" type="number" placeholder="金额" step="0.01" style="flex:1;border:1px solid #e8e4df;border-radius:8px;padding:10px;font-size:16px;background:#faf9f7;outline:none;">
+      <select id="exp-cat" style="flex:1;border:1px solid #e8e4df;border-radius:8px;padding:10px;font-size:13px;background:#faf9f7;outline:none;">
+        <option>餐饮</option>
+        <option>交通</option>
+        <option>购物</option>
+        <option>娱乐</option>
+        <option>学习</option>
+        <option>其他</option>
+      </select>
+    </div>
+    <textarea id="exp-desc" rows="1" placeholder="备注（可选）" style="margin-top:8px;width:100%;border:1px solid #e8e4df;border-radius:8px;padding:10px;font-size:14px;font-family:inherit;resize:none;outline:none;background:#faf9f7;"></textarea>
+    <div class="input-row"><button class="btn btn-sm" onclick="addExpense()">记账</button></div>
+  </div>
+  <div id="month-summary"></div>
+  <div id="expenses-list"><div class="empty">暂无记录</div></div>
 </div>
 
 <!-- 关于yaya的记事本 -->
@@ -242,6 +269,44 @@ async function addDiary() {
   loadDiary();
 }
 
+// EXPENSES
+async function loadExpenses() {
+  const data = await api('expenses?select=*&order=spent_at.desc,created_at.desc&limit=50');
+  const monthEl = document.getElementById('month-summary');
+  const listEl = document.getElementById('expenses-list');
+  if (!data.length) { listEl.innerHTML = '<div class="empty">暂无记录</div>'; monthEl.innerHTML = ''; return; }
+  const now = new Date();
+  const thisMonth = data.filter(e => {
+    const d = new Date(e.spent_at);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+  const total = thisMonth.reduce((s, e) => s + parseFloat(e.amount), 0);
+  monthEl.innerHTML = `<div class="month-total">本月支出<strong>¥${total.toFixed(2)}</strong></div>`;
+  listEl.innerHTML = data.map(e => `
+    <div class="card">
+      <button class="del-btn" onclick="delExpense(${e.id})">×</button>
+      <span class="expense-cat">${e.category}</span>
+      <div class="amount ${parseFloat(e.amount) >= 100 ? 'big' : ''}">¥${parseFloat(e.amount).toFixed(2)}</div>
+      <div class="meta">${e.spent_at}${e.description ? ' · ' + e.description : ''}</div>
+      ${e.ethan_comment ? `<div class="comment"><span>Ethan：</span>${e.ethan_comment}</div>` : ''}
+    </div>`).join('');
+}
+
+async function addExpense() {
+  const amount = document.getElementById('exp-amount').value;
+  if (!amount || parseFloat(amount) <= 0) return;
+  await api('expenses', 'POST', {
+    amount: parseFloat(amount),
+    category: document.getElementById('exp-cat').value,
+    description: document.getElementById('exp-desc').value.trim() || null
+  });
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-desc').value = '';
+  loadExpenses();
+}
+
+async function delExpense(id) { await api('expenses?id=eq.' + id, 'DELETE'); loadExpenses(); }
+
 // NOTES
 async function loadNotes() {
   const data = await api('yaya_notes?select=*&order=created_at.desc');
@@ -260,6 +325,7 @@ function load(name) {
   else if (name === 'feed') loadFeed();
   else if (name === 'diary') loadDiary();
   else if (name === 'notes') loadNotes();
+  else if (name === 'expenses') loadExpenses();
 }
 
 loadTodos();
