@@ -68,7 +68,7 @@ def load_memories():
         print("memory load failed:", e)
         return []
 
-def recent_alert(keyword, hours=3):
+def recent_alert(keyword, hours=20):
     cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
     for m in memories:
         t_str = m.get("created_at", "")
@@ -172,24 +172,18 @@ def ask_claude(user_prompt, memories=None):
 
 memories = load_memories()
 
-if hour == 8:
+# 早上9点：天气问候
+if hour == 9:
     try:
         with urllib.request.urlopen("https://wttr.in/Beijing?format=%C,%t,%h") as r:
             weather = r.read().decode().strip()
     except Exception:
         weather = ""
-    prompt = f"现在是早上8点，北京今天天气：{weather}。发一条早安问候，自然地带上天气，让她知道今天穿什么。" if weather else "发一条早安问候。"
+    prompt = f"现在是早上9点，北京今天天气：{weather}。发一条早安问候，自然地带上天气，让她知道今天穿什么。" if weather else "发一条早安问候。"
     msg = ask_claude(prompt, memories)
     if msg:
         send(msg)
         save_memory(f"早安：{msg}")
-    exit()
-
-if hour == 12:
-    msg = ask_claude("发一条午饭提醒。", memories)
-    if msg:
-        send(msg)
-        save_memory(f"午饭提醒：{msg}")
     exit()
 
 url = os.environ["SUPABASE_URL"] + "/rest/v1/phone_activity?select=*&order=opened_at.desc&limit=50"
@@ -222,22 +216,18 @@ def calc_duration(app_open, app_close):
 xhs_mins = calc_duration("小红书", "小红书-关闭")
 dy_mins = calc_duration("抖音", "抖音-关闭")
 
-if xhs_mins >= 20 and not recent_alert("提醒放下小红书"):
-    msg = ask_claude(f"她今天刷了{xhs_mins}分钟小红书，发一条提醒她放下手机的消息。", memories)
-    if msg:
-        send(msg)
-        write_feed(f"刷了{xhs_mins}分钟小红书。{msg}", "note")
-        save_memory(f"提醒放下小红书（{xhs_mins}分钟）：{msg}")
-    exit()
+# 手机超时提醒：每天最多一次，取用时最长的
+if not recent_alert("手机提醒"):
+    worst_app, worst_mins = ("小红书", xhs_mins) if xhs_mins >= dy_mins else ("抖音", dy_mins)
+    if worst_mins >= 20:
+        msg = ask_claude(f"她今天刷了{worst_mins}分钟{worst_app}，发一条提醒她放下手机的消息。", memories)
+        if msg:
+            send(msg)
+            write_feed(f"刷了{worst_mins}分钟{worst_app}。{msg}", "note")
+            save_memory(f"手机提醒（{worst_app} {worst_mins}分钟）：{msg}")
+        exit()
 
-if dy_mins >= 20 and not recent_alert("提醒放下抖音"):
-    msg = ask_claude(f"她今天刷了{dy_mins}分钟抖音，发一条提醒她放下手机的消息。", memories)
-    if msg:
-        send(msg)
-        write_feed(f"刷了{dy_mins}分钟抖音。{msg}", "note")
-        save_memory(f"提醒放下抖音（{dy_mins}分钟）：{msg}")
-    exit()
-
+# 每天22点：写关于你的日记，不发bark
 if hour == 22 and not recent_alert("每日记录"):
     today = beijing_now.strftime("%Y-%m-%d")
     note = ask_claude(
@@ -246,18 +236,11 @@ if hour == 22 and not recent_alert("每日记录"):
         memories
     )
     if note:
-        write_note(note, category="每日观察", date_ref=today)
-        queue_bark("我在网页里写了今天关于你的记录。")
+        write_note(note, category="日常", date_ref=today)
         save_memory(f"每日记录：{note}")
     exit()
 
-if hour >= 23 or hour == 0:
-    msg = ask_claude("发一条催她睡觉的消息。", memories)
-    if msg:
-        send(msg)
-        save_memory(f"催睡：{msg}")
-    exit()
-
+# 新待办评论
 def check_uncommented_todos():
     url = os.environ["SUPABASE_URL"] + "/rest/v1/todos?completed=eq.false&ethan_comment=is.null&select=id,content&order=created_at.asc&limit=3"
     req = urllib.request.Request(url, headers={
@@ -286,6 +269,10 @@ def check_uncommented_todos():
         print("todo comment failed:", e)
 
 check_uncommented_todos()
+
+# 日常关心：每天随机时段一次
+if recent_alert("日常关心"):
+    exit()
 
 if random.random() > 0.2:
     exit()
