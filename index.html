@@ -28,6 +28,11 @@
   .tab-page { position: absolute; top: 0; left: 0; right: 0; bottom: 60px; overflow-y: auto; -webkit-overflow-scrolling: touch; display: none; background: #f5f3f0; }
   .tab-page.active { display: block; }
 
+  /* TOOTH ACCENTS */
+  .tooth-accent { opacity: .13; flex-shrink: 0; }
+  .cover-tooth { position: absolute; bottom: 120px; right: 36px; opacity: .07; }
+  .feed-tooth { position: absolute; top: 62px; right: 20px; opacity: .12; }
+
   /* BOTTOM NAV */
   #bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: rgba(255,255,255,.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(0,0,0,.07); display: flex; z-index: 10; padding-bottom: env(safe-area-inset-bottom,0); }
   .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; color: #c8c4be; cursor: pointer; padding: 0; font-family: inherit; }
@@ -72,13 +77,13 @@
   .feed-input-row select { flex: 1; border: none; outline: none; font-size: 13px; background: transparent; color: #888; font-family: inherit; }
 
   /* Timeline */
-  .timeline-wrap { padding: 16px 16px 30px; }
-  .tl-group { display: flex; align-items: flex-start; }
+  .timeline-wrap { padding: 14px 16px 30px; position: relative; }
+  .timeline-wrap::before { content: ''; position: absolute; left: 37px; top: 38px; bottom: 36px; width: 2px; background: linear-gradient(to bottom, transparent, rgba(200,195,188,.6) 8%, rgba(200,195,188,.6) 92%, transparent); border-radius: 1px; pointer-events: none; }
+  .tl-group { display: flex; align-items: stretch; }
   .tl-left { width: 42px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
   .tl-date-lbl { font-size: 10px; color: #bbb; font-weight: 600; white-space: nowrap; padding-top: 4px; text-align: center; line-height: 1.4; }
-  .tl-spine { display: flex; flex-direction: column; align-items: center; width: 100%; flex: 1; }
-  .tl-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc8c2; flex-shrink: 0; margin-top: 6px; }
-  .tl-line { width: 1.5px; background: linear-gradient(to bottom, #e0dcd6, #ede9e3); flex: 1; min-height: 20px; margin-top: 5px; }
+  .tl-spine { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .tl-dot { width: 9px; height: 9px; border-radius: 50%; background: #c8c4be; flex-shrink: 0; margin-top: 7px; position: relative; z-index: 1; }
   .tl-cards { flex: 1; padding-left: 10px; padding-bottom: 14px; }
   .tl-card { background: #fff; border-radius: 16px; padding: 13px 14px; margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
   .tl-card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
@@ -220,6 +225,9 @@
   <div class="cover-title">YAYA &nbsp;&amp;&nbsp; ETHAN</div>
   <div class="cover-date">2026.06.10</div>
   <button class="cover-btn" onclick="enterApp()">进入</button>
+  <svg class="cover-tooth" width="52" height="72" viewBox="140 98 220 310">
+    <path d="M170 140 Q170 110 200 110 L312 110 Q342 110 342 140 L342 280 Q342 340 312 370 Q290 395 275 370 Q265 350 256 350 Q247 350 237 370 Q222 395 200 370 Q170 340 170 280 Z" fill="none" stroke="#fff" stroke-width="12"/>
+  </svg>
 </div>
 
 <!-- APP -->
@@ -256,9 +264,12 @@
 
   <!-- TAB: 动态 -->
   <div class="tab-page" id="tab-feed">
-    <div class="feed-header">
+    <div class="feed-header" style="position:relative">
       <div class="feed-title">我们的动态</div>
       <button class="feed-add-btn" onclick="toggleFeedInput()">+</button>
+      <svg class="feed-tooth" width="28" height="38" viewBox="140 98 220 310" style="position:absolute;right:60px;top:62px;opacity:.1">
+        <path d="M170 140 Q170 110 200 110 L312 110 Q342 110 342 140 L342 280 Q342 340 312 370 Q290 395 275 370 Q265 350 256 350 Q247 350 237 370 Q222 395 200 370 Q170 340 170 280 Z" fill="none" stroke="#2c2c2c" stroke-width="14"/>
+      </svg>
     </div>
     <div class="feed-input-panel" id="feed-input-panel">
       <div id="feed-gacha-banner"></div>
@@ -408,12 +419,17 @@ function renderCalendar() {
 // ── WEATHER ──
 async function loadWeather() {
   try {
-    const r = await fetch('https://wttr.in/Beijing?format=%c+%t');
-    const t = (await r.text()).trim().split(' ');
-    document.getElementById('wx-icon').textContent = t[0] || '—';
-    document.getElementById('wx-desc').textContent = t.slice(1).join(' ') || '北京';
+    const wurl = new URL('https://wttr.in/Beijing');
+    wurl.searchParams.set('format', '%c %t');
+    const r = await fetch(wurl.toString());
+    const text = (await r.text()).trim();
+    if (text.includes('<') || text.length > 40) throw new Error('html');
+    const sp = text.split(/\s+/);
+    document.getElementById('wx-icon').textContent = sp[0] || '—';
+    document.getElementById('wx-desc').textContent = sp.slice(1).join(' ') || '北京';
   } catch(e) {
-    document.getElementById('wx-desc').textContent = '天气获取失败';
+    document.getElementById('wx-icon').textContent = '—';
+    document.getElementById('wx-desc').textContent = '北京';
   }
 }
 
@@ -506,10 +522,8 @@ async function loadFeed(filter) {
     return '<div class="tl-group">' +
       '<div class="tl-left">' +
       '<div class="tl-date-lbl">' + dateLabel(date) + '</div>' +
-      '<div class="tl-spine">' +
-      '<div class="tl-dot"></div>' +
-      (isLast ? '' : '<div class="tl-line"></div>') +
-      '</div></div>' +
+      '<div class="tl-spine"><div class="tl-dot"></div></div>' +
+      '</div>' +
       '<div class="tl-cards">' + cards + '</div></div>';
   }).join('');
 }
