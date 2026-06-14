@@ -19,7 +19,7 @@ def send(msg):
     print("sent:", msg)
 
 def load_memories():
-    url = os.environ["SUPABASE_URL"] + "/rest/v1/memories?select=role,content&order=created_at.desc&limit=10"
+    url = os.environ["SUPABASE_URL"] + "/rest/v1/memories?select=role,content,created_at&order=created_at.desc&limit=20"
     req = urllib.request.Request(url, headers={
         "apikey": os.environ["SUPABASE_KEY"],
         "Authorization": "Bearer " + os.environ["SUPABASE_KEY"]
@@ -30,6 +30,16 @@ def load_memories():
     except Exception as e:
         print("memory load failed:", e)
         return []
+
+def recent_alert(keyword, hours=3):
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    for m in memories:
+        t_str = m.get("created_at", "")
+        if t_str and keyword in m.get("content", ""):
+            t = datetime.fromisoformat(t_str.replace("Z", "+00:00"))
+            if t > cutoff:
+                return True
+    return False
 
 def save_memory(content, role="bot"):
     url = os.environ["SUPABASE_URL"] + "/rest/v1/memories"
@@ -128,14 +138,14 @@ def calc_duration(app_open, app_close):
 xhs_mins = calc_duration("小红书", "小红书-关闭")
 dy_mins = calc_duration("抖音", "抖音-关闭")
 
-if xhs_mins >= 20:
+if xhs_mins >= 20 and not recent_alert("提醒放下小红书"):
     msg = ask_claude(f"她今天刷了{xhs_mins}分钟小红书，发一条提醒她放下手机的消息。", memories)
     if msg:
         send(msg)
         save_memory(f"提醒放下小红书（{xhs_mins}分钟）：{msg}")
     exit()
 
-if dy_mins >= 20:
+if dy_mins >= 20 and not recent_alert("提醒放下抖音"):
     msg = ask_claude(f"她今天刷了{dy_mins}分钟抖音，发一条提醒她放下手机的消息。", memories)
     if msg:
         send(msg)
