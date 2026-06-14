@@ -7,9 +7,9 @@
   "theme_color": "#f5f3f0",
   "icons": [
     {
-      "src": "tooth.svg",
+      "src": "icon.png",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/png"
     }
   ]
 }
