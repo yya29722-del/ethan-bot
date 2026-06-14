@@ -46,6 +46,9 @@
   .btn { padding: 8px 16px; background: #2c2c2c; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; }
   .btn:active { opacity: .8; }
   .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .del-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #ddd; font-size: 16px; cursor: pointer; line-height: 1; }
+  .del-btn:hover { color: #e8a0a0; }
+  .card { position: relative; }
 
   .diary-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #888; }
   .diary-toggle input { accent-color: #2c2c2c; }
@@ -160,6 +163,7 @@ async function loadTodos() {
   if (!data.length) { el.innerHTML = '<div class="empty">暂无待办</div>'; return; }
   el.innerHTML = data.map(t => `
     <div class="card todo-card ${t.completed ? 'done' : ''}">
+      <button class="del-btn" onclick="delTodo(${t.id})">×</button>
       <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTodo(${t.id}, this.checked)">
       <div class="todo-text">
         <div class="meta">${fmt(t.created_at)}</div>
@@ -186,6 +190,9 @@ async function toggleTodo(id, completed) {
   await api('todos?id=eq.' + id, 'PATCH', { completed });
   loadTodos();
 }
+async function delTodo(id) { await api('todos?id=eq.' + id, 'DELETE'); loadTodos(); }
+async function delFeed(id) { await api('feed?id=eq.' + id, 'DELETE'); loadFeed(); }
+async function delDiary(id) { await api('diary?id=eq.' + id, 'DELETE'); loadDiary(); }
 
 // FEED
 async function loadFeed() {
@@ -194,6 +201,7 @@ async function loadFeed() {
   if (!data.length) { el.innerHTML = '<div class="empty">暂无动态</div>'; return; }
   el.innerHTML = data.map(f => `
     <div class="card author-${f.author}">
+      <button class="del-btn" onclick="delFeed(${f.id})">×</button>
       <span class="tag ${f.type}">${{note:'随记',event:'事件',quote:'话语',emotion:'情感'}[f.type]||f.type}</span>
       <div class="meta">${f.author === 'ethan' ? 'Ethan' : 'yaya'} · ${fmt(f.created_at)}</div>
       <div class="body">${f.content}</div>
@@ -217,6 +225,7 @@ async function loadDiary() {
   if (!data.length) { el.innerHTML = '<div class="empty">暂无日记</div>'; return; }
   el.innerHTML = data.map(d => `
     <div class="card author-${d.author}">
+      <button class="del-btn" onclick="delDiary(${d.id})">×</button>
       <div class="meta">${d.author === 'ethan' ? 'Ethan' : 'yaya'} · ${fmt(d.created_at)}${!d.visible_to_other ? '<span class="private-badge">私密</span>' : ''}</div>
       <div class="body">${d.content}</div>
     </div>`).join('');
