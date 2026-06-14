@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="110" fill="#1a1814"/>
+  <!-- tooth body -->
+  <path d="M170 140 Q170 110 200 110 L312 110 Q342 110 342 140 L342 280 Q342 340 312 370 Q290 395 275 370 Q265 350 256 350 Q247 350 237 370 Q222 395 200 370 Q170 340 170 280 Z" fill="none" stroke="#e8e0d8" stroke-width="14" stroke-linejoin="round"/>
+  <!-- tooth highlight -->
+  <path d="M205 125 Q220 118 240 122" stroke="#e8e0d8" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.4"/>
+</svg>
