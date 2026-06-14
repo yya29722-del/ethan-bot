@@ -71,7 +71,7 @@ def ask_claude(user_prompt, memories=None):
             return json.loads(r.read())["choices"][0]["message"]["content"].strip()
     except urllib.error.HTTPError as e:
         print("HTTP Error:", e.code, e.read().decode())
-        raise
+        return None
 
 memories = load_memories()
 
@@ -83,20 +83,23 @@ if hour == 8:
         weather = ""
     prompt = f"现在是早上8点，北京今天天气：{weather}。发一条早安问候，自然地带上天气，让她知道今天穿什么。" if weather else "发一条早安问候。"
     msg = ask_claude(prompt, memories)
-    send(msg)
-    save_memory(f"早安：{msg}")
+    if msg:
+        send(msg)
+        save_memory(f"早安：{msg}")
     exit()
 
 if hour == 12:
     msg = ask_claude("发一条午饭提醒。", memories)
-    send(msg)
-    save_memory(f"午饭提醒：{msg}")
+    if msg:
+        send(msg)
+        save_memory(f"午饭提醒：{msg}")
     exit()
 
 if hour >= 23 or hour == 0:
     msg = ask_claude("发一条催她睡觉的消息。", memories)
-    send(msg)
-    save_memory(f"催睡：{msg}")
+    if msg:
+        send(msg)
+        save_memory(f"催睡：{msg}")
     exit()
 
 url = os.environ["SUPABASE_URL"] + "/rest/v1/phone_activity?select=*&order=opened_at.desc&limit=50"
@@ -131,19 +134,22 @@ dy_mins = calc_duration("抖音", "抖音-关闭")
 
 if xhs_mins >= 20:
     msg = ask_claude(f"她今天刷了{xhs_mins}分钟小红书，发一条提醒她放下手机的消息。", memories)
-    send(msg)
-    save_memory(f"提醒放下小红书（{xhs_mins}分钟）：{msg}")
+    if msg:
+        send(msg)
+        save_memory(f"提醒放下小红书（{xhs_mins}分钟）：{msg}")
     exit()
 
 if dy_mins >= 20:
     msg = ask_claude(f"她今天刷了{dy_mins}分钟抖音，发一条提醒她放下手机的消息。", memories)
-    send(msg)
-    save_memory(f"提醒放下抖音（{dy_mins}分钟）：{msg}")
+    if msg:
+        send(msg)
+        save_memory(f"提醒放下抖音（{dy_mins}分钟）：{msg}")
     exit()
 
 if random.random() > 0.2:
     exit()
 
 msg = ask_claude("随机发一条日常关心的消息，可以是问她在干嘛、叫她喝水、叫她休息、说想她等。", memories)
-send(msg)
-save_memory(f"日常关心：{msg}")
+if msg:
+    send(msg)
+    save_memory(f"日常关心：{msg}")
