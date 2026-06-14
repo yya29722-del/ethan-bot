@@ -1,4 +1,4 @@
-import urllib.request, json, urllib.parse, os, random
+import urllib.request, json, urllib.parse, os, random, time
 from datetime import datetime, timezone, timedelta
 
 hour = (datetime.now(timezone.utc) + timedelta(hours=8)).hour
@@ -66,12 +66,15 @@ def ask_claude(user_prompt, memories=None):
             "Content-Type": "application/json",
         }
     )
-    try:
-        with urllib.request.urlopen(req) as r:
-            return json.loads(r.read())["choices"][0]["message"]["content"].strip()
-    except urllib.error.HTTPError as e:
-        print("HTTP Error:", e.code, e.read().decode())
-        return None
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req) as r:
+                return json.loads(r.read())["choices"][0]["message"]["content"].strip()
+        except urllib.error.HTTPError as e:
+            print(f"HTTP Error (attempt {attempt+1}/3):", e.code, e.read().decode())
+            if attempt < 2:
+                time.sleep(5)
+    return None
 
 memories = load_memories()
 
