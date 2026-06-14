@@ -12,7 +12,8 @@
 <meta name="theme-color" content="#7a8ea0">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, sans-serif; background: #f5f3f0; color: #2c2c2c; overflow: hidden; height: 100vh; }
+  html { height: -webkit-fill-available; }
+  body { font-family: -apple-system, sans-serif; background: #f5f3f0; color: #2c2c2c; overflow: hidden; height: 100vh; height: -webkit-fill-available; min-height: -webkit-fill-available; }
 
   /* COVER */
   #cover { position: fixed; inset: 0; background: #1a1814; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity .6s ease; }
@@ -850,6 +851,9 @@ function gameBack() { if (_qMode) { _qMode = ''; showGameMenu(); } }
 
 // ── INIT ──
 function enterApp() {
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
   const cover = document.getElementById('cover');
   const app = document.getElementById('app');
   app.style.display = 'block';
