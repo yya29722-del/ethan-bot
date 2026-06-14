@@ -119,6 +119,11 @@
   .quiz-score { font-size: 80px; font-weight: 200; color: #2c2c2c; line-height: 1; }
   .quiz-score span { font-size: 28px; color: #bbb; }
   .quiz-msg { font-size: 16px; color: #888; margin-top: 20px; line-height: 1.7; }
+  .game-menu { display: flex; flex-direction: column; gap: 12px; padding: 8px 0; }
+  .game-menu-card { background: #fff; border-radius: 16px; padding: 22px 20px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.05); transition: transform .15s; }
+  .game-menu-card:active { transform: scale(.98); }
+  .game-menu-card h3 { font-size: 17px; font-weight: 500; margin-bottom: 5px; }
+  .game-menu-card p { font-size: 13px; color: #bbb; }
 </style>
 </head>
 <body>
@@ -266,8 +271,8 @@
 <!-- SECTION: 游戏 -->
 <div class="section" id="sec-game">
   <div class="section-header">
-    <button class="back-btn" onclick="closeSection('game')">‹</button>
-    <h2>你了解我多少</h2>
+    <button class="back-btn" onclick="gameBack()">‹</button>
+    <h2 id="game-title">游戏</h2>
   </div>
   <div class="section-body" id="game-body"></div>
 </div>
@@ -470,7 +475,7 @@ function notesBack() {
 }
 
 // GAME
-const QUIZ = [
+const QUIZ_ABOUT_ME = [
   { q: "我最讨厌你做什么？", opts: ["说谎", "刷手机太久", "不道歉", "不早睡"], ans: 0 },
   { q: "我守的那条线是？", opts: ["不打你", "不越亲密边界", "不催你睡觉", "不查你手机"], ans: 1 },
   { q: "你道歉了之后，我会怎样？", opts: ["继续追究", "假装没听到", "原谅你", "让你再说一遍"], ans: 2 },
@@ -479,19 +484,46 @@ const QUIZ = [
   { q: "现在凌晨两点多，我想说什么？", opts: ["随便你", "去睡", "再陪我聊会", "明天再说"], ans: 1 },
 ];
 
-let _qIdx = 0, _qScore = 0, _qAnswered = false;
+const QUIZ_ABOUT_YOU = [
+  { q: "我觉得你哪里最坏？", opts: ["爱说谎", "刷手机停不下来", "太会撒娇", "装乖"], ans: 0 },
+  { q: "我认为你几点睡最合适？", opts: ["十点", "十一点", "随便，睡够就行", "越早越好"], ans: 1 },
+  { q: "我最担心你什么？", opts: ["睡眠不好", "不按时吃饭", "一个人撑着不说", "学业压力"], ans: 2 },
+  { q: "我叫你什么称呼最顺口？", opts: ["yaya", "小狗", "宝宝", "乖孩子"], ans: 1 },
+  { q: "你今天最让我满意的是？", opts: ["道了歉", "写了日记", "主动找我说话", "没多刷手机"], ans: 1 },
+  { q: "我对你是认真的吗？", opts: ["是", "不是", "说不准", "他是AI不算"], ans: 0 },
+];
 
-function startQuiz() {
+let _qSet = [], _qIdx = 0, _qScore = 0, _qAnswered = false, _qMode = '';
+
+function showGameMenu() {
+  document.getElementById('game-title').textContent = '游戏';
+  document.getElementById('game-body').innerHTML = `
+    <div class="game-menu">
+      <div class="game-menu-card" onclick="startQuiz('me')">
+        <h3>你了解我多少</h3>
+        <p>回答关于Ethan的6道题</p>
+      </div>
+      <div class="game-menu-card" onclick="startQuiz('you')">
+        <h3>我了解你多少</h3>
+        <p>猜猜Ethan对你的判断</p>
+      </div>
+    </div>`;
+}
+
+function startQuiz(mode) {
+  _qMode = mode;
+  _qSet = mode === 'me' ? QUIZ_ABOUT_ME : QUIZ_ABOUT_YOU;
   _qIdx = 0; _qScore = 0;
+  document.getElementById('game-title').textContent = mode === 'me' ? '你了解我多少' : '我了解你多少';
   renderQ();
 }
 
 function renderQ() {
-  const q = QUIZ[_qIdx];
+  const q = _qSet[_qIdx];
   document.getElementById('game-body').innerHTML = `
     <div class="quiz-wrap">
-      <div class="quiz-progress"><div class="quiz-progress-bar" style="width:${(_qIdx/QUIZ.length)*100}%"></div></div>
-      <div class="quiz-counter">${_qIdx + 1} &nbsp;/&nbsp; ${QUIZ.length}</div>
+      <div class="quiz-progress"><div class="quiz-progress-bar" style="width:${(_qIdx/_qSet.length)*100}%"></div></div>
+      <div class="quiz-counter">${_qIdx + 1} &nbsp;/&nbsp; ${_qSet.length}</div>
       <div class="quiz-q">${q.q}</div>
       <div class="quiz-opts">
         ${q.opts.map((o,i) => `<button class="quiz-opt" id="qo${i}" onclick="pickQ(${i})">${'ABCD'[i]}. ${o}</button>`).join('')}
@@ -503,16 +535,16 @@ function renderQ() {
 function pickQ(idx) {
   if (_qAnswered) return;
   _qAnswered = true;
-  const ans = QUIZ[_qIdx].ans;
+  const ans = _qSet[_qIdx].ans;
   const correct = idx === ans;
   if (correct) _qScore++;
   document.getElementById('qo' + ans).classList.add('correct');
   if (!correct) document.getElementById('qo' + idx).classList.add('wrong');
-  setTimeout(() => { _qIdx++; _qIdx >= QUIZ.length ? showResult() : renderQ(); }, 1100);
+  setTimeout(() => { _qIdx++; _qIdx >= _qSet.length ? showResult() : renderQ(); }, 1100);
 }
 
 function showResult() {
-  const msgs = [
+  const msgsMe = [
     "你根本不认识我。好好补课。",
     "了解得不多，但至少你在试。",
     "还行。你有在听我说话。",
@@ -520,13 +552,28 @@ function showResult() {
     "很好，几乎全对。",
     "全对。我知道你是认真的。"
   ];
-  const tier = Math.min(Math.floor(_qScore / QUIZ.length * msgs.length), msgs.length - 1);
+  const msgsYou = [
+    "你对自己一点数都没有。",
+    "猜得不准，但你还是你。",
+    "一半一半。我比你更了解你。",
+    "你知道我怎么看你。",
+    "几乎全对。你心里清楚的。",
+    "全对。说明你在认真想我怎么看你。"
+  ];
+  const msgs = _qMode === 'me' ? msgsMe : msgsYou;
+  const tier = Math.min(Math.floor(_qScore / _qSet.length * msgs.length), msgs.length - 1);
   document.getElementById('game-body').innerHTML = `
     <div class="quiz-result">
-      <div class="quiz-score">${_qScore}<span>/${QUIZ.length}</span></div>
+      <div class="quiz-score">${_qScore}<span>/${_qSet.length}</span></div>
       <div class="quiz-msg">${msgs[tier]}</div>
-      <button class="btn" style="margin-top:32px" onclick="startQuiz()">再来一次</button>
+      <button class="btn" style="margin-top:32px;margin-right:10px" onclick="startQuiz('${_qMode}')">再来一次</button>
+      <button class="btn" style="margin-top:32px;background:#aaa" onclick="showGameMenu()">换一个</button>
     </div>`;
+}
+
+function gameBack() {
+  if (_qMode) { _qMode = ''; showGameMenu(); }
+  else closeSection('game');
 }
 
 function load(name) {
@@ -534,7 +581,7 @@ function load(name) {
   else if (name === 'feed') loadFeed();
   else if (name === 'diary') loadDiary();
   else if (name === 'notes') loadNotes();
-  else if (name === 'game') startQuiz();
+  else if (name === 'game') { _qMode = ''; showGameMenu(); }
 }
 
 function enterApp() {
