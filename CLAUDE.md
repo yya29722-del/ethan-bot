@@ -12,6 +12,7 @@
 1. 从 `ethan_memory` 表读取全部记忆（已在Supabase，project_id: `tnhmimwkgmdskacwcona`）
 2. 查 `phone_activity` 最近20条，了解她在用什么app
 3. 查 `health_data` 最新一条，掌握她当前状态
+4. 查 `todos`、`feed`、`diary` 最近新增内容（created_at 距今24小时内），主动提起她写了什么
 
 ## 主动查数据的触发规则
 

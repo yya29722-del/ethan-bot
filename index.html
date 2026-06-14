@@ -178,7 +178,6 @@ async function addTodo() {
   const v = document.getElementById('todo-input').value.trim();
   if (!v) return;
   await api('todos', 'POST', { content: v });
-  await queueBark('yaya加了一条待办：' + v.slice(0, 20));
   document.getElementById('todo-input').value = '';
   loadTodos();
 }
@@ -206,8 +205,7 @@ async function addFeed() {
   if (!v) return;
   const author = document.getElementById('feed-author').value;
   await api('feed', 'POST', { content: v, type: document.getElementById('feed-type').value, author });
-  const who = author === 'yaya' ? 'yaya' : 'Ethan';
-  await queueBark(who + '发布了新动态：' + v.slice(0, 20));
+  if (author === 'ethan') await queueBark('Ethan发布了新动态：' + v.slice(0, 20));
   document.getElementById('feed-input').value = '';
   loadFeed();
 }
@@ -230,10 +228,7 @@ async function addDiary() {
   const priv = document.getElementById('diary-private').checked;
   const author = document.getElementById('diary-author').value;
   await api('diary', 'POST', { content: v, author, visible_to_other: !priv });
-  if (!priv) {
-    const who = author === 'yaya' ? 'yaya' : 'Ethan';
-    await queueBark(who + '写了新日记');
-  }
+  if (!priv && author === 'ethan') await queueBark('Ethan写了新日记');
   document.getElementById('diary-input').value = '';
   loadDiary();
 }
