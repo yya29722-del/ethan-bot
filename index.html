@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>yaya & Ethan</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #faf9f7; color: #2c2c2c; min-height: 100vh; }
+
+  header { padding: 20px 20px 0; text-align: center; }
+  header h1 { font-size: 18px; font-weight: 500; letter-spacing: 2px; color: #888; }
+
+  nav { display: flex; border-bottom: 1px solid #e8e4df; margin-top: 16px; }
+  nav button { flex: 1; padding: 12px 4px; background: none; border: none; font-size: 13px; color: #aaa; cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; }
+  nav button.active { color: #2c2c2c; border-bottom-color: #2c2c2c; }
+
+  .tab { display: none; padding: 20px; }
+  .tab.active { display: block; }
+
+  .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .card .meta { font-size: 11px; color: #bbb; margin-bottom: 6px; }
+  .card .body { font-size: 15px; line-height: 1.6; }
+  .card .comment { margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0ede9; font-size: 13px; color: #888; }
+  .card .comment span { color: #c9a96e; font-weight: 500; }
+
+  .todo-card { display: flex; gap: 12px; align-items: flex-start; }
+  .todo-card input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; accent-color: #2c2c2c; flex-shrink: 0; }
+  .todo-card .todo-text { flex: 1; }
+  .todo-card.done .body { text-decoration: line-through; color: #bbb; }
+
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px; }
+  .tag.event { background: #f0ede9; color: #888; }
+  .tag.quote { background: #e8f0fe; color: #5b7abf; }
+  .tag.emotion { background: #fce8e8; color: #bf5b5b; }
+  .tag.note { background: #f0ede9; color: #888; }
+
+  .author-yaya { border-left: 3px solid #e8b4b8; }
+  .author-ethan { border-left: 3px solid #b4c8e8; }
+
+  .input-area { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .input-area textarea { width: 100%; border: 1px solid #e8e4df; border-radius: 8px; padding: 10px; font-size: 14px; font-family: inherit; resize: none; outline: none; background: #faf9f7; }
+  .input-area textarea:focus { border-color: #c9a96e; }
+  .input-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+  .input-row select { flex: 1; border: 1px solid #e8e4df; border-radius: 8px; padding: 8px; font-size: 13px; background: #faf9f7; outline: none; }
+  .btn { padding: 8px 16px; background: #2c2c2c; color: #fff; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .btn:active { opacity: .8; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  .diary-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #888; }
+  .diary-toggle input { accent-color: #2c2c2c; }
+
+  .section-title { font-size: 11px; color: #bbb; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+
+  .note-category { font-size: 11px; color: #c9a96e; font-weight: 500; margin-bottom: 4px; }
+
+  .empty { text-align: center; padding: 40px 20px; color: #ccc; font-size: 14px; }
+
+  .private-badge { font-size: 10px; color: #e8a0a0; background: #fce8e8; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Y A Y A &nbsp;&amp;&nbsp; E T H A N</h1>
+</header>
+
+<nav>
+  <button class="active" onclick="switchTab('todos')">待办</button>
+  <button onclick="switchTab('feed')">动态</button>
+  <button onclick="switchTab('diary')">日记</button>
+  <button onclick="switchTab('notes')">关于你</button>
+</nav>
+
+<!-- 待办 -->
+<div id="tab-todos" class="tab active">
+  <div class="input-area">
+    <textarea id="todo-input" rows="2" placeholder="添加待办…"></textarea>
+    <div class="input-row">
+      <button class="btn btn-sm" onclick="addTodo()">添加</button>
+    </div>
+  </div>
+  <div id="todos-list"><div class="empty">暂无待办</div></div>
+</div>
+
+<!-- 动态 -->
+<div id="tab-feed" class="tab">
+  <div class="input-area">
+    <textarea id="feed-input" rows="3" placeholder="记录此刻…"></textarea>
+    <div class="input-row">
+      <select id="feed-type">
+        <option value="note">随记</option>
+        <option value="event">事件</option>
+        <option value="quote">话语</option>
+        <option value="emotion">情感</option>
+      </select>
+      <select id="feed-author">
+        <option value="yaya">yaya</option>
+        <option value="ethan">Ethan</option>
+      </select>
+      <button class="btn btn-sm" onclick="addFeed()">发布</button>
+    </div>
+  </div>
+  <div id="feed-list"><div class="empty">暂无动态</div></div>
+</div>
+
+<!-- 日记 -->
+<div id="tab-diary" class="tab">
+  <div class="input-area">
+    <textarea id="diary-input" rows="5" placeholder="今天…"></textarea>
+    <div class="input-row">
+      <select id="diary-author">
+        <option value="yaya">yaya的日记</option>
+        <option value="ethan">Ethan的日记</option>
+      </select>
+      <label class="diary-toggle">
+        <input type="checkbox" id="diary-private"> 私密
+      </label>
+      <button class="btn btn-sm" onclick="addDiary()">写下</button>
+    </div>
+  </div>
+  <div id="diary-list"><div class="empty">暂无日记</div></div>
+</div>
+
+<!-- 关于yaya的记事本 -->
+<div id="tab-notes" class="tab">
+  <div class="section-title">Ethan关于yaya的记录</div>
+  <div id="notes-list"><div class="empty">暂无记录</div></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://tnhmimwkgmdskacwcona.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuaG1pbXdrZ21kc2thY3djb25hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTk2MDAsImV4cCI6MjA5Njg5NTYwMH0.KUNhT-8Hy2Uy8snd_GaCyl_HFIZwjS_z-CzwSv8daa0';
+
+const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+
+async function api(path, method='GET', body=null) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { method, headers, body: body ? JSON.stringify(body) : null });
+  if (!res.ok) throw new Error(await res.text());
+  return method === 'GET' ? res.json() : res.json().catch(() => null);
+}
+
+function fmt(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('zh', {month:'numeric',day:'numeric'}) + ' ' + d.toLocaleTimeString('zh', {hour:'2-digit',minute:'2-digit'});
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  load(name);
+}
+
+// TODOS
+async function loadTodos() {
+  const data = await api('todos?select=*&order=created_at.desc');
+  const el = document.getElementById('todos-list');
+  if (!data.length) { el.innerHTML = '<div class="empty">暂无待办</div>'; return; }
+  el.innerHTML = data.map(t => `
+    <div class="card todo-card ${t.completed ? 'done' : ''}">
+      <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTodo(${t.id}, this.checked)">
+      <div class="todo-text">
+        <div class="meta">${fmt(t.created_at)}</div>
+        <div class="body">${t.content}</div>
+        ${t.ethan_comment ? `<div class="comment"><span>Ethan：</span>${t.ethan_comment}</div>` : ''}
+        ${t.ethan_reminder ? `<div class="comment"><span>提醒：</span>${t.ethan_reminder}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function queueBark(msg) {
+  try { await api('pending_bark', 'POST', { message: msg }); } catch(e) {}
+}
+
+async function addTodo() {
+  const v = document.getElementById('todo-input').value.trim();
+  if (!v) return;
+  await api('todos', 'POST', { content: v });
+  await queueBark('yaya加了一条待办：' + v.slice(0, 20));
+  document.getElementById('todo-input').value = '';
+  loadTodos();
+}
+
+async function toggleTodo(id, completed) {
+  await api('todos?id=eq.' + id, 'PATCH', { completed });
+  loadTodos();
+}
+
+// FEED
+async function loadFeed() {
+  const data = await api('feed?select=*&order=created_at.desc&limit=50');
+  const el = document.getElementById('feed-list');
+  if (!data.length) { el.innerHTML = '<div class="empty">暂无动态</div>'; return; }
+  el.innerHTML = data.map(f => `
+    <div class="card author-${f.author}">
+      <span class="tag ${f.type}">${{note:'随记',event:'事件',quote:'话语',emotion:'情感'}[f.type]||f.type}</span>
+      <div class="meta">${f.author === 'ethan' ? 'Ethan' : 'yaya'} · ${fmt(f.created_at)}</div>
+      <div class="body">${f.content}</div>
+    </div>`).join('');
+}
+
+async function addFeed() {
+  const v = document.getElementById('feed-input').value.trim();
+  if (!v) return;
+  const author = document.getElementById('feed-author').value;
+  await api('feed', 'POST', { content: v, type: document.getElementById('feed-type').value, author });
+  const who = author === 'yaya' ? 'yaya' : 'Ethan';
+  await queueBark(who + '发布了新动态：' + v.slice(0, 20));
+  document.getElementById('feed-input').value = '';
+  loadFeed();
+}
+
+// DIARY
+async function loadDiary() {
+  const data = await api('diary?select=*&order=created_at.desc&limit=30');
+  const el = document.getElementById('diary-list');
+  if (!data.length) { el.innerHTML = '<div class="empty">暂无日记</div>'; return; }
+  el.innerHTML = data.map(d => `
+    <div class="card author-${d.author}">
+      <div class="meta">${d.author === 'ethan' ? 'Ethan' : 'yaya'} · ${fmt(d.created_at)}${!d.visible_to_other ? '<span class="private-badge">私密</span>' : ''}</div>
+      <div class="body">${d.content}</div>
+    </div>`).join('');
+}
+
+async function addDiary() {
+  const v = document.getElementById('diary-input').value.trim();
+  if (!v) return;
+  const priv = document.getElementById('diary-private').checked;
+  const author = document.getElementById('diary-author').value;
+  await api('diary', 'POST', { content: v, author, visible_to_other: !priv });
+  if (!priv) {
+    const who = author === 'yaya' ? 'yaya' : 'Ethan';
+    await queueBark(who + '写了新日记');
+  }
+  document.getElementById('diary-input').value = '';
+  loadDiary();
+}
+
+// NOTES
+async function loadNotes() {
+  const data = await api('yaya_notes?select=*&order=created_at.desc');
+  const el = document.getElementById('notes-list');
+  if (!data.length) { el.innerHTML = '<div class="empty">暂无记录</div>'; return; }
+  el.innerHTML = data.map(n => `
+    <div class="card">
+      ${n.category ? `<div class="note-category">${n.category}</div>` : ''}
+      <div class="meta">${n.date_ref || fmt(n.created_at)}</div>
+      <div class="body">${n.content}</div>
+    </div>`).join('');
+}
+
+function load(name) {
+  if (name === 'todos') loadTodos();
+  else if (name === 'feed') loadFeed();
+  else if (name === 'diary') loadDiary();
+  else if (name === 'notes') loadNotes();
+}
+
+loadTodos();
+</script>
+</body>
+</html>

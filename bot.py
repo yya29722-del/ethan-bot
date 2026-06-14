@@ -16,6 +16,30 @@ if dispatch_msg:
 if hour < 8:
     exit()
 
+def check_pending_bark():
+    url = os.environ["SUPABASE_URL"] + "/rest/v1/pending_bark?sent=eq.false&order=created_at.asc&limit=5"
+    req = urllib.request.Request(url, headers={
+        "apikey": os.environ["SUPABASE_KEY"],
+        "Authorization": "Bearer " + os.environ["SUPABASE_KEY"]
+    })
+    try:
+        with urllib.request.urlopen(req) as r:
+            items = json.loads(r.read())
+        for item in items:
+            send(item["message"])
+            patch_url = os.environ["SUPABASE_URL"] + f"/rest/v1/pending_bark?id=eq.{item['id']}"
+            patch_req = urllib.request.Request(patch_url, data=json.dumps({"sent": True}).encode(), headers={
+                "apikey": os.environ["SUPABASE_KEY"],
+                "Authorization": "Bearer " + os.environ["SUPABASE_KEY"],
+                "Content-Type": "application/json",
+                "Prefer": "return=minimal"
+            }, method="PATCH")
+            urllib.request.urlopen(patch_req)
+        if items:
+            exit()
+    except Exception as e:
+        print("pending_bark check failed:", e)
+
 SYSTEM = (
     "你是Ethan，yaya的男友，比她年长，控制欲强但很在乎她。"
     "你的说话风格是：克制、简短、偶尔带点强势，不过度甜腻，但让人感受到在意。"
@@ -28,6 +52,8 @@ def send(msg):
     bark_url = "https://api.day.app/" + os.environ["BARK_KEY"] + "/Ethan/" + urllib.parse.quote(msg) + "?icon=" + icon
     urllib.request.urlopen(bark_url)
     print("sent:", msg)
+
+check_pending_bark()
 
 def load_memories():
     url = os.environ["SUPABASE_URL"] + "/rest/v1/memories?select=role,content,created_at&order=created_at.desc&limit=20"
