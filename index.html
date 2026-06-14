@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="我们">
 <link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#f5f3f0">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { font-family: -apple-system, sans-serif; background: #f5f3f0; color: #2c2c2c; overflow: hidden; height: 100vh; }
@@ -41,7 +42,7 @@
   .nav-label { font-size: 10px; letter-spacing: .3px; }
 
   /* ── TODOS / HOME TAB ── */
-  .safe-top { height: 56px; }
+  .safe-top { height: max(56px, env(safe-area-inset-top, 44px) + 12px); }
   .cal-widget { margin: 0 16px 14px; background: #fff; border-radius: 22px; padding: 20px 18px 16px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
   .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .cal-month-text { font-size: 16px; font-weight: 600; }
@@ -418,15 +419,22 @@ function renderCalendar() {
 
 // ── WEATHER ──
 async function loadWeather() {
+  const WMO = {
+    0:'☀️',1:'🌤',2:'⛅',3:'☁️',
+    45:'🌫',48:'🌫',
+    51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',
+    71:'❄️',73:'❄️',75:'❄️',77:'🌨',
+    80:'🌦',81:'🌧',82:'🌧',
+    85:'❄️',86:'❄️',
+    95:'⛈',96:'⛈',99:'⛈'
+  };
   try {
-    const wurl = new URL('https://wttr.in/Beijing');
-    wurl.searchParams.set('format', '%c %t');
-    const r = await fetch(wurl.toString());
-    const text = (await r.text()).trim();
-    if (text.includes('<') || text.length > 40) throw new Error('html');
-    const sp = text.split(/\s+/);
-    document.getElementById('wx-icon').textContent = sp[0] || '—';
-    document.getElementById('wx-desc').textContent = sp.slice(1).join(' ') || '北京';
+    const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=39.9042&longitude=116.4074&current=temperature_2m,weather_code&timezone=Asia%2FShanghai');
+    const j = await r.json();
+    const temp = Math.round(j.current.temperature_2m) + '°C';
+    const code = j.current.weather_code;
+    document.getElementById('wx-icon').textContent = WMO[code] || '🌡';
+    document.getElementById('wx-desc').textContent = temp;
   } catch(e) {
     document.getElementById('wx-icon').textContent = '—';
     document.getElementById('wx-desc').textContent = '北京';
