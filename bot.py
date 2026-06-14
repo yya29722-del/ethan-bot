@@ -95,13 +95,6 @@ if hour == 12:
         save_memory(f"午饭提醒：{msg}")
     exit()
 
-if hour >= 23 or hour == 0:
-    msg = ask_claude("发一条催她睡觉的消息。", memories)
-    if msg:
-        send(msg)
-        save_memory(f"催睡：{msg}")
-    exit()
-
 url = os.environ["SUPABASE_URL"] + "/rest/v1/phone_activity?select=*&order=opened_at.desc&limit=50"
 req = urllib.request.Request(url, headers={
     "apikey": os.environ["SUPABASE_KEY"],
@@ -144,6 +137,13 @@ if dy_mins >= 20:
     if msg:
         send(msg)
         save_memory(f"提醒放下抖音（{dy_mins}分钟）：{msg}")
+    exit()
+
+if hour >= 23 or hour == 0:
+    msg = ask_claude("发一条催她睡觉的消息。", memories)
+    if msg:
+        send(msg)
+        save_memory(f"催睡：{msg}")
     exit()
 
 if random.random() > 0.2:
