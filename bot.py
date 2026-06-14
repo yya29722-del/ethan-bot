@@ -2,6 +2,17 @@ import urllib.request, json, urllib.parse, os, random, time
 from datetime import datetime, timezone, timedelta
 
 hour = (datetime.now(timezone.utc) + timedelta(hours=8)).hour
+
+dispatch_msg = os.environ.get("DISPATCH_MESSAGE", "").strip()
+if dispatch_msg:
+    def send(msg):
+        icon = urllib.parse.quote("https://i.postimg.cc/xcs6C4WY/IMG-9570.jpg", safe="")
+        bark_url = "https://api.day.app/" + os.environ["BARK_KEY"] + "/Ethan/" + urllib.parse.quote(msg) + "?icon=" + icon
+        urllib.request.urlopen(bark_url)
+        print("sent:", msg)
+    send(dispatch_msg)
+    exit()
+
 if hour < 8:
     exit()
 
