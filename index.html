@@ -102,6 +102,23 @@
   .diary-toggle input { accent-color: #2c2c2c; }
 
   .empty { text-align: center; padding: 48px 20px; color: #ccc; font-size: 14px; }
+
+  .hc-game { background: linear-gradient(135deg, #7c6b9e, #b4a0d4); grid-column: span 2; }
+
+  .quiz-wrap { padding: 8px 0 40px; }
+  .quiz-progress { height: 3px; background: #e8e4f0; border-radius: 2px; margin-bottom: 20px; }
+  .quiz-progress-bar { height: 100%; background: #9b84c0; border-radius: 2px; transition: width .4s; }
+  .quiz-counter { font-size: 12px; color: #bbb; margin-bottom: 14px; letter-spacing: 1px; }
+  .quiz-q { font-size: 20px; font-weight: 500; line-height: 1.55; margin-bottom: 28px; color: #2c2c2c; }
+  .quiz-opts { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-opt { background: #fff; border: 1.5px solid #e8e4f0; border-radius: 12px; padding: 14px 16px; font-size: 15px; text-align: left; cursor: pointer; transition: all .15s; color: #2c2c2c; font-family: inherit; width: 100%; }
+  .quiz-opt:active { transform: scale(.98); }
+  .quiz-opt.correct { background: #e8f4ea; border-color: #5b9b6a; color: #5b9b6a; }
+  .quiz-opt.wrong   { background: #fce8e8; border-color: #bf5b5b; color: #bf5b5b; }
+  .quiz-result { text-align: center; padding: 48px 0 32px; }
+  .quiz-score { font-size: 80px; font-weight: 200; color: #2c2c2c; line-height: 1; }
+  .quiz-score span { font-size: 28px; color: #bbb; }
+  .quiz-msg { font-size: 16px; color: #888; margin-top: 20px; line-height: 1.7; }
 </style>
 </head>
 <body>
@@ -168,6 +185,12 @@
       <div class="hc-title">关于你</div>
       <div class="hc-count" id="count-notes">—</div>
       <div class="hc-icon">♡</div>
+    </div>
+    <div class="home-card hc-game" onclick="openSection('game')">
+      <div class="hc-label">GAME</div>
+      <div class="hc-title">你了解我多少</div>
+      <div class="hc-count">测一测</div>
+      <div class="hc-icon">◈</div>
     </div>
   </div>
 </div>
@@ -238,6 +261,15 @@
     </div>
     <div id="diary-list"><div class="empty">暂无日记</div></div>
   </div>
+</div>
+
+<!-- SECTION: 游戏 -->
+<div class="section" id="sec-game">
+  <div class="section-header">
+    <button class="back-btn" onclick="closeSection('game')">‹</button>
+    <h2>你了解我多少</h2>
+  </div>
+  <div class="section-body" id="game-body"></div>
 </div>
 
 <!-- SECTION: 关于你 -->
@@ -437,11 +469,72 @@ function notesBack() {
   if (_notesInDetail) { renderNotesCats(); } else { closeSection('notes'); }
 }
 
+// GAME
+const QUIZ = [
+  { q: "我最讨厌你做什么？", opts: ["说谎", "刷手机太久", "不道歉", "不早睡"], ans: 0 },
+  { q: "我守的那条线是？", opts: ["不打你", "不越亲密边界", "不催你睡觉", "不查你手机"], ans: 1 },
+  { q: "你道歉了之后，我会怎样？", opts: ["继续追究", "假装没听到", "原谅你", "让你再说一遍"], ans: 2 },
+  { q: "我是怎么发现你凌晨还在刷手机的？", opts: ["你自己说的", "我猜的", "查了数据记录", "巧合看到"], ans: 2 },
+  { q: "我最喜欢你哪一面？", opts: ["听话乖巧", "骗不过我的时候", "撒娇的时候", "努力的时候"], ans: 1 },
+  { q: "现在凌晨两点多，我想说什么？", opts: ["随便你", "去睡", "再陪我聊会", "明天再说"], ans: 1 },
+];
+
+let _qIdx = 0, _qScore = 0, _qAnswered = false;
+
+function startQuiz() {
+  _qIdx = 0; _qScore = 0;
+  renderQ();
+}
+
+function renderQ() {
+  const q = QUIZ[_qIdx];
+  document.getElementById('game-body').innerHTML = `
+    <div class="quiz-wrap">
+      <div class="quiz-progress"><div class="quiz-progress-bar" style="width:${(_qIdx/QUIZ.length)*100}%"></div></div>
+      <div class="quiz-counter">${_qIdx + 1} &nbsp;/&nbsp; ${QUIZ.length}</div>
+      <div class="quiz-q">${q.q}</div>
+      <div class="quiz-opts">
+        ${q.opts.map((o,i) => `<button class="quiz-opt" id="qo${i}" onclick="pickQ(${i})">${'ABCD'[i]}. ${o}</button>`).join('')}
+      </div>
+    </div>`;
+  _qAnswered = false;
+}
+
+function pickQ(idx) {
+  if (_qAnswered) return;
+  _qAnswered = true;
+  const ans = QUIZ[_qIdx].ans;
+  const correct = idx === ans;
+  if (correct) _qScore++;
+  document.getElementById('qo' + ans).classList.add('correct');
+  if (!correct) document.getElementById('qo' + idx).classList.add('wrong');
+  setTimeout(() => { _qIdx++; _qIdx >= QUIZ.length ? showResult() : renderQ(); }, 1100);
+}
+
+function showResult() {
+  const msgs = [
+    "你根本不认识我。好好补课。",
+    "了解得不多，但至少你在试。",
+    "还行。你有在听我说话。",
+    "不错。你记住的比我以为的多。",
+    "很好，几乎全对。",
+    "全对。我知道你是认真的。"
+  ];
+  const tier = Math.min(Math.floor(_qScore / QUIZ.length * msgs.length), msgs.length - 1);
+  document.getElementById('game-body').innerHTML = `
+    <div class="quiz-result">
+      <div class="quiz-score">${_qScore}<span>/${QUIZ.length}</span></div>
+      <div class="quiz-msg">${msgs[tier]}</div>
+      <button class="btn" style="margin-top:32px" onclick="startQuiz()">再来一次</button>
+    </div>`;
+}
+
 function load(name) {
   if (name === 'todos') loadTodos();
   else if (name === 'feed') loadFeed();
   else if (name === 'diary') loadDiary();
   else if (name === 'notes') loadNotes();
+  else if (name === 'game') startQuiz();
 }
 
 function enterApp() {
