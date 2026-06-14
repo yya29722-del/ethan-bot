@@ -247,7 +247,7 @@ def check_uncommented_todos():
         with urllib.request.urlopen(req) as r:
             todos = json.loads(r.read())
         for todo in todos:
-            comment = ask_claude(f"她的待办："{todo['content']}"。写一条简短的评论或提醒，3-10字。", memories)
+            comment = ask_claude(f"她的待办：「{todo['content']}」。写一条简短的评论或提醒，3-10字。", memories)
             if comment:
                 patch_url = os.environ["SUPABASE_URL"] + f"/rest/v1/todos?id=eq.{todo['id']}"
                 patch_req = urllib.request.Request(patch_url, data=json.dumps({"ethan_comment": comment}).encode(), headers={
