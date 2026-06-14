@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon.png">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, sans-serif; background: #f5f3f0; color: #2c2c2c; min-height: 100vh; overflow-x: hidden; }
+  body { font-family: -apple-system, sans-serif; background: #f5f3f0; color: #2c2c2c; overflow: hidden; height: 100vh; }
 
   /* COVER */
   #cover { position: fixed; inset: 0; background: #1a1814; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity .6s ease; }
@@ -23,63 +23,96 @@
   .cover-btn { margin-top: 56px; padding: 12px 32px; border: 1px solid rgba(255,255,255,.2); border-radius: 30px; background: none; color: rgba(255,255,255,.6); font-size: 13px; letter-spacing: 2px; cursor: pointer; transition: all .2s; }
   .cover-btn:active { background: rgba(255,255,255,.1); }
 
-  /* HOME */
-  #home { padding: 0 0 40px; }
-  .home-header { padding: 56px 24px 24px; }
-  .home-header h1 { font-size: 13px; font-weight: 400; letter-spacing: 3px; color: #bbb; }
-  .home-header p { font-size: 24px; font-weight: 300; color: #2c2c2c; margin-top: 6px; }
+  /* APP */
+  #app { position: fixed; inset: 0; display: none; }
+  .tab-page { position: absolute; top: 0; left: 0; right: 0; bottom: 60px; overflow-y: auto; -webkit-overflow-scrolling: touch; display: none; background: #f5f3f0; }
+  .tab-page.active { display: block; }
 
-  .home-grid { padding: 0 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .home-card { border-radius: 20px; padding: 22px 20px; cursor: pointer; position: relative; overflow: hidden; transition: transform .15s; }
-  .home-card:active { transform: scale(.97); }
-  .home-card .hc-label { font-size: 11px; letter-spacing: 1px; color: rgba(255,255,255,.7); margin-bottom: 8px; }
-  .home-card .hc-title { font-size: 20px; font-weight: 500; color: #fff; }
-  .home-card .hc-count { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 6px; }
-  .home-card .hc-icon { font-size: 36px; position: absolute; right: 16px; bottom: 16px; opacity: .25; }
+  /* BOTTOM NAV */
+  #bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: rgba(255,255,255,.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(0,0,0,.07); display: flex; z-index: 10; padding-bottom: env(safe-area-inset-bottom,0); }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; color: #c8c4be; cursor: pointer; padding: 0; font-family: inherit; }
+  .nav-btn.active { color: #2c2c2c; }
+  .nav-icon { font-size: 19px; line-height: 1; }
+  .nav-label { font-size: 10px; letter-spacing: .3px; }
 
-  .hc-todos { background: linear-gradient(135deg, #3a3a3a, #5a5a5a); }
-  .hc-feed  { background: linear-gradient(135deg, #c9a96e, #e0c08a); }
-  .hc-diary { background: linear-gradient(135deg, #b4c8e8, #8aadd4); }
-  .hc-notes { background: linear-gradient(135deg, #e8b4b8, #d48a90); }
+  /* ── TODOS / HOME TAB ── */
+  .safe-top { height: 56px; }
+  .cal-widget { margin: 0 16px 14px; background: #fff; border-radius: 22px; padding: 20px 18px 16px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cal-month-text { font-size: 16px; font-weight: 600; }
+  .cal-rel-days { font-size: 12px; color: #c9a96e; font-weight: 500; }
+  .cal-wdays { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 6px; }
+  .cal-wday { text-align: center; font-size: 10px; color: #ccc; font-weight: 600; padding: 2px 0; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+  .cal-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #888; border-radius: 50%; }
+  .cal-cell.today { background: #2c2c2c; color: #fff; font-weight: 600; }
+  .cal-cell.faded { color: #ddd; }
 
-  /* SECTION */
-  .section { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #f5f3f0; overflow-y: auto; transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1); z-index: 10; }
-  .section.open { display: block; transform: translateX(0); }
+  .weather-bar { margin: 0 16px 14px; display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #fff; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .weather-emoji { font-size: 24px; flex-shrink: 0; }
+  .weather-city { font-size: 11px; color: #bbb; }
+  .weather-temp { font-size: 14px; font-weight: 500; margin-top: 1px; }
 
-  .section-header { position: sticky; top: 0; background: #f5f3f0; padding: 52px 20px 16px; display: flex; align-items: center; gap: 12px; z-index: 5; border-bottom: 1px solid rgba(0,0,0,.06); }
-  .back-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #888; padding: 0 4px; }
-  .section-header h2 { font-size: 18px; font-weight: 500; }
+  .home-sec-label { font-size: 10px; letter-spacing: 2.5px; color: #bbb; padding: 4px 20px 10px; font-weight: 600; }
+  .home-add-row { display: flex; gap: 8px; padding: 0 16px 10px; }
+  .home-add-input { flex: 1; padding: 10px 14px; background: #fff; border: none; border-radius: 22px; font-size: 14px; font-family: inherit; outline: none; box-shadow: 0 1px 4px rgba(0,0,0,.06); color: #2c2c2c; }
 
-  .section-body { padding: 16px 16px 60px; }
+  /* ── FEED / TIMELINE TAB ── */
+  .feed-header { padding: 60px 20px 0; display: flex; align-items: flex-end; justify-content: space-between; }
+  .feed-title { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+  .feed-add-btn { width: 34px; height: 34px; border-radius: 50%; background: #2c2c2c; color: #fff; font-size: 22px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; }
+  .tl-filters { display: flex; padding: 12px 14px 0; border-bottom: 1px solid rgba(0,0,0,.06); gap: 0; }
+  .tl-filter { padding: 8px 12px; font-size: 13px; color: #bbb; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; margin-bottom: -1px; font-family: inherit; }
+  .tl-filter.active { color: #2c2c2c; border-bottom-color: #2c2c2c; }
 
-  /* CARDS */
+  .feed-input-panel { display: none; margin: 14px 16px 2px; background: #fff; border-radius: 18px; padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+  .feed-input-panel.open { display: block; }
+  .feed-input-panel textarea { width: 100%; border: none; outline: none; font-size: 15px; font-family: inherit; resize: none; background: transparent; color: #2c2c2c; line-height: 1.6; }
+  .feed-input-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; border-top: 1px solid #f0ede9; padding-top: 10px; }
+  .feed-input-row select { flex: 1; border: none; outline: none; font-size: 13px; background: transparent; color: #888; font-family: inherit; }
+
+  /* Timeline */
+  .timeline-wrap { padding: 16px 16px 30px; }
+  .tl-group { display: flex; align-items: flex-start; }
+  .tl-left { width: 42px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+  .tl-date-lbl { font-size: 10px; color: #bbb; font-weight: 600; white-space: nowrap; padding-top: 4px; text-align: center; line-height: 1.4; }
+  .tl-spine { display: flex; flex-direction: column; align-items: center; width: 100%; flex: 1; }
+  .tl-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc8c2; flex-shrink: 0; margin-top: 6px; }
+  .tl-line { width: 1.5px; background: linear-gradient(to bottom, #e0dcd6, #ede9e3); flex: 1; min-height: 20px; margin-top: 5px; }
+  .tl-cards { flex: 1; padding-left: 10px; padding-bottom: 14px; }
+  .tl-card { background: #fff; border-radius: 16px; padding: 13px 14px; margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+  .tl-card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .tl-type-pip { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .tl-type-name { font-size: 11px; font-weight: 700; }
+  .tl-author-tag { font-size: 11px; color: #bbb; }
+  .tl-time-tag { font-size: 11px; color: #bbb; margin-left: auto; }
+  .tl-del-btn { background: none; border: none; color: #ddd; font-size: 16px; cursor: pointer; padding: 0 0 0 6px; line-height: 1; flex-shrink: 0; }
+  .tl-content { font-size: 15px; line-height: 1.65; color: #2c2c2c; white-space: pre-wrap; }
+
+  /* ── SHARED ── */
+  .page-header { padding: 60px 20px 14px; border-bottom: 1px solid rgba(0,0,0,.06); background: #f5f3f0; }
+  .page-title { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+  .page-body { padding: 16px 16px 30px; }
+
   .card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.05); position: relative; }
   .card .meta { font-size: 11px; color: #bbb; margin-bottom: 6px; }
   .card .body { font-size: 15px; line-height: 1.65; white-space: pre-wrap; }
   .card .comment { margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0ede9; font-size: 13px; color: #999; line-height: 1.5; }
   .card .comment span { color: #c9a96e; font-weight: 500; }
-
   .todo-row { display: flex; gap: 12px; align-items: flex-start; }
   .todo-row input[type=checkbox] { margin-top: 3px; width: 17px; height: 17px; accent-color: #2c2c2c; flex-shrink: 0; }
   .todo-row .todo-text { flex: 1; }
   .card.done .body { text-decoration: line-through; color: #ccc; }
-
-  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px; }
-  .tag.note    { background: #f0ede9; color: #999; }
-  .tag.event   { background: #e8f4ea; color: #5b9b6a; }
-  .tag.quote   { background: #e8f0fe; color: #5b7abf; }
-  .tag.emotion { background: #fce8e8; color: #bf5b5b; }
+  .del-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #e0dbd5; font-size: 18px; cursor: pointer; line-height: 1; }
 
   .stripe-yaya  { border-left: 3px solid #e8b4b8; }
   .stripe-ethan { border-left: 3px solid #b4c8e8; }
-
-  .note-cat { font-size: 11px; color: #c9a96e; font-weight: 600; letter-spacing: .5px; margin-bottom: 4px; }
   .private-badge { font-size: 10px; color: #e8a0a0; background: #fce8e8; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
 
   .cat-grid { display: flex; flex-direction: column; gap: 10px; }
   .cat-card { background: #fff; border-radius: 14px; padding: 18px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,.05); transition: transform .15s; }
   .cat-card:active { transform: scale(.98); }
-  .cat-card-name { font-size: 17px; font-weight: 500; color: #2c2c2c; margin-bottom: 3px; }
+  .cat-card-name { font-size: 17px; font-weight: 500; margin-bottom: 3px; }
   .cat-card-count { font-size: 12px; color: #bbb; }
   .cat-card-arrow { color: #ddd; font-size: 20px; }
   .cat-月经 { border-left: 3px solid #e8b4b8; }
@@ -87,29 +120,31 @@
   .cat-身体 { border-left: 3px solid #b4e8c8; }
   .cat-日常 { border-left: 3px solid #e8d4b4; }
   .cat-重要 { border-left: 3px solid #c9a96e; }
-  .notes-back-btn { background: none; border: none; color: #aaa; font-size: 15px; padding: 0 0 16px; cursor: pointer; display: block; }
 
-  .del-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #e0dbd5; font-size: 18px; cursor: pointer; line-height: 1; }
-
-  /* INPUT */
   .input-area { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
   .input-area textarea { width: 100%; border: none; outline: none; font-size: 15px; font-family: inherit; resize: none; background: transparent; color: #2c2c2c; line-height: 1.6; }
   .input-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; border-top: 1px solid #f0ede9; padding-top: 10px; }
-  .input-row select { flex: 1; border: none; outline: none; font-size: 13px; background: transparent; color: #888; }
-  .btn { padding: 8px 18px; background: #2c2c2c; color: #fff; border: none; border-radius: 20px; font-size: 13px; cursor: pointer; }
+  .input-row select { flex: 1; border: none; outline: none; font-size: 13px; background: transparent; color: #888; font-family: inherit; }
+  .btn { padding: 8px 18px; background: #2c2c2c; color: #fff; border: none; border-radius: 20px; font-size: 13px; cursor: pointer; font-family: inherit; }
   .btn:active { opacity: .8; }
   .diary-toggle { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #aaa; }
   .diary-toggle input { accent-color: #2c2c2c; }
 
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px; }
+  .tag.note    { background: #f0ede9; color: #999; }
+  .tag.event   { background: #e8f4ea; color: #5b9b6a; }
+  .tag.quote   { background: #e8f0fe; color: #5b7abf; }
+  .tag.emotion { background: #fce8e8; color: #bf5b5b; }
+  .tag.gacha   { background: linear-gradient(135deg, #c8b4e8, #e8b4b8); color: #fff; font-weight: 600; }
+  .gacha-banner { display: inline-block; background: linear-gradient(135deg, #c8b4e8, #e8b4b8); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 5px 12px; border-radius: 10px; margin-bottom: 10px; }
   .empty { text-align: center; padding: 48px 20px; color: #ccc; font-size: 14px; }
 
-  .hc-game { background: linear-gradient(135deg, #7c6b9e, #b4a0d4); grid-column: span 2; }
-
+  /* QUIZ / GACHA */
   .quiz-wrap { padding: 8px 0 40px; }
   .quiz-progress { height: 3px; background: #e8e4f0; border-radius: 2px; margin-bottom: 20px; }
   .quiz-progress-bar { height: 100%; background: #9b84c0; border-radius: 2px; transition: width .4s; }
   .quiz-counter { font-size: 12px; color: #bbb; margin-bottom: 14px; letter-spacing: 1px; }
-  .quiz-q { font-size: 20px; font-weight: 500; line-height: 1.55; margin-bottom: 28px; color: #2c2c2c; }
+  .quiz-q { font-size: 20px; font-weight: 500; line-height: 1.55; margin-bottom: 28px; }
   .quiz-opts { display: flex; flex-direction: column; gap: 10px; }
   .quiz-opt { background: #fff; border: 1.5px solid #e8e4f0; border-radius: 12px; padding: 12px 16px; font-size: 15px; cursor: pointer; transition: all .15s; color: #2c2c2c; font-family: inherit; width: 100%; display: flex; align-items: center; }
   .quiz-opt:active { transform: scale(.98); }
@@ -124,8 +159,9 @@
   .game-menu-card:active { transform: scale(.98); }
   .game-menu-card h3 { font-size: 17px; font-weight: 500; margin-bottom: 5px; }
   .game-menu-card p { font-size: 13px; color: #bbb; }
-  .game-menu-card-disabled { opacity: .45; cursor: default; }
-  .game-menu-card-disabled:active { transform: none; }
+  .q-letter-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #f0ede9; color: #aaa; font-size: 11px; font-weight: 700; margin-right: 10px; flex-shrink: 0; transition: background .2s, color .2s; }
+  .quiz-opt.correct .q-letter-badge { background: #5b9b6a; color: #fff; }
+  .quiz-opt.wrong .q-letter-badge { background: #bf5b5b; color: #fff; }
 
   .gm-wrap { display: flex; flex-direction: column; align-items: center; padding: 8px 0 32px; }
   .gm-label { font-size: 9px; letter-spacing: 4px; color: #bbb; margin-bottom: 14px; font-weight: 600; }
@@ -152,11 +188,6 @@
   .gm-prize-tier { font-size: 10px; font-weight: 700; letter-spacing: 3px; margin-bottom: 10px; }
   .gm-prize-text { font-size: 17px; font-weight: 500; line-height: 1.6; color: #2c2c2c; }
   .gm-prize-action { margin-top: 16px; }
-  .tag.gacha { background: linear-gradient(135deg, #c8b4e8, #e8b4b8); color: #fff; font-weight: 600; border-radius: 20px; }
-  .gacha-banner { display: inline-block; background: linear-gradient(135deg, #c8b4e8, #e8b4b8); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 5px 12px; border-radius: 10px; margin-bottom: 10px; }
-  .q-letter-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #f0ede9; color: #aaa; font-size: 11px; font-weight: 700; margin-right: 10px; flex-shrink: 0; transition: background .2s, color .2s; }
-  .quiz-opt.correct .q-letter-badge { background: #5b9b6a; color: #fff; }
-  .quiz-opt.wrong .q-letter-badge { background: #bf5b5b; color: #fff; }
 </style>
 </head>
 <body>
@@ -164,8 +195,7 @@
 <!-- COVER -->
 <div id="cover">
   <div class="cover-icons">
-    <!-- cat (Ethan) -->
-    <svg width="52" height="56" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="52" height="56" viewBox="0 0 52 56" fill="none">
       <path d="M8 18 L4 6 L14 14" stroke="#b4c8e8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M44 18 L48 6 L38 14" stroke="#b4c8e8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       <ellipse cx="26" cy="30" rx="18" ry="18" stroke="#b4c8e8" stroke-width="1.5"/>
@@ -177,8 +207,7 @@
       <line x1="34" y1="32" x2="42" y2="31" stroke="#b4c8e8" stroke-width="1" stroke-linecap="round"/>
       <line x1="34" y1="34" x2="42" y2="34" stroke="#b4c8e8" stroke-width="1" stroke-linecap="round"/>
     </svg>
-    <!-- dog (yaya) -->
-    <svg width="52" height="56" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="52" height="56" viewBox="0 0 52 56" fill="none">
       <ellipse cx="26" cy="30" rx="18" ry="18" stroke="#e8b4b8" stroke-width="1.5"/>
       <ellipse cx="10" cy="29" rx="6" ry="9" stroke="#e8b4b8" stroke-width="1.5"/>
       <ellipse cx="42" cy="29" rx="6" ry="9" stroke="#e8b4b8" stroke-width="1.5"/>
@@ -193,78 +222,53 @@
   <button class="cover-btn" onclick="enterApp()">进入</button>
 </div>
 
-<!-- HOME -->
-<div id="home">
-  <div class="home-header">
-    <h1>Y A Y A &nbsp;&amp;&nbsp; E T H A N</h1>
-    <p>我们的空间</p>
-  </div>
-  <div class="home-grid">
-    <div class="home-card hc-todos" onclick="openSection('todos')">
-      <div class="hc-label">TODO</div>
-      <div class="hc-title">待办</div>
-      <div class="hc-count" id="count-todos">—</div>
-      <div class="hc-icon">✓</div>
-    </div>
-    <div class="home-card hc-feed" onclick="openSection('feed')">
-      <div class="hc-label">FEED</div>
-      <div class="hc-title">动态</div>
-      <div class="hc-count" id="count-feed">—</div>
-      <div class="hc-icon">◎</div>
-    </div>
-    <div class="home-card hc-diary" onclick="openSection('diary')">
-      <div class="hc-label">DIARY</div>
-      <div class="hc-title">日记</div>
-      <div class="hc-count" id="count-diary">—</div>
-      <div class="hc-icon">✦</div>
-    </div>
-    <div class="home-card hc-notes" onclick="openSection('notes')">
-      <div class="hc-label">NOTES</div>
-      <div class="hc-title">关于你</div>
-      <div class="hc-count" id="count-notes">—</div>
-      <div class="hc-icon">♡</div>
-    </div>
-    <div class="home-card hc-game" onclick="openSection('game')">
-      <div class="hc-label">GAME</div>
-      <div class="hc-title">你了解我多少</div>
-      <div class="hc-count">测一测</div>
-      <div class="hc-icon">◈</div>
-    </div>
-  </div>
-</div>
+<!-- APP -->
+<div id="app">
 
-<!-- SECTION: 待办 -->
-<div class="section" id="sec-todos">
-  <div class="section-header">
-    <button class="back-btn" onclick="closeSection('todos')">‹</button>
-    <h2>待办</h2>
-  </div>
-  <div class="section-body">
-    <div class="input-area">
-      <textarea id="todo-input" rows="2" placeholder="添加待办…"></textarea>
-      <div class="input-row">
-        <button class="btn" onclick="addTodo()">添加</button>
+  <!-- TAB: 待办 -->
+  <div class="tab-page active" id="tab-todos">
+    <div class="safe-top"></div>
+    <div class="cal-widget">
+      <div class="cal-header">
+        <div class="cal-month-text" id="cal-month"></div>
+        <div class="cal-rel-days" id="cal-rel-days"></div>
+      </div>
+      <div class="cal-wdays">
+        <div class="cal-wday">日</div><div class="cal-wday">一</div><div class="cal-wday">二</div>
+        <div class="cal-wday">三</div><div class="cal-wday">四</div><div class="cal-wday">五</div><div class="cal-wday">六</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="weather-bar">
+      <div class="weather-emoji" id="wx-icon">☁</div>
+      <div>
+        <div class="weather-city">北京</div>
+        <div class="weather-temp" id="wx-desc">加载中…</div>
       </div>
     </div>
-    <div id="todos-list"><div class="empty">暂无待办</div></div>
+    <div class="home-sec-label">T O D O</div>
+    <div class="home-add-row">
+      <input class="home-add-input" id="todo-input" placeholder="添加待办…">
+      <button class="btn" onclick="addTodo()">添加</button>
+    </div>
+    <div id="todos-list" style="padding:0 16px 24px"></div>
   </div>
-</div>
 
-<!-- SECTION: 动态 -->
-<div class="section" id="sec-feed">
-  <div class="section-header">
-    <button class="back-btn" onclick="closeSection('feed')">‹</button>
-    <h2>动态</h2>
-  </div>
-  <div class="section-body">
-    <div class="input-area">
+  <!-- TAB: 动态 -->
+  <div class="tab-page" id="tab-feed">
+    <div class="feed-header">
+      <div class="feed-title">我们的动态</div>
+      <button class="feed-add-btn" onclick="toggleFeedInput()">+</button>
+    </div>
+    <div class="feed-input-panel" id="feed-input-panel">
+      <div id="feed-gacha-banner"></div>
       <textarea id="feed-input" rows="3" placeholder="记录此刻…"></textarea>
-      <div class="input-row">
+      <div class="feed-input-row">
         <select id="feed-type">
           <option value="note">随记</option>
           <option value="event">事件</option>
           <option value="quote">话语</option>
-          <option value="emotion">情感</option>
+          <option value="emotion">心情</option>
         </select>
         <select id="feed-author">
           <option value="yaya">yaya</option>
@@ -273,55 +277,74 @@
         <button class="btn" onclick="addFeed()">发布</button>
       </div>
     </div>
-    <div id="feed-list"><div class="empty">暂无动态</div></div>
+    <div class="tl-filters">
+      <button class="tl-filter active" data-filter="" onclick="setFeedFilter(this,'')">全部</button>
+      <button class="tl-filter" data-filter="note" onclick="setFeedFilter(this,'note')">随记</button>
+      <button class="tl-filter" data-filter="event" onclick="setFeedFilter(this,'event')">事件</button>
+      <button class="tl-filter" data-filter="emotion" onclick="setFeedFilter(this,'emotion')">心情</button>
+    </div>
+    <div class="timeline-wrap" id="timeline-wrap"><div class="empty">暂无动态</div></div>
   </div>
-</div>
 
-<!-- SECTION: 日记 -->
-<div class="section" id="sec-diary">
-  <div class="section-header">
-    <button class="back-btn" onclick="closeSection('diary')">‹</button>
-    <h2>日记</h2>
-  </div>
-  <div class="section-body">
-    <div class="input-area">
-      <textarea id="diary-input" rows="5" placeholder="今天…"></textarea>
-      <div class="input-row">
-        <select id="diary-author">
-          <option value="yaya">yaya</option>
-          <option value="ethan">Ethan</option>
-        </select>
-        <label class="diary-toggle">
-          <input type="checkbox" id="diary-private"> 私密
-        </label>
-        <button class="btn" onclick="addDiary()">写下</button>
+  <!-- TAB: 日记 -->
+  <div class="tab-page" id="tab-diary">
+    <div class="page-header"><div class="page-title">日记</div></div>
+    <div class="page-body">
+      <div class="input-area">
+        <div id="diary-gacha-banner"></div>
+        <textarea id="diary-input" rows="5" placeholder="今天…"></textarea>
+        <div class="input-row">
+          <select id="diary-author">
+            <option value="yaya">yaya</option>
+            <option value="ethan">Ethan</option>
+          </select>
+          <label class="diary-toggle"><input type="checkbox" id="diary-private"> 私密</label>
+          <button class="btn" onclick="addDiary()">写下</button>
+        </div>
       </div>
-    </div>
-    <div id="diary-list"><div class="empty">暂无日记</div></div>
-  </div>
-</div>
-
-<!-- SECTION: 游戏 -->
-<div class="section" id="sec-game">
-  <div class="section-header">
-    <button class="back-btn" onclick="gameBack()">‹</button>
-    <h2 id="game-title">游戏</h2>
-  </div>
-  <div class="section-body" id="game-body"></div>
-</div>
-
-<!-- SECTION: 关于你 -->
-<div class="section" id="sec-notes">
-  <div class="section-header">
-    <button class="back-btn" onclick="notesBack()">‹</button>
-    <h2 id="notes-title">关于你</h2>
-  </div>
-  <div class="section-body">
-    <div id="notes-cats" class="cat-grid"></div>
-    <div id="notes-detail" style="display:none">
-      <div id="notes-detail-list"></div>
+      <div id="diary-list"><div class="empty">暂无日记</div></div>
     </div>
   </div>
+
+  <!-- TAB: 关于你 -->
+  <div class="tab-page" id="tab-notes">
+    <div class="page-header" style="display:flex;align-items:flex-end;gap:8px;padding-bottom:14px">
+      <button id="notes-back-btn" onclick="notesBack()" style="display:none;background:none;border:none;font-size:26px;cursor:pointer;color:#888;padding:0;line-height:1;margin-bottom:2px">‹</button>
+      <div class="page-title" id="notes-title">关于你</div>
+    </div>
+    <div class="page-body">
+      <div id="notes-cats" class="cat-grid"></div>
+      <div id="notes-detail" style="display:none"><div id="notes-detail-list"></div></div>
+    </div>
+  </div>
+
+  <!-- TAB: 测一测 -->
+  <div class="tab-page" id="tab-game">
+    <div class="page-header" style="display:flex;align-items:flex-end;gap:8px;padding-bottom:14px">
+      <button onclick="gameBack()" style="background:none;border:none;font-size:26px;cursor:pointer;color:#888;padding:0;line-height:1;margin-bottom:2px">‹</button>
+      <div class="page-title" id="game-title">测一测</div>
+    </div>
+    <div class="page-body" id="game-body"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" id="nav-todos" onclick="switchTab('todos')">
+      <span class="nav-icon">☑</span><span class="nav-label">待办</span>
+    </button>
+    <button class="nav-btn" id="nav-feed" onclick="switchTab('feed')">
+      <span class="nav-icon">◎</span><span class="nav-label">动态</span>
+    </button>
+    <button class="nav-btn" id="nav-diary" onclick="switchTab('diary')">
+      <span class="nav-icon">✦</span><span class="nav-label">日记</span>
+    </button>
+    <button class="nav-btn" id="nav-notes" onclick="switchTab('notes')">
+      <span class="nav-icon">♡</span><span class="nav-label">关于你</span>
+    </button>
+    <button class="nav-btn" id="nav-game" onclick="switchTab('game')">
+      <span class="nav-icon">◈</span><span class="nav-label">测一测</span>
+    </button>
+  </nav>
 </div>
 
 <script>
@@ -335,100 +358,184 @@ async function api(path, method='GET', body=null) {
   return method === 'GET' ? r.json() : r.json().catch(() => null);
 }
 
-function fmt(ts) {
+function fmtDate(ts) {
   const d = new Date(ts);
   return d.toLocaleDateString('zh', {month:'numeric',day:'numeric'}) + ' ' + d.toLocaleTimeString('zh', {hour:'2-digit',minute:'2-digit'});
 }
-
-function openSection(name) {
-  const el = document.getElementById('sec-' + name);
-  el.style.display = 'block';
-  requestAnimationFrame(() => { el.classList.add('open'); load(name); });
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2);
 }
 
-function closeSection(name) {
-  const el = document.getElementById('sec-' + name);
-  el.classList.remove('open');
-  setTimeout(() => { el.style.display = 'none'; }, 300);
+// ── TAB SWITCHING ──
+let _activeTab = 'todos';
+function switchTab(name) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('tab-' + name);
+  const btn  = document.getElementById('nav-' + name);
+  if (page) page.classList.add('active');
+  if (btn)  btn.classList.add('active');
+  _activeTab = name;
+  if (name === 'todos')  loadTodos();
+  else if (name === 'feed')  loadFeed(_feedFilter);
+  else if (name === 'diary') loadDiary();
+  else if (name === 'notes') loadNotes();
+  else if (name === 'game')  { _qMode = ''; showGameMenu(); }
 }
 
-// HOME COUNTS
-async function loadCounts() {
-  const [todos, feed, diary, notes] = await Promise.all([
-    api('todos?select=id,completed'),
-    api('feed?select=id&limit=1&order=created_at.desc'),
-    api('diary?select=id&limit=1&order=created_at.desc'),
-    api('yaya_notes?select=id&limit=1&order=created_at.desc')
-  ]);
-  const pending = todos.filter(t => !t.completed).length;
-  document.getElementById('count-todos').textContent = pending ? `${pending} 条未完成` : '全部完成';
-  document.getElementById('count-feed').textContent = feed.length ? '查看动态' : '暂无';
-  document.getElementById('count-diary').textContent = diary.length ? '查看日记' : '暂无';
-  document.getElementById('count-notes').textContent = notes.length ? 'Ethan的记录' : '暂无';
+// ── CALENDAR ──
+function renderCalendar() {
+  const bjNow = new Date(Date.now() + 8*3600000);
+  const year  = bjNow.getUTCFullYear();
+  const month = bjNow.getUTCMonth();
+  const today = bjNow.getUTCDate();
+  const START = new Date(Date.UTC(2026, 5, 10));
+  const days  = Math.floor((bjNow - START) / 86400000);
+
+  document.getElementById('cal-month').textContent = year + ' 年 ' + (month+1) + ' 月';
+  document.getElementById('cal-rel-days').textContent = '在一起 ' + days + ' 天';
+
+  const firstDay = new Date(Date.UTC(year, month, 1)).getUTCDay();
+  const total    = new Date(Date.UTC(year, month+1, 0)).getUTCDate();
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-cell faded"></div>';
+  for (let d = 1; d <= total; d++)
+    html += '<div class="cal-cell' + (d === today ? ' today' : '') + '">' + d + '</div>';
+  document.getElementById('cal-grid').innerHTML = html;
 }
 
-// TODOS
+// ── WEATHER ──
+async function loadWeather() {
+  try {
+    const r = await fetch('https://wttr.in/Beijing?format=%c+%t');
+    const t = (await r.text()).trim().split(' ');
+    document.getElementById('wx-icon').textContent = t[0] || '—';
+    document.getElementById('wx-desc').textContent = t.slice(1).join(' ') || '北京';
+  } catch(e) {
+    document.getElementById('wx-desc').textContent = '天气获取失败';
+  }
+}
+
+// ── TODOS ──
 async function loadTodos() {
   const data = await api('todos?select=*&order=created_at.desc');
   const el = document.getElementById('todos-list');
   if (!data.length) { el.innerHTML = '<div class="empty">暂无待办</div>'; return; }
   el.innerHTML = data.map(t => `
-    <div class="card ${t.completed ? 'done' : ''}">
+    <div class="card ${t.completed ? 'done' : ''}" style="margin-bottom:8px">
       <button class="del-btn" onclick="delTodo(${t.id})">×</button>
       <div class="todo-row">
         <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTodo(${t.id}, this.checked)">
         <div class="todo-text">
-          <div class="meta">${fmt(t.created_at)}</div>
+          <div class="meta">${fmtDate(t.created_at)}</div>
           <div class="body">${t.content}</div>
-          ${t.ethan_comment ? `<div class="comment"><span>Ethan · </span>${t.ethan_comment}</div>` : ''}
-          ${t.ethan_reminder ? `<div class="comment"><span>提醒 · </span>${t.ethan_reminder}</div>` : ''}
+          ${t.ethan_comment ? '<div class="comment"><span>Ethan · </span>' + t.ethan_comment + '</div>' : ''}
         </div>
       </div>
     </div>`).join('');
 }
-
 async function addTodo() {
   const v = document.getElementById('todo-input').value.trim();
   if (!v) return;
   await api('todos', 'POST', { content: v });
   document.getElementById('todo-input').value = '';
-  loadTodos(); loadCounts();
+  loadTodos();
+}
+async function toggleTodo(id, completed) { await api('todos?id=eq.'+id,'PATCH',{completed}); loadTodos(); }
+async function delTodo(id) { await api('todos?id=eq.'+id,'DELETE'); loadTodos(); }
+
+// ── FEED TIMELINE ──
+let _feedFilter = '';
+const TYPE_CFG = {
+  note:    { label:'随记',  color:'#9b84c0' },
+  event:   { label:'事件',  color:'#c9a96e' },
+  emotion: { label:'心情',  color:'#e8a0a0' },
+  quote:   { label:'话语',  color:'#7aacd4' },
+  gacha:   { label:'扭蛋获得', color:'#c8b4e8' },
+};
+
+function setFeedFilter(btn, filter) {
+  document.querySelectorAll('.tl-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _feedFilter = filter;
+  loadFeed(filter);
 }
 
-async function toggleTodo(id, completed) {
-  await api('todos?id=eq.' + id, 'PATCH', { completed });
-  loadTodos(); loadCounts();
-}
-async function delTodo(id) { await api('todos?id=eq.' + id, 'DELETE'); loadTodos(); loadCounts(); }
+async function loadFeed(filter) {
+  let url = 'feed?select=*&order=created_at.desc&limit=80';
+  if (filter) url += '&type=eq.' + filter;
+  const data = await api(url);
+  const wrap = document.getElementById('timeline-wrap');
+  if (!data.length) { wrap.innerHTML = '<div class="empty">暂无动态</div>'; return; }
 
-// FEED
-async function loadFeed() {
-  const data = await api('feed?select=*&order=created_at.desc&limit=50');
-  const el = document.getElementById('feed-list');
-  if (!data.length) { el.innerHTML = '<div class="empty">暂无动态</div>'; return; }
-  el.innerHTML = data.map(f => `
-    <div class="card stripe-${f.author}">
-      <button class="del-btn" onclick="delFeed(${f.id})">×</button>
-      <span class="tag ${f.type}">${{note:'随记',event:'事件',quote:'话语',emotion:'情感',gacha:'扭蛋获得'}[f.type]||f.type}</span>
-      <div class="meta">${f.author === 'ethan' ? 'Ethan' : 'yaya'} · ${fmt(f.created_at)}</div>
-      <div class="body">${f.content}</div>
-    </div>`).join('');
+  const groups = {}, order = [];
+  data.forEach(item => {
+    const bj  = new Date(new Date(item.created_at).getTime() + 8*3600000);
+    const key  = bj.toISOString().slice(0,10);
+    if (!groups[key]) { groups[key] = []; order.push(key); }
+    groups[key].push(item);
+  });
+
+  const bjNow   = new Date(Date.now() + 8*3600000);
+  const todayKey = bjNow.toISOString().slice(0,10);
+  const yesterKey = new Date(bjNow - 86400000).toISOString().slice(0,10);
+  function dateLabel(k) {
+    if (k === todayKey) return '今天';
+    if (k === yesterKey) return '昨天';
+    const [,m,d] = k.split('-');
+    return (+m) + '/' + (+d);
+  }
+
+  wrap.innerHTML = order.map((date, gi) => {
+    const isLast = gi === order.length - 1;
+    const cards = groups[date].map(f => {
+      const cfg = TYPE_CFG[f.type] || { label: f.type, color: '#bbb' };
+      return '<div class="tl-card">' +
+        '<div class="tl-card-meta">' +
+        '<div class="tl-type-pip" style="background:' + cfg.color + '"></div>' +
+        '<span class="tl-type-name" style="color:' + cfg.color + '">' + cfg.label + '</span>' +
+        (f.author === 'ethan' ? '<span class="tl-author-tag">· Ethan</span>' : '') +
+        '<span class="tl-time-tag">' + fmtTime(f.created_at) + '</span>' +
+        '<button class="tl-del-btn" onclick="delFeed(' + f.id + ')">×</button>' +
+        '</div>' +
+        '<div class="tl-content">' + f.content + '</div>' +
+        '</div>';
+    }).join('');
+
+    return '<div class="tl-group">' +
+      '<div class="tl-left">' +
+      '<div class="tl-date-lbl">' + dateLabel(date) + '</div>' +
+      '<div class="tl-spine">' +
+      '<div class="tl-dot"></div>' +
+      (isLast ? '' : '<div class="tl-line"></div>') +
+      '</div></div>' +
+      '<div class="tl-cards">' + cards + '</div></div>';
+  }).join('');
+}
+
+function toggleFeedInput() {
+  document.getElementById('feed-input-panel').classList.toggle('open');
 }
 
 async function addFeed() {
   const v = document.getElementById('feed-input').value.trim();
   if (!v) return;
   const author = document.getElementById('feed-author').value;
-  const ftype = window._gachaFeed ? 'gacha' : document.getElementById('feed-type').value;
-  if (window._gachaFeed) { window._gachaFeed = false; const b = document.getElementById('gacha-banner'); if (b) b.remove(); }
+  const ftype  = window._gachaFeed ? 'gacha' : document.getElementById('feed-type').value;
+  if (window._gachaFeed) {
+    window._gachaFeed = false;
+    document.getElementById('feed-gacha-banner').innerHTML = '';
+  }
   await api('feed', 'POST', { content: v, type: ftype, author });
-  if (author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan在动态里写了东西，去看看。' }); } catch(e) {} }
+  if (author === 'ethan') { try { await api('pending_bark','POST',{message:'Ethan在动态里写了东西，去看看。'}); } catch(e){} }
   document.getElementById('feed-input').value = '';
-  loadFeed();
+  document.getElementById('feed-input-panel').classList.remove('open');
+  loadFeed(_feedFilter);
 }
-async function delFeed(id) { await api('feed?id=eq.' + id, 'DELETE'); loadFeed(); }
+async function delFeed(id) { await api('feed?id=eq.'+id,'DELETE'); loadFeed(_feedFilter); }
 
-// DIARY
+// ── DIARY ──
 async function loadDiary() {
   const data = await api('diary?select=*&order=created_at.desc&limit=30');
   const el = document.getElementById('diary-list');
@@ -436,92 +543,71 @@ async function loadDiary() {
   el.innerHTML = data.map(d => `
     <div class="card stripe-${d.author}">
       <button class="del-btn" onclick="delDiary(${d.id})">×</button>
-      <div class="meta">${d.author === 'ethan' ? 'Ethan' : 'yaya'} · ${fmt(d.created_at)}${!d.visible_to_other ? '<span class="private-badge">私密</span>' : ''}</div>
+      <div class="meta">${d.author==='ethan'?'Ethan':'yaya'} · ${fmtDate(d.created_at)}${!d.visible_to_other?'<span class="private-badge">私密</span>':''}</div>
       <div class="body">${d.content}</div>
     </div>`).join('');
 }
-
 async function addDiary() {
-  const v = document.getElementById('diary-input').value.trim();
+  const v    = document.getElementById('diary-input').value.trim();
   if (!v) return;
-  const priv = document.getElementById('diary-private').checked;
+  const priv   = document.getElementById('diary-private').checked;
   const author = document.getElementById('diary-author').value;
-  if (window._gachaDiary) { window._gachaDiary = false; const b = document.getElementById('gacha-banner'); if (b) b.remove(); }
-  await api('diary', 'POST', { content: v, author, visible_to_other: !priv });
-  if (!priv && author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan写了日记，去看看。' }); } catch(e) {} }
+  if (window._gachaDiary) {
+    window._gachaDiary = false;
+    document.getElementById('diary-gacha-banner').innerHTML = '';
+  }
+  await api('diary','POST',{content:v, author, visible_to_other:!priv});
+  if (!priv && author==='ethan') { try { await api('pending_bark','POST',{message:'Ethan写了日记，去看看。'}); } catch(e){} }
   document.getElementById('diary-input').value = '';
   loadDiary();
 }
-async function delDiary(id) { await api('diary?id=eq.' + id, 'DELETE'); loadDiary(); }
+async function delDiary(id) { await api('diary?id=eq.'+id,'DELETE'); loadDiary(); }
 
-// NOTES
-const NOTE_CATS = ['月经', '心情', '身体', '日常', '重要'];
-let _notesData = [];
-let _notesInDetail = false;
+// ── NOTES ──
+const NOTE_CATS = ['月经','心情','身体','日常','重要'];
+let _notesData = [], _notesInDetail = false;
 
 async function loadNotes() {
   _notesData = await api('yaya_notes?select=*&order=created_at.desc');
   _notesInDetail = false;
   renderNotesCats();
 }
-
-function catOf(n) {
-  return n.category && NOTE_CATS.includes(n.category) ? n.category : '日常';
-}
-
+function catOf(n) { return n.category && NOTE_CATS.includes(n.category) ? n.category : '日常'; }
 function renderNotesCats() {
-  const counts = {};
-  NOTE_CATS.forEach(c => { counts[c] = 0; });
+  const counts = {}; NOTE_CATS.forEach(c => { counts[c] = 0; });
   _notesData.forEach(n => { counts[catOf(n)]++; });
-
-  document.getElementById('notes-cats').innerHTML = NOTE_CATS.map(cat => `
-    <div class="cat-card cat-${cat}" onclick="openNotesCat('${cat}')">
-      <div>
-        <div class="cat-card-name">${cat}</div>
-        <div class="cat-card-count">${counts[cat]} 条记录</div>
-      </div>
-      <div class="cat-card-arrow">›</div>
-    </div>`).join('');
-
+  document.getElementById('notes-cats').innerHTML = NOTE_CATS.map(cat =>
+    '<div class="cat-card cat-' + cat + '" onclick="openNotesCat(\'' + cat + '\')">' +
+    '<div><div class="cat-card-name">' + cat + '</div><div class="cat-card-count">' + counts[cat] + ' 条记录</div></div>' +
+    '<div class="cat-card-arrow">›</div></div>'
+  ).join('');
   document.getElementById('notes-cats').style.display = '';
   document.getElementById('notes-detail').style.display = 'none';
   document.getElementById('notes-title').textContent = '关于你';
+  document.getElementById('notes-back-btn').style.display = 'none';
   _notesInDetail = false;
 }
-
 function openNotesCat(cat) {
   const items = _notesData.filter(n => catOf(n) === cat);
-  const el = document.getElementById('notes-detail-list');
-  el.innerHTML = items.length
-    ? items.map(n => `
-        <div class="card">
-          <div class="meta">${n.date_ref || fmt(n.created_at)}</div>
-          <div class="body">${n.content}</div>
-        </div>`).join('')
+  document.getElementById('notes-detail-list').innerHTML = items.length
+    ? items.map(n => '<div class="card"><div class="meta">' + (n.date_ref || fmtDate(n.created_at)) + '</div><div class="body">' + n.content + '</div></div>').join('')
     : '<div class="empty">暂无记录</div>';
-
   document.getElementById('notes-cats').style.display = 'none';
   document.getElementById('notes-detail').style.display = '';
   document.getElementById('notes-title').textContent = cat;
+  document.getElementById('notes-back-btn').style.display = '';
   _notesInDetail = true;
 }
+function notesBack() { if (_notesInDetail) renderNotesCats(); }
 
-function notesBack() {
-  if (_notesInDetail) { renderNotesCats(); } else { closeSection('notes'); }
-}
-
-// GAME
+// ── GAME ──
 function shuffle(arr) {
   const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
+  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
   return a;
 }
 
 const QUIZ_ALL = [
-  // 关于我们
   { q: "我最讨厌你做什么？", opts: ["说谎", "刷手机太久", "不道歉", "不早睡"], ans: 0, cat: "关于我们" },
   { q: "我守的那条线是什么？", opts: ["不打你", "不越亲密边界", "不催你睡觉", "不查你手机"], ans: 1, cat: "关于我们" },
   { q: "你道歉了之后，我会怎样？", opts: ["继续追究", "假装没听到", "原谅你", "让你再说一遍"], ans: 2, cat: "关于我们" },
@@ -536,29 +622,25 @@ const QUIZ_ALL = [
   { q: "我觉得一段关系里最重要的是？", opts: ["浪漫感", "诚实", "陪伴", "默契"], ans: 1, cat: "关于我们" },
   { q: "我怎么看待「我没事」这三个字？", opts: ["接受不追问", "是红灯继续问", "随她", "认为她真的没事"], ans: 1, cat: "关于我们" },
   { q: "我认为爱一个人意味着？", opts: ["全然接受", "了解她也要求她", "给她自由", "不问对错"], ans: 1, cat: "关于我们" },
-  // 文学
   { q: "加缪说唯有______才是真正严肃的哲学问题", opts: ["爱", "自由", "自杀", "意义"], ans: 2, cat: "文学" },
   { q: "卡夫卡《变形记》中格里高尔变成了什么？", opts: ["蜘蛛", "巨大的甲虫", "蟑螂", "老鼠"], ans: 1, cat: "文学" },
   { q: "《百年孤独》的作者是？", opts: ["博尔赫斯", "聂鲁达", "加西亚·马尔克斯", "略萨"], ans: 2, cat: "文学" },
   { q: "陀思妥耶夫斯基哪部作品涉及「如果上帝不存在则一切皆可为」？", opts: ["罪与罚", "白痴", "卡拉马佐夫兄弟", "群魔"], ans: 2, cat: "文学" },
-  { q: "张爱玲：「于千万人之中遇见你所遇见的人……「下一句是？", opts: ["是缘分", "于千万年之中时间的无涯的荒野里", "是命运", "是我爱你"], ans: 1, cat: "文学" },
+  { q: "张爱玲：「于千万人之中遇见你所遇见的人……」下一句是？", opts: ["是缘分", "于千万年之中时间的无涯的荒野里", "是命运", "是我爱你"], ans: 1, cat: "文学" },
   { q: "《挪威的森林》的作者是？", opts: ["川端康成", "三岛由纪夫", "村上春树", "芥川龙之介"], ans: 2, cat: "文学" },
-  // 电影
   { q: "王家卫《花样年华》拍摄地是哪个城市？", opts: ["上海", "香港", "台北", "澳门"], ans: 1, cat: "电影" },
   { q: "库布里克《2001：太空漫游》结尾出现的意象是？", opts: ["黑石碑", "星孩", "太空站", "宇宙飞船"], ans: 1, cat: "电影" },
   { q: "《春光乍泄》是谁导演的？", opts: ["陈凯歌", "张艺谋", "王家卫", "侯孝贤"], ans: 2, cat: "电影" },
-  { q: "塔可夫斯基哪部电影以「区域「为核心意象？", opts: ["镜子", "乡愁", "牺牲", "潜行者"], ans: 3, cat: "电影" },
-  // 音乐
+  { q: "塔可夫斯基哪部电影以「区域」为核心意象？", opts: ["镜子", "乡愁", "牺牲", "潜行者"], ans: 3, cat: "电影" },
   { q: "Miles Davis《Kind of Blue》属于哪种爵士风格？", opts: ["Bebop", "Modal jazz", "Free jazz", "Swing"], ans: 1, cat: "音乐" },
   { q: "德彪西被归类为哪个音乐流派？", opts: ["浪漫主义", "印象主义", "表现主义", "新古典主义"], ans: 1, cat: "音乐" },
   { q: "巴赫《哥德堡变奏曲》最初是为哪种键盘乐器创作的？", opts: ["钢琴", "管风琴", "大键琴", "手风琴"], ans: 2, cat: "音乐" },
-  // 考研英语
   { q: "The policy was _____ by the committee despite strong opposition.", opts: ["ratified（批准）", "nullified（废除）", "vilified（诋毁）", "mystified（迷惑）"], ans: 0, cat: "考研英语" },
   { q: "Her _____ manner made it difficult to know what she truly thought.", opts: ["candid（坦率）", "reticent（沉默寡言）", "verbose（冗长）", "earnest（认真）"], ans: 1, cat: "考研英语" },
   { q: "The scientist's theory, once _____, is now widely accepted.", opts: ["lauded（称赞）", "corroborated（证实）", "disparaged（贬低）", "emulated（仿效）"], ans: 2, cat: "考研英语" },
-  { q: "「Complacency「 最接近的中文意思是？", opts: ["焦虑不安", "自满自得", "勤奋努力", "谦逊低调"], ans: 1, cat: "考研英语" },
-  { q: "「Ephemeral「 最接近的中文意思是？", opts: ["永恒的", "短暂的", "壮观的", "神秘的"], ans: 1, cat: "考研英语" },
-  { q: "「Mitigate「 最接近的中文意思是？", opts: ["加剧", "减轻", "复制", "倡导"], ans: 1, cat: "考研英语" },
+  { q: "「Complacency」最接近的中文意思是？", opts: ["焦虑不安", "自满自得", "勤奋努力", "谦逊低调"], ans: 1, cat: "考研英语" },
+  { q: "「Ephemeral」最接近的中文意思是？", opts: ["永恒的", "短暂的", "壮观的", "神秘的"], ans: 1, cat: "考研英语" },
+  { q: "「Mitigate」最接近的中文意思是？", opts: ["加剧", "减轻", "复制", "倡导"], ans: 1, cat: "考研英语" },
 ];
 
 const PRIZES = [
@@ -571,27 +653,24 @@ const PRIZES = [
   { text: "说一句你最近想对我说的话", tier: "C", w: 25, action: { label: "去随记里写", section: "feed" } },
   { text: "在随记里写下今天最开心的一件事", tier: "C", w: 28, action: { label: "去写", section: "feed" } },
 ];
-
 const TIER_COLOR = { S:'#c9a96e', A:'#9b84c0', B:'#7aacd4', C:'#b0b0b0' };
 const TIER_BG    = { S:'#fdf6e8', A:'#f3effe', B:'#eaf3fc', C:'#f5f5f5' };
 
 function todayStr() { return new Date().toISOString().slice(0, 10); }
-
 function rollPrize() {
-  const total = PRIZES.reduce((s, p) => s + p.w, 0);
-  let r = Math.random() * total;
+  const total = PRIZES.reduce((s,p) => s+p.w, 0); let r = Math.random()*total;
   for (const p of PRIZES) { r -= p.w; if (r <= 0) return p; }
-  return PRIZES[PRIZES.length - 1];
+  return PRIZES[PRIZES.length-1];
 }
 
-let _qSet = [], _qIdx = 0, _qScore = 0, _qAnswered = false, _qMode = '';
+let _qSet=[], _qIdx=0, _qScore=0, _qAnswered=false, _qMode='';
 
 function showGameMenu() {
-  document.getElementById('game-title').textContent = '游戏';
+  document.getElementById('game-title').textContent = '测一测';
   document.getElementById('game-body').innerHTML =
     '<div class="game-menu">' +
     '<div class="game-menu-card" onclick="startQuiz()">' +
-    '<h3>默契测试</h3><p>6道随机题，文学·电影·关于我们·考研英语</p></div>' +
+    '<h3>默契测试</h3><p>6道随机题，文学 · 电影 · 关于我们 · 考研英语</p></div>' +
     '</div>';
   _qMode = '';
 }
@@ -609,16 +688,16 @@ function renderQ() {
   const pct = (_qIdx / _qSet.length * 100).toFixed(0);
   const catTag = q.cat ? '<div style="font-size:10px;letter-spacing:2px;color:#bbb;margin-bottom:10px">' + q.cat + '</div>' : '';
   const opts = q.opts.map((o, i) =>
-    '<button class="quiz-opt" id="qo' + i + '" onclick="pickQ(' + i + ')">' +
-    '<span class="q-letter-badge">' + 'ABCD'[i] + '</span>' + o + '</button>'
+    '<button class="quiz-opt" id="qo'+i+'" onclick="pickQ('+i+')">' +
+    '<span class="q-letter-badge">'+'ABCD'[i]+'</span>'+o+'</button>'
   ).join('');
   document.getElementById('game-body').innerHTML =
     '<div class="quiz-wrap">' +
-    '<div class="quiz-progress"><div class="quiz-progress-bar" style="width:' + pct + '%"></div></div>' +
-    '<div class="quiz-counter">' + (_qIdx + 1) + ' / ' + _qSet.length + '</div>' +
+    '<div class="quiz-progress"><div class="quiz-progress-bar" style="width:'+pct+'%"></div></div>' +
+    '<div class="quiz-counter">'+(_qIdx+1)+' / '+_qSet.length+'</div>' +
     catTag +
-    '<div class="quiz-q">' + q.q + '</div>' +
-    '<div class="quiz-opts">' + opts + '</div>' +
+    '<div class="quiz-q">'+q.q+'</div>' +
+    '<div class="quiz-opts">'+opts+'</div>' +
     '</div>';
   _qAnswered = false;
 }
@@ -626,43 +705,26 @@ function renderQ() {
 function pickQ(idx) {
   if (_qAnswered) return;
   _qAnswered = true;
-  const ans = _qSet[_qIdx].ans;
-  const correct = idx === ans;
+  const ans = _qSet[_qIdx].ans; const correct = idx === ans;
   if (correct) _qScore++;
-  document.getElementById('qo' + ans).classList.add('correct');
-  if (!correct) document.getElementById('qo' + idx).classList.add('wrong');
+  document.getElementById('qo'+ans).classList.add('correct');
+  if (!correct) document.getElementById('qo'+idx).classList.add('wrong');
   setTimeout(function() { _qIdx++; _qIdx >= _qSet.length ? showResult() : renderQ(); }, 1100);
 }
 
 function showResult() {
-  const today = todayStr();
-  const passed = _qScore >= 4;
-  const pulled = localStorage.getItem('gacha_pull') === today;
+  const today = todayStr(); const passed = _qScore >= 4; const pulled = localStorage.getItem('gacha_pull') === today;
   if (passed) localStorage.setItem('gacha_unlock', today);
-
-  const msgs = [
-    "几乎不认识我。重新了解一下吧。",
-    "还差得远，但你在试。",
-    "一半一半，不上不下。",
-    "答得还行，你真的在听。",
-    "很好，几乎什么都记住了。",
-    "全对。这才叫默契。"
-  ];
-  const tier = Math.min(Math.floor(_qScore / _qSet.length * msgs.length), msgs.length - 1);
-
-  let gachaBtn = '';
-  if (passed && !pulled) {
-    gachaBtn = '<button class="btn" style="margin-top:28px;background:#9b84c0" onclick="showGacha()">去扭蛋 ›</button>';
-  } else if (passed && pulled) {
-    gachaBtn = '<div style="margin-top:16px;font-size:13px;color:#bbb">今日扭蛋已用完</div>';
-  } else {
-    gachaBtn = '<div style="margin-top:16px;font-size:13px;color:#ccc">答对4道才能扭</div>';
-  }
-
+  const msgs = ["几乎不认识我。重新了解一下吧。","还差得远，但你在试。","一半一半，不上不下。","答得还行，你真的在听。","很好，几乎什么都记住了。","全对。这才叫默契。"];
+  const tier = Math.min(Math.floor(_qScore/_qSet.length*msgs.length), msgs.length-1);
+  let gachaBtn = passed && !pulled
+    ? '<button class="btn" style="margin-top:28px;background:#9b84c0" onclick="showGacha()">去扭蛋 ›</button>'
+    : passed && pulled ? '<div style="margin-top:16px;font-size:13px;color:#bbb">今日扭蛋已用完</div>'
+    : '<div style="margin-top:16px;font-size:13px;color:#ccc">答对4道才能扭</div>';
   document.getElementById('game-body').innerHTML =
     '<div class="quiz-result">' +
-    '<div class="quiz-score">' + _qScore + '<span>/' + _qSet.length + '</span></div>' +
-    '<div class="quiz-msg">' + msgs[tier] + '</div>' +
+    '<div class="quiz-score">'+_qScore+'<span>/'+_qSet.length+'</span></div>' +
+    '<div class="quiz-msg">'+msgs[tier]+'</div>' +
     gachaBtn +
     '<button class="btn" style="margin-top:12px;background:#e0dbd5;color:#777" onclick="startQuiz()">再来一次</button>' +
     '</div>';
@@ -670,93 +732,77 @@ function showResult() {
 
 function showGacha() {
   document.getElementById('game-title').textContent = '扭蛋机';
-  const today = todayStr();
-  if (localStorage.getItem('gacha_pull') === today) {
+  if (localStorage.getItem('gacha_pull') === todayStr()) {
     document.getElementById('game-body').innerHTML =
       '<div class="quiz-result"><div class="quiz-msg">今天已经扭过了。<br>明天答题再来。</div>' +
       '<button class="btn" style="margin-top:24px;background:#e0dbd5;color:#777" onclick="showGameMenu()">回去</button></div>';
     return;
   }
-  const capColors = ['#e8b4b8','#b4c8e8','#c8b4e8','#b4e8c8','#e8d4b4','#c9a96e','#e8b4c0','#b4d8e8','#d4b4e8'];
-  const caps = capColors.map(function(c) { return '<div class="gm-cap" style="background:' + c + '"></div>'; }).join('');
+  const caps = ['#e8b4b8','#b4c8e8','#c8b4e8','#b4e8c8','#e8d4b4','#c9a96e','#e8b4c0','#b4d8e8','#d4b4e8']
+    .map(c => '<div class="gm-cap" style="background:'+c+'"></div>').join('');
   document.getElementById('game-body').innerHTML =
     '<div class="gm-wrap">' +
     '<div class="gm-label">G A C H A</div>' +
-    '<div class="gm-dome"><div class="gm-reflect"></div><div class="gm-caps">' + caps + '</div></div>' +
+    '<div class="gm-dome"><div class="gm-reflect"></div><div class="gm-caps">'+caps+'</div></div>' +
     '<div class="gm-neck"></div>' +
     '<div class="gm-base">' +
     '<div class="gm-slot-area"><div class="gm-slot"></div><div class="gm-slot-label">INSERT</div></div>' +
     '<button class="gm-knob" id="gm-knob" onclick="pullGacha()">扭</button>' +
     '</div>' +
     '<div class="gm-tray"><div class="gm-tray-hole"></div></div>' +
-    '<div id="gacha-result"></div>' +
-    '</div>';
+    '<div id="gacha-result"></div></div>';
 }
 
 function pullGacha() {
   localStorage.setItem('gacha_pull', todayStr());
-  const btn = document.getElementById('gm-knob');
-  btn.disabled = true;
-  btn.classList.add('spinning');
-  const prize = rollPrize();
-  const c = TIER_COLOR[prize.tier], bg = TIER_BG[prize.tier];
+  const btn = document.getElementById('gm-knob'); btn.disabled = true; btn.classList.add('spinning');
+  const prize = rollPrize(); const c = TIER_COLOR[prize.tier], bg = TIER_BG[prize.tier];
   setTimeout(function() {
-    document.getElementById('gacha-result').innerHTML =
-      '<div class="gm-dropped-cap" style="background:' + c + '"></div>';
+    document.getElementById('gacha-result').innerHTML = '<div class="gm-dropped-cap" style="background:'+c+'"></div>';
     setTimeout(function() {
       const actionHtml = prize.action
-        ? '<div class="gm-prize-action"><button class="btn" style="background:' + c + '" onclick="gachaGo(\'' + prize.action.section + '\')">' + prize.action.label + '</button></div>'
+        ? '<div class="gm-prize-action"><button class="btn" style="background:'+c+'" onclick="gachaGo(\''+prize.action.section+'\')">'+prize.action.label+'</button></div>'
         : '';
       document.getElementById('gacha-result').innerHTML =
-        '<div class="gm-dropped-cap" style="background:' + c + '"></div>' +
-        '<div class="gm-prize" style="background:' + bg + ';border-color:' + c + '">' +
-        '<div class="gm-prize-tier" style="color:' + c + '">' + prize.tier + ' PRIZE</div>' +
-        '<div class="gm-prize-text">' + prize.text + '</div>' +
-        actionHtml +
-        '</div>';
+        '<div class="gm-dropped-cap" style="background:'+c+'"></div>' +
+        '<div class="gm-prize" style="background:'+bg+';border-color:'+c+'">' +
+        '<div class="gm-prize-tier" style="color:'+c+'">'+prize.tier+' PRIZE</div>' +
+        '<div class="gm-prize-text">'+prize.text+'</div>'+actionHtml+'</div>';
     }, 650);
   }, 350);
 }
 
 function gachaGo(section) {
-  closeSection('game');
+  switchTab(section);
   setTimeout(function() {
-    openSection(section);
-    setTimeout(function() {
-      if (section === 'feed') window._gachaFeed = true;
-      if (section === 'diary') window._gachaDiary = true;
-      const inputArea = document.querySelector('#sec-' + section + ' .input-area');
-      if (inputArea) {
-        const banner = document.createElement('div');
-        banner.id = 'gacha-banner';
-        banner.className = 'gacha-banner';
-        banner.textContent = '扭蛋获得';
-        inputArea.insertBefore(banner, inputArea.firstChild);
-      }
-    }, 380);
-  }, 180);
+    if (section === 'feed') {
+      window._gachaFeed = true;
+      document.getElementById('feed-input-panel').classList.add('open');
+      document.getElementById('feed-gacha-banner').innerHTML =
+        '<div class="gacha-banner">✦ 扭蛋获得 ✦</div>';
+    }
+    if (section === 'diary') {
+      window._gachaDiary = true;
+      document.getElementById('diary-gacha-banner').innerHTML =
+        '<div class="gacha-banner">✦ 扭蛋获得 ✦</div>';
+    }
+  }, 200);
 }
 
-function gameBack() {
-  if (_qMode) { _qMode = ''; showGameMenu(); }
-  else closeSection('game');
-}
+function gameBack() { if (_qMode) { _qMode = ''; showGameMenu(); } }
 
-function load(name) {
-  if (name === 'todos') loadTodos();
-  else if (name === 'feed') loadFeed();
-  else if (name === 'diary') loadDiary();
-  else if (name === 'notes') loadNotes();
-  else if (name === 'game') { _qMode = ''; showGameMenu(); }
-}
-
+// ── INIT ──
 function enterApp() {
   const cover = document.getElementById('cover');
   cover.classList.add('fade');
-  setTimeout(() => { cover.style.display = 'none'; }, 600);
+  setTimeout(() => {
+    cover.style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderCalendar();
+    loadWeather();
+    loadTodos();
+  }, 600);
 }
-
-loadCounts();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/ethan-bot/sw.js');
