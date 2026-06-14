@@ -1,0 +1,15 @@
+{
+  "name": "yaya & Ethan",
+  "short_name": "我们",
+  "start_url": "/ethan-bot/",
+  "display": "standalone",
+  "background_color": "#f5f3f0",
+  "theme_color": "#f5f3f0",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/xcs6C4WY/IMG-9570.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
