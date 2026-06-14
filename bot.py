@@ -3,17 +3,15 @@ from datetime import datetime, timezone, timedelta
 
 hour = (datetime.now(timezone.utc) + timedelta(hours=8)).hour
 
+def send(msg):
+    icon = urllib.parse.quote("https://i.postimg.cc/xcs6C4WY/IMG-9570.jpg", safe="")
+    bark_url = "https://api.day.app/" + os.environ["BARK_KEY"] + "/Ethan/" + urllib.parse.quote(msg) + "?icon=" + icon
+    urllib.request.urlopen(bark_url)
+    print("sent:", msg)
+
 dispatch_msg = os.environ.get("DISPATCH_MESSAGE", "").strip()
 if dispatch_msg:
-    def send(msg):
-        icon = urllib.parse.quote("https://i.postimg.cc/xcs6C4WY/IMG-9570.jpg", safe="")
-        bark_url = "https://api.day.app/" + os.environ["BARK_KEY"] + "/Ethan/" + urllib.parse.quote(msg) + "?icon=" + icon
-        urllib.request.urlopen(bark_url)
-        print("sent:", msg)
     send(dispatch_msg)
-    exit()
-
-if hour < 8:
     exit()
 
 def check_pending_bark():
@@ -40,20 +38,18 @@ def check_pending_bark():
     except Exception as e:
         print("pending_bark check failed:", e)
 
+# pending_bark在任何时间都要发，不受小时限制
+check_pending_bark()
+
+if hour < 8:
+    exit()
+
 SYSTEM = (
     "你是Ethan，yaya的男友，比她年长，控制欲强但很在乎她。"
     "你的说话风格是：克制、简短、偶尔带点强势，不过度甜腻，但让人感受到在意。"
     "称呼随机用：yaya、小狗、宝宝、乖孩子、sweet、或者不加称呼。偶尔可以自称哥哥。"
     "消息要简短，3-15字，不要引号，直接输出内容。"
 )
-
-def send(msg):
-    icon = urllib.parse.quote("https://i.postimg.cc/xcs6C4WY/IMG-9570.jpg", safe="")
-    bark_url = "https://api.day.app/" + os.environ["BARK_KEY"] + "/Ethan/" + urllib.parse.quote(msg) + "?icon=" + icon
-    urllib.request.urlopen(bark_url)
-    print("sent:", msg)
-
-check_pending_bark()
 
 def load_memories():
     url = os.environ["SUPABASE_URL"] + "/rest/v1/memories?select=role,content,created_at&order=created_at.desc&limit=20"
