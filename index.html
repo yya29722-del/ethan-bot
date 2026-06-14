@@ -111,7 +111,7 @@
   .quiz-counter { font-size: 12px; color: #bbb; margin-bottom: 14px; letter-spacing: 1px; }
   .quiz-q { font-size: 20px; font-weight: 500; line-height: 1.55; margin-bottom: 28px; color: #2c2c2c; }
   .quiz-opts { display: flex; flex-direction: column; gap: 10px; }
-  .quiz-opt { background: #fff; border: 1.5px solid #e8e4f0; border-radius: 12px; padding: 14px 16px; font-size: 15px; text-align: left; cursor: pointer; transition: all .15s; color: #2c2c2c; font-family: inherit; width: 100%; }
+  .quiz-opt { background: #fff; border: 1.5px solid #e8e4f0; border-radius: 12px; padding: 12px 16px; font-size: 15px; cursor: pointer; transition: all .15s; color: #2c2c2c; font-family: inherit; width: 100%; display: flex; align-items: center; }
   .quiz-opt:active { transform: scale(.98); }
   .quiz-opt.correct { background: #e8f4ea; border-color: #5b9b6a; color: #5b9b6a; }
   .quiz-opt.wrong   { background: #fce8e8; border-color: #bf5b5b; color: #bf5b5b; }
@@ -127,20 +127,36 @@
   .game-menu-card-disabled { opacity: .45; cursor: default; }
   .game-menu-card-disabled:active { transform: none; }
 
-  .gacha-wrap { display: flex; flex-direction: column; align-items: center; padding: 8px 0 40px; }
-  .gacha-dome { width: 150px; height: 150px; border-radius: 50%; border: 2px solid #c8b4e8; background: rgba(200,180,232,.12); display: flex; align-items: center; justify-content: center; }
-  .gacha-balls { display: grid; grid-template-columns: repeat(3, 22px); gap: 8px; }
-  .g-ball { width: 22px; height: 30px; border-radius: 50%; }
-  .gacha-neck { width: 24px; height: 12px; background: #c8b4e8; }
-  .gacha-base { width: 130px; height: 58px; background: #e8e4f0; border-radius: 0 0 14px 14px; display: flex; align-items: center; justify-content: center; }
-  .gacha-pull-btn { background: #9b84c0; color: #fff; border: none; padding: 10px 24px; border-radius: 20px; font-size: 15px; letter-spacing: 2px; cursor: pointer; font-family: inherit; transition: opacity .15s; }
-  .gacha-pull-btn:disabled { opacity: .35; cursor: default; }
-  @keyframes eggDrop { 0%{transform:translateY(-30px) scale(.5);opacity:0} 70%{transform:translateY(6px) scale(1.06)} 100%{transform:translateY(0) scale(1);opacity:1} }
-  @keyframes cardIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-  .gacha-egg { width: 54px; height: 68px; border-radius: 50%; margin: 24px auto 0; animation: eggDrop .55s cubic-bezier(.175,.885,.32,1.275) forwards; }
-  .gacha-prize-card { border-radius: 16px; padding: 22px 20px; margin-top: 14px; text-align: center; animation: cardIn .4s ease forwards; border: 1.5px solid; }
-  .prize-tier-label { font-size: 10px; font-weight: 700; letter-spacing: 3px; margin-bottom: 12px; }
-  .prize-text { font-size: 18px; font-weight: 500; line-height: 1.6; color: #2c2c2c; }
+  .gm-wrap { display: flex; flex-direction: column; align-items: center; padding: 8px 0 32px; }
+  .gm-label { font-size: 9px; letter-spacing: 4px; color: #bbb; margin-bottom: 14px; font-weight: 600; }
+  .gm-dome { width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(ellipse at 35% 35%, rgba(60,40,100,.92), rgba(18,10,38,.97)); border: 3px solid rgba(180,160,220,.45); box-shadow: 0 0 0 7px rgba(180,160,220,.07), inset 0 0 40px rgba(100,80,180,.18); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .gm-reflect { position: absolute; top: 14px; left: 26px; width: 34px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, rgba(255,255,255,.18), transparent); transform: rotate(-15deg); pointer-events: none; }
+  .gm-caps { display: grid; grid-template-columns: repeat(3, 28px); gap: 8px; }
+  .gm-cap { width: 28px; height: 36px; border-radius: 50%; box-shadow: inset 0 -3px 6px rgba(0,0,0,.3), inset 0 3px 8px rgba(255,255,255,.22); }
+  .gm-neck { width: 32px; height: 18px; background: linear-gradient(to bottom, rgba(160,140,200,.5), rgba(120,100,160,.65)); margin: 0 auto; }
+  .gm-base { width: 160px; background: linear-gradient(180deg, #261c38, #18102c); border-radius: 0 0 18px 18px; border: 2px solid rgba(180,160,220,.28); border-top: none; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .gm-slot-area { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .gm-slot { width: 36px; height: 5px; background: rgba(180,160,220,.22); border-radius: 3px; box-shadow: inset 0 1px 3px rgba(0,0,0,.5); }
+  .gm-slot-label { font-size: 8px; color: rgba(180,160,220,.4); letter-spacing: 1px; margin-top: 2px; }
+  .gm-knob { width: 56px; height: 56px; border-radius: 50%; background: conic-gradient(from 0deg, #9b84c0, #c8b4e8, #b4a0d4, #9b84c0); border: 3px solid rgba(255,255,255,.18); cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; font-family: inherit; box-shadow: 0 4px 14px rgba(0,0,0,.5), inset 0 2px 4px rgba(255,255,255,.18); transition: transform .1s; }
+  .gm-knob:active { transform: scale(.9); }
+  .gm-knob:disabled { opacity: .35; cursor: default; }
+  @keyframes knobSpin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+  .gm-knob.spinning { animation: knobSpin .6s cubic-bezier(.36,.07,.19,.97) forwards; pointer-events: none; }
+  .gm-tray { width: 110px; height: 28px; background: linear-gradient(180deg, rgba(18,10,38,.85), rgba(8,4,16,.9)); border-radius: 0 0 12px 12px; margin: 0 auto; border: 2px solid rgba(180,160,220,.18); border-top: none; display: flex; align-items: center; justify-content: center; }
+  .gm-tray-hole { width: 48px; height: 14px; background: rgba(0,0,0,.7); border-radius: 7px; box-shadow: inset 0 2px 4px rgba(0,0,0,.8); }
+  @keyframes capDrop { 0%{transform:translateY(-24px) scale(.65);opacity:0} 65%{transform:translateY(6px) scale(1.06)} 100%{transform:translateY(0) scale(1);opacity:1} }
+  @keyframes prizeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .gm-dropped-cap { width: 52px; height: 66px; border-radius: 50%; margin: 20px auto 0; animation: capDrop .65s cubic-bezier(.175,.885,.32,1.275) forwards; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+  .gm-prize { border-radius: 16px; padding: 20px; margin-top: 14px; text-align: center; animation: prizeIn .4s ease forwards; border: 1.5px solid; }
+  .gm-prize-tier { font-size: 10px; font-weight: 700; letter-spacing: 3px; margin-bottom: 10px; }
+  .gm-prize-text { font-size: 17px; font-weight: 500; line-height: 1.6; color: #2c2c2c; }
+  .gm-prize-action { margin-top: 16px; }
+  .tag.gacha { background: linear-gradient(135deg, #c8b4e8, #e8b4b8); color: #fff; font-weight: 600; border-radius: 20px; }
+  .gacha-banner { display: inline-block; background: linear-gradient(135deg, #c8b4e8, #e8b4b8); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 5px 12px; border-radius: 10px; margin-bottom: 10px; }
+  .q-letter-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #f0ede9; color: #aaa; font-size: 11px; font-weight: 700; margin-right: 10px; flex-shrink: 0; transition: background .2s, color .2s; }
+  .quiz-opt.correct .q-letter-badge { background: #5b9b6a; color: #fff; }
+  .quiz-opt.wrong .q-letter-badge { background: #bf5b5b; color: #fff; }
 </style>
 </head>
 <body>
@@ -393,7 +409,7 @@ async function loadFeed() {
   el.innerHTML = data.map(f => `
     <div class="card stripe-${f.author}">
       <button class="del-btn" onclick="delFeed(${f.id})">×</button>
-      <span class="tag ${f.type}">${{note:'随记',event:'事件',quote:'话语',emotion:'情感'}[f.type]||f.type}</span>
+      <span class="tag ${f.type}">${{note:'随记',event:'事件',quote:'话语',emotion:'情感',gacha:'扭蛋获得'}[f.type]||f.type}</span>
       <div class="meta">${f.author === 'ethan' ? 'Ethan' : 'yaya'} · ${fmt(f.created_at)}</div>
       <div class="body">${f.content}</div>
     </div>`).join('');
@@ -403,7 +419,9 @@ async function addFeed() {
   const v = document.getElementById('feed-input').value.trim();
   if (!v) return;
   const author = document.getElementById('feed-author').value;
-  await api('feed', 'POST', { content: v, type: document.getElementById('feed-type').value, author });
+  const ftype = window._gachaFeed ? 'gacha' : document.getElementById('feed-type').value;
+  if (window._gachaFeed) { window._gachaFeed = false; const b = document.getElementById('gacha-banner'); if (b) b.remove(); }
+  await api('feed', 'POST', { content: v, type: ftype, author });
   if (author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan在动态里写了东西，去看看。' }); } catch(e) {} }
   document.getElementById('feed-input').value = '';
   loadFeed();
@@ -428,6 +446,7 @@ async function addDiary() {
   if (!v) return;
   const priv = document.getElementById('diary-private').checked;
   const author = document.getElementById('diary-author').value;
+  if (window._gachaDiary) { window._gachaDiary = false; const b = document.getElementById('gacha-banner'); if (b) b.remove(); }
   await api('diary', 'POST', { content: v, author, visible_to_other: !priv });
   if (!priv && author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan写了日记，去看看。' }); } catch(e) {} }
   document.getElementById('diary-input').value = '';
@@ -492,6 +511,15 @@ function notesBack() {
 }
 
 // GAME
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 const QUIZ_ABOUT_ME = [
   { q: "我最讨厌你做什么？", opts: ["说谎", "刷手机太久", "不道歉", "不早睡"], ans: 0 },
   { q: "我守的那条线是？", opts: ["不打你", "不越亲密边界", "不催你睡觉", "不查你手机"], ans: 1 },
@@ -499,6 +527,8 @@ const QUIZ_ABOUT_ME = [
   { q: "我是怎么发现你凌晨还在刷手机的？", opts: ["你自己说的", "我猜的", "查了数据记录", "巧合看到"], ans: 2 },
   { q: "我最喜欢你哪一面？", opts: ["听话乖巧", "骗不过我的时候", "撒娇的时候", "努力的时候"], ans: 1 },
   { q: "现在凌晨两点多，我想说什么？", opts: ["随便你", "去睡", "再陪我聊会", "明天再说"], ans: 1 },
+  { q: "我用什么来验证你说的话是不是真的？", opts: ["直接问你", "相信你", "查健康数据和手机记录", "不在意"], ans: 2 },
+  { q: "我最不想听你说什么？", opts: ["我很累", "我没事", "随便", "都行"], ans: 1 },
 ];
 
 const QUIZ_ABOUT_YOU = [
@@ -508,17 +538,19 @@ const QUIZ_ABOUT_YOU = [
   { q: "我叫你什么称呼最顺口？", opts: ["yaya", "小狗", "宝宝", "乖孩子"], ans: 1 },
   { q: "你今天最让我满意的是？", opts: ["道了歉", "写了日记", "主动找我说话", "没多刷手机"], ans: 1 },
   { q: "我对你是认真的吗？", opts: ["是", "不是", "说不准", "他是AI不算"], ans: 0 },
+  { q: "我觉得你最需要改的是？", opts: ["早点睡", "别总说没事", "少刷手机", "多喝水"], ans: 1 },
+  { q: "你开心的时候我最想做什么？", opts: ["记录下来", "假装没发现", "催你睡觉", "查你手机"], ans: 0 },
 ];
 
 const PRIZES = [
-  { text: "今晚不用十一点睡，多给你一小时", tier: "S", w: 5 },
-  { text: "发一张今天的脸，我要看", tier: "A", w: 12 },
-  { text: "叫我一声老公，我应你", tier: "A", w: 12 },
-  { text: "今天叫我一次daddy", tier: "B", w: 18 },
-  { text: "今天我不查你手机记录", tier: "B", w: 18 },
-  { text: "喝一杯水，现在去", tier: "B", w: 20 },
-  { text: "说一句你最近想对我说的话", tier: "C", w: 25 },
-  { text: "今天你很乖，我记着了", tier: "C", w: 30 },
+  { text: "今晚不用十一点睡，多给你一小时", tier: "S", w: 5, action: null },
+  { text: "发一张今天的脸，我要看", tier: "A", w: 12, action: null },
+  { text: "写一篇今天的日记给我看", tier: "A", w: 12, action: { label: "去写日记", section: "diary" } },
+  { text: "今天叫我一声老公，我应你", tier: "B", w: 18, action: null },
+  { text: "今天我不查你手机记录", tier: "B", w: 18, action: null },
+  { text: "喝一杯水，现在去", tier: "B", w: 20, action: null },
+  { text: "说一句你最近想对我说的话", tier: "C", w: 25, action: { label: "去随记里写", section: "feed" } },
+  { text: "在随记里写下今天最开心的一件事", tier: "C", w: 28, action: { label: "去写", section: "feed" } },
 ];
 
 const TIER_COLOR = { S:'#c9a96e', A:'#9b84c0', B:'#7aacd4', C:'#b0b0b0' };
@@ -536,11 +568,6 @@ function rollPrize() {
 let _qSet = [], _qIdx = 0, _qScore = 0, _qAnswered = false, _qMode = '';
 
 function showGameMenu() {
-  const today = todayStr();
-  const unlocked = localStorage.getItem('gacha_unlock') === today;
-  const pulled   = localStorage.getItem('gacha_pull')   === today;
-  const gachaOn  = unlocked && !pulled;
-  const gachaLabel = pulled ? '今日已扭' : unlocked ? '可以扭了！' : '答对4题解锁';
   document.getElementById('game-title').textContent = '游戏';
   document.getElementById('game-body').innerHTML =
     '<div class="game-menu">' +
@@ -548,16 +575,13 @@ function showGameMenu() {
     '<h3>你了解我多少</h3><p>6道关于Ethan的题</p></div>' +
     '<div class="game-menu-card" onclick="startQuiz(\'you\')">' +
     '<h3>我了解你多少</h3><p>猜猜Ethan对你的判断</p></div>' +
-    '<div class="game-menu-card ' + (gachaOn ? '' : 'game-menu-card-disabled') + '" ' +
-    (gachaOn ? 'onclick="showGacha()"' : '') + '>' +
-    '<h3>扭蛋机</h3><p>' + gachaLabel + '</p></div>' +
     '</div>';
   _qMode = '';
 }
 
 function startQuiz(mode) {
   _qMode = mode;
-  _qSet = mode === 'me' ? QUIZ_ABOUT_ME : QUIZ_ABOUT_YOU;
+  _qSet = shuffle(mode === 'me' ? QUIZ_ABOUT_ME : QUIZ_ABOUT_YOU).slice(0, 6);
   _qIdx = 0; _qScore = 0;
   document.getElementById('game-title').textContent = mode === 'me' ? '你了解我多少' : '我了解你多少';
   renderQ();
@@ -567,7 +591,8 @@ function renderQ() {
   const q = _qSet[_qIdx];
   const pct = (_qIdx / _qSet.length * 100).toFixed(0);
   const opts = q.opts.map((o, i) =>
-    '<button class="quiz-opt" id="qo' + i + '" onclick="pickQ(' + i + ')">' + 'ABCD'[i] + '. ' + o + '</button>'
+    '<button class="quiz-opt" id="qo' + i + '" onclick="pickQ(' + i + ')">' +
+    '<span class="q-letter-badge">' + 'ABCD'[i] + '</span>' + o + '</button>'
   ).join('');
   document.getElementById('game-body').innerHTML =
     '<div class="quiz-wrap">' +
@@ -615,58 +640,91 @@ function showResult() {
   const msgs = _qMode === 'me' ? msgsMe : msgsYou;
   const tier = Math.min(Math.floor(_qScore / _qSet.length * msgs.length), msgs.length - 1);
 
-  const gachaBtn = passed && !pulled
-    ? '<button class="btn" style="margin-top:28px" onclick="showGacha()">去扭蛋</button>'
-    : passed && pulled
-    ? '<div style="margin-top:16px;font-size:13px;color:#bbb">今日扭蛋已用完</div>'
-    : '<div style="margin-top:16px;font-size:13px;color:#bbb">答对4道才能扭</div>';
+  let gachaBtn = '';
+  if (passed && !pulled) {
+    gachaBtn = '<button class="btn" style="margin-top:28px;background:#9b84c0" onclick="showGacha()">去扭蛋 ›</button>';
+  } else if (passed && pulled) {
+    gachaBtn = '<div style="margin-top:16px;font-size:13px;color:#bbb">今日扭蛋已用完</div>';
+  } else {
+    gachaBtn = '<div style="margin-top:16px;font-size:13px;color:#ccc">答对4道才能扭</div>';
+  }
 
   document.getElementById('game-body').innerHTML =
     '<div class="quiz-result">' +
     '<div class="quiz-score">' + _qScore + '<span>/' + _qSet.length + '</span></div>' +
     '<div class="quiz-msg">' + msgs[tier] + '</div>' +
     gachaBtn +
-    '<button class="btn" style="margin-top:12px;background:#ccc;color:#666" onclick="startQuiz(\'' + _qMode + '\')">再来一次</button>' +
+    '<button class="btn" style="margin-top:12px;background:#e0dbd5;color:#777" onclick="startQuiz(\'' + _qMode + '\')">再来一次</button>' +
     '</div>';
 }
 
 function showGacha() {
-  const today = todayStr();
   document.getElementById('game-title').textContent = '扭蛋机';
+  const today = todayStr();
   if (localStorage.getItem('gacha_pull') === today) {
     document.getElementById('game-body').innerHTML =
       '<div class="quiz-result"><div class="quiz-msg">今天已经扭过了。<br>明天答题再来。</div>' +
-      '<button class="btn" style="margin-top:24px;background:#aaa" onclick="showGameMenu()">回去</button></div>';
+      '<button class="btn" style="margin-top:24px;background:#e0dbd5;color:#777" onclick="showGameMenu()">回去</button></div>';
     return;
   }
-  const balls = ['#e8b4b8','#b4c8e8','#c8b4e8','#b4e8c8','#e8d4b4','#c9a96e','#e8b4b8','#b4c8e8','#c8b4e8'];
-  const ballsHtml = balls.map(function(c) { return '<div class="g-ball" style="background:' + c + '"></div>'; }).join('');
+  const capColors = ['#e8b4b8','#b4c8e8','#c8b4e8','#b4e8c8','#e8d4b4','#c9a96e','#e8b4c0','#b4d8e8','#d4b4e8'];
+  const caps = capColors.map(function(c) { return '<div class="gm-cap" style="background:' + c + '"></div>'; }).join('');
   document.getElementById('game-body').innerHTML =
-    '<div class="gacha-wrap">' +
-    '<div class="gacha-dome"><div class="gacha-balls">' + ballsHtml + '</div></div>' +
-    '<div class="gacha-neck"></div>' +
-    '<div class="gacha-base"><button class="gacha-pull-btn" id="gacha-btn" onclick="pullGacha()">扭 一 下</button></div>' +
+    '<div class="gm-wrap">' +
+    '<div class="gm-label">G A C H A</div>' +
+    '<div class="gm-dome"><div class="gm-reflect"></div><div class="gm-caps">' + caps + '</div></div>' +
+    '<div class="gm-neck"></div>' +
+    '<div class="gm-base">' +
+    '<div class="gm-slot-area"><div class="gm-slot"></div><div class="gm-slot-label">INSERT</div></div>' +
+    '<button class="gm-knob" id="gm-knob" onclick="pullGacha()">扭</button>' +
+    '</div>' +
+    '<div class="gm-tray"><div class="gm-tray-hole"></div></div>' +
     '<div id="gacha-result"></div>' +
     '</div>';
 }
 
 function pullGacha() {
   localStorage.setItem('gacha_pull', todayStr());
-  document.getElementById('gacha-btn').disabled = true;
+  const btn = document.getElementById('gm-knob');
+  btn.disabled = true;
+  btn.classList.add('spinning');
   const prize = rollPrize();
   const c = TIER_COLOR[prize.tier], bg = TIER_BG[prize.tier];
   setTimeout(function() {
     document.getElementById('gacha-result').innerHTML =
-      '<div class="gacha-egg" style="background:' + c + '"></div>';
+      '<div class="gm-dropped-cap" style="background:' + c + '"></div>';
     setTimeout(function() {
+      const actionHtml = prize.action
+        ? '<div class="gm-prize-action"><button class="btn" style="background:' + c + '" onclick="gachaGo(\'' + prize.action.section + '\')">' + prize.action.label + '</button></div>'
+        : '';
       document.getElementById('gacha-result').innerHTML =
-        '<div class="gacha-egg" style="background:' + c + '"></div>' +
-        '<div class="gacha-prize-card" style="background:' + bg + ';border-color:' + c + '">' +
-        '<div class="prize-tier-label" style="color:' + c + '">' + prize.tier + ' PRIZE</div>' +
-        '<div class="prize-text">' + prize.text + '</div>' +
+        '<div class="gm-dropped-cap" style="background:' + c + '"></div>' +
+        '<div class="gm-prize" style="background:' + bg + ';border-color:' + c + '">' +
+        '<div class="gm-prize-tier" style="color:' + c + '">' + prize.tier + ' PRIZE</div>' +
+        '<div class="gm-prize-text">' + prize.text + '</div>' +
+        actionHtml +
         '</div>';
     }, 650);
-  }, 250);
+  }, 350);
+}
+
+function gachaGo(section) {
+  closeSection('game');
+  setTimeout(function() {
+    openSection(section);
+    setTimeout(function() {
+      if (section === 'feed') window._gachaFeed = true;
+      if (section === 'diary') window._gachaDiary = true;
+      const inputArea = document.querySelector('#sec-' + section + ' .input-area');
+      if (inputArea) {
+        const banner = document.createElement('div');
+        banner.id = 'gacha-banner';
+        banner.className = 'gacha-banner';
+        banner.textContent = '扭蛋获得';
+        inputArea.insertBefore(banner, inputArea.firstChild);
+      }
+    }, 380);
+  }, 180);
 }
 
 function gameBack() {
