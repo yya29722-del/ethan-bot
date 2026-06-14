@@ -591,6 +591,10 @@ function enterApp() {
 }
 
 loadCounts();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/ethan-bot/sw.js');
+}
 </script>
 </body>
 </html>
