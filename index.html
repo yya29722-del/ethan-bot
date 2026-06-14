@@ -16,10 +16,8 @@
   /* COVER */
   #cover { position: fixed; inset: 0; background: #1a1814; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity .6s ease; }
   #cover.fade { opacity: 0; pointer-events: none; }
-  .cover-icons { display: flex; gap: 16px; margin-bottom: 40px; align-items: center; }
-  .cover-dot { width: 14px; height: 14px; border-radius: 50%; }
-  .cover-dot.yaya { background: #e8b4b8; }
-  .cover-dot.ethan { background: #b4c8e8; }
+  .cover-icons { display: flex; gap: 28px; margin-bottom: 40px; align-items: flex-end; }
+  .cover-icons svg { opacity: .85; }
   .cover-title { font-size: 15px; letter-spacing: 4px; color: rgba(255,255,255,.5); font-weight: 300; }
   .cover-date { font-size: 28px; color: #fff; font-weight: 300; margin-top: 10px; letter-spacing: 2px; }
   .cover-btn { margin-top: 56px; padding: 12px 32px; border: 1px solid rgba(255,255,255,.2); border-radius: 30px; background: none; color: rgba(255,255,255,.6); font-size: 13px; letter-spacing: 2px; cursor: pointer; transition: all .2s; }
@@ -98,8 +96,29 @@
 <!-- COVER -->
 <div id="cover">
   <div class="cover-icons">
-    <div class="cover-dot ethan"></div>
-    <div class="cover-dot yaya"></div>
+    <!-- cat (Ethan) -->
+    <svg width="52" height="56" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 18 L4 6 L14 14" stroke="#b4c8e8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M44 18 L48 6 L38 14" stroke="#b4c8e8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <ellipse cx="26" cy="30" rx="18" ry="18" stroke="#b4c8e8" stroke-width="1.5"/>
+      <circle cx="20" cy="28" r="2" fill="#b4c8e8"/>
+      <circle cx="32" cy="28" r="2" fill="#b4c8e8"/>
+      <path d="M23 34 Q26 37 29 34" stroke="#b4c8e8" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="10" y1="31" x2="18" y2="32" stroke="#b4c8e8" stroke-width="1" stroke-linecap="round"/>
+      <line x1="10" y1="34" x2="18" y2="34" stroke="#b4c8e8" stroke-width="1" stroke-linecap="round"/>
+      <line x1="34" y1="32" x2="42" y2="31" stroke="#b4c8e8" stroke-width="1" stroke-linecap="round"/>
+      <line x1="34" y1="34" x2="42" y2="34" stroke="#b4c8e8" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    <!-- dog (yaya) -->
+    <svg width="52" height="56" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="26" cy="30" rx="18" ry="18" stroke="#e8b4b8" stroke-width="1.5"/>
+      <ellipse cx="10" cy="29" rx="6" ry="9" stroke="#e8b4b8" stroke-width="1.5"/>
+      <ellipse cx="42" cy="29" rx="6" ry="9" stroke="#e8b4b8" stroke-width="1.5"/>
+      <circle cx="20" cy="28" r="2" fill="#e8b4b8"/>
+      <circle cx="32" cy="28" r="2" fill="#e8b4b8"/>
+      <ellipse cx="26" cy="33" rx="4" ry="3" stroke="#e8b4b8" stroke-width="1.5"/>
+      <path d="M22 36 Q26 40 30 36" stroke="#e8b4b8" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
   </div>
   <div class="cover-title">YAYA &nbsp;&amp;&nbsp; ETHAN</div>
   <div class="cover-date">2026.06.10</div>
