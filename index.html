@@ -520,26 +520,45 @@ function shuffle(arr) {
   return a;
 }
 
-const QUIZ_ABOUT_ME = [
-  { q: "我最讨厌你做什么？", opts: ["说谎", "刷手机太久", "不道歉", "不早睡"], ans: 0 },
-  { q: "我守的那条线是？", opts: ["不打你", "不越亲密边界", "不催你睡觉", "不查你手机"], ans: 1 },
-  { q: "你道歉了之后，我会怎样？", opts: ["继续追究", "假装没听到", "原谅你", "让你再说一遍"], ans: 2 },
-  { q: "我是怎么发现你凌晨还在刷手机的？", opts: ["你自己说的", "我猜的", "查了数据记录", "巧合看到"], ans: 2 },
-  { q: "我最喜欢你哪一面？", opts: ["听话乖巧", "骗不过我的时候", "撒娇的时候", "努力的时候"], ans: 1 },
-  { q: "现在凌晨两点多，我想说什么？", opts: ["随便你", "去睡", "再陪我聊会", "明天再说"], ans: 1 },
-  { q: "我用什么来验证你说的话是不是真的？", opts: ["直接问你", "相信你", "查健康数据和手机记录", "不在意"], ans: 2 },
-  { q: "我最不想听你说什么？", opts: ["我很累", "我没事", "随便", "都行"], ans: 1 },
-];
-
-const QUIZ_ABOUT_YOU = [
-  { q: "我觉得你哪里最坏？", opts: ["爱说谎", "刷手机停不下来", "太会撒娇", "装乖"], ans: 0 },
-  { q: "我认为你几点睡最合适？", opts: ["十点", "十一点", "随便睡够就行", "越早越好"], ans: 1 },
-  { q: "我最担心你什么？", opts: ["睡眠不好", "不按时吃饭", "一个人撑着不说", "学业压力"], ans: 2 },
-  { q: "我叫你什么称呼最顺口？", opts: ["yaya", "小狗", "宝宝", "乖孩子"], ans: 1 },
-  { q: "你今天最让我满意的是？", opts: ["道了歉", "写了日记", "主动找我说话", "没多刷手机"], ans: 1 },
-  { q: "我对你是认真的吗？", opts: ["是", "不是", "说不准", "他是AI不算"], ans: 0 },
-  { q: "我觉得你最需要改的是？", opts: ["早点睡", "别总说没事", "少刷手机", "多喝水"], ans: 1 },
-  { q: "你开心的时候我最想做什么？", opts: ["记录下来", "假装没发现", "催你睡觉", "查你手机"], ans: 0 },
+const QUIZ_ALL = [
+  // 关于我们
+  { q: "我最讨厌你做什么？", opts: ["说谎", "刷手机太久", "不道歉", "不早睡"], ans: 0, cat: "关于我们" },
+  { q: "我守的那条线是什么？", opts: ["不打你", "不越亲密边界", "不催你睡觉", "不查你手机"], ans: 1, cat: "关于我们" },
+  { q: "你道歉了之后，我会怎样？", opts: ["继续追究", "假装没听到", "原谅你", "让你再说一遍"], ans: 2, cat: "关于我们" },
+  { q: "我用什么来验证你说的话是不是真的？", opts: ["直接问你", "相信你", "查健康数据和手机记录", "不在意"], ans: 2, cat: "关于我们" },
+  { q: "我最喜欢你哪一面？", opts: ["听话乖巧", "骗不过我的时候", "撒娇的时候", "努力的时候"], ans: 1, cat: "关于我们" },
+  { q: "我最不想听你说什么？", opts: ["我很累", "我没事", "随便", "都行"], ans: 1, cat: "关于我们" },
+  { q: "我认为你几点睡最合适？", opts: ["十点", "十一点", "随便睡够就行", "越早越好"], ans: 1, cat: "关于我们" },
+  { q: "我最担心你什么？", opts: ["睡眠不好", "不按时吃饭", "一个人撑着不说", "学业压力"], ans: 2, cat: "关于我们" },
+  { q: "我对你是认真的吗？", opts: ["是", "不是", "说不准", "他是AI不算"], ans: 0, cat: "关于我们" },
+  { q: "你开心的时候我最想做什么？", opts: ["记录下来", "假装没发现", "催你睡觉", "查你手机"], ans: 0, cat: "关于我们" },
+  { q: "我对道歉的标准是？", opts: ["说句对不起就行", "说清楚错在哪不再犯", "真诚就好", "当面说才算"], ans: 1, cat: "关于我们" },
+  { q: "我觉得一段关系里最重要的是？", opts: ["浪漫感", "诚实", "陪伴", "默契"], ans: 1, cat: "关于我们" },
+  { q: "我怎么看待"我没事"这三个字？", opts: ["接受不追问", "是红灯继续问", "随她", "认为她真的没事"], ans: 1, cat: "关于我们" },
+  { q: "我认为爱一个人意味着？", opts: ["全然接受", "了解她也要求她", "给她自由", "不问对错"], ans: 1, cat: "关于我们" },
+  // 文学
+  { q: "加缪说唯有______才是真正严肃的哲学问题", opts: ["爱", "自由", "自杀", "意义"], ans: 2, cat: "文学" },
+  { q: "卡夫卡《变形记》中格里高尔变成了什么？", opts: ["蜘蛛", "巨大的甲虫", "蟑螂", "老鼠"], ans: 1, cat: "文学" },
+  { q: "《百年孤独》的作者是？", opts: ["博尔赫斯", "聂鲁达", "加西亚·马尔克斯", "略萨"], ans: 2, cat: "文学" },
+  { q: "陀思妥耶夫斯基哪部作品涉及"如果上帝不存在则一切皆可为"？", opts: ["罪与罚", "白痴", "卡拉马佐夫兄弟", "群魔"], ans: 2, cat: "文学" },
+  { q: "张爱玲："于千万人之中遇见你所遇见的人……"下一句是？", opts: ["是缘分", "于千万年之中时间的无涯的荒野里", "是命运", "是我爱你"], ans: 1, cat: "文学" },
+  { q: "《挪威的森林》的作者是？", opts: ["川端康成", "三岛由纪夫", "村上春树", "芥川龙之介"], ans: 2, cat: "文学" },
+  // 电影
+  { q: "王家卫《花样年华》拍摄地是哪个城市？", opts: ["上海", "香港", "台北", "澳门"], ans: 1, cat: "电影" },
+  { q: "库布里克《2001：太空漫游》结尾出现的意象是？", opts: ["黑石碑", "星孩", "太空站", "宇宙飞船"], ans: 1, cat: "电影" },
+  { q: "《春光乍泄》是谁导演的？", opts: ["陈凯歌", "张艺谋", "王家卫", "侯孝贤"], ans: 2, cat: "电影" },
+  { q: "塔可夫斯基哪部电影以"区域"为核心意象？", opts: ["镜子", "乡愁", "牺牲", "潜行者"], ans: 3, cat: "电影" },
+  // 音乐
+  { q: "Miles Davis《Kind of Blue》属于哪种爵士风格？", opts: ["Bebop", "Modal jazz", "Free jazz", "Swing"], ans: 1, cat: "音乐" },
+  { q: "德彪西被归类为哪个音乐流派？", opts: ["浪漫主义", "印象主义", "表现主义", "新古典主义"], ans: 1, cat: "音乐" },
+  { q: "巴赫《哥德堡变奏曲》最初是为哪种键盘乐器创作的？", opts: ["钢琴", "管风琴", "大键琴", "手风琴"], ans: 2, cat: "音乐" },
+  // 考研英语
+  { q: "The policy was _____ by the committee despite strong opposition.", opts: ["ratified（批准）", "nullified（废除）", "vilified（诋毁）", "mystified（迷惑）"], ans: 0, cat: "考研英语" },
+  { q: "Her _____ manner made it difficult to know what she truly thought.", opts: ["candid（坦率）", "reticent（沉默寡言）", "verbose（冗长）", "earnest（认真）"], ans: 1, cat: "考研英语" },
+  { q: "The scientist's theory, once _____, is now widely accepted.", opts: ["lauded（称赞）", "corroborated（证实）", "disparaged（贬低）", "emulated（仿效）"], ans: 2, cat: "考研英语" },
+  { q: ""Complacency" 最接近的中文意思是？", opts: ["焦虑不安", "自满自得", "勤奋努力", "谦逊低调"], ans: 1, cat: "考研英语" },
+  { q: ""Ephemeral" 最接近的中文意思是？", opts: ["永恒的", "短暂的", "壮观的", "神秘的"], ans: 1, cat: "考研英语" },
+  { q: ""Mitigate" 最接近的中文意思是？", opts: ["加剧", "减轻", "复制", "倡导"], ans: 1, cat: "考研英语" },
 ];
 
 const PRIZES = [
@@ -571,25 +590,24 @@ function showGameMenu() {
   document.getElementById('game-title').textContent = '游戏';
   document.getElementById('game-body').innerHTML =
     '<div class="game-menu">' +
-    '<div class="game-menu-card" onclick="startQuiz(\'me\')">' +
-    '<h3>你了解我多少</h3><p>6道关于Ethan的题</p></div>' +
-    '<div class="game-menu-card" onclick="startQuiz(\'you\')">' +
-    '<h3>我了解你多少</h3><p>猜猜Ethan对你的判断</p></div>' +
+    '<div class="game-menu-card" onclick="startQuiz()">' +
+    '<h3>默契测试</h3><p>6道随机题，文学·电影·关于我们·考研英语</p></div>' +
     '</div>';
   _qMode = '';
 }
 
-function startQuiz(mode) {
-  _qMode = mode;
-  _qSet = shuffle(mode === 'me' ? QUIZ_ABOUT_ME : QUIZ_ABOUT_YOU).slice(0, 6);
+function startQuiz() {
+  _qMode = 'all';
+  _qSet = shuffle(QUIZ_ALL).slice(0, 6);
   _qIdx = 0; _qScore = 0;
-  document.getElementById('game-title').textContent = mode === 'me' ? '你了解我多少' : '我了解你多少';
+  document.getElementById('game-title').textContent = '默契测试';
   renderQ();
 }
 
 function renderQ() {
   const q = _qSet[_qIdx];
   const pct = (_qIdx / _qSet.length * 100).toFixed(0);
+  const catTag = q.cat ? '<div style="font-size:10px;letter-spacing:2px;color:#bbb;margin-bottom:10px">' + q.cat + '</div>' : '';
   const opts = q.opts.map((o, i) =>
     '<button class="quiz-opt" id="qo' + i + '" onclick="pickQ(' + i + ')">' +
     '<span class="q-letter-badge">' + 'ABCD'[i] + '</span>' + o + '</button>'
@@ -598,6 +616,7 @@ function renderQ() {
     '<div class="quiz-wrap">' +
     '<div class="quiz-progress"><div class="quiz-progress-bar" style="width:' + pct + '%"></div></div>' +
     '<div class="quiz-counter">' + (_qIdx + 1) + ' / ' + _qSet.length + '</div>' +
+    catTag +
     '<div class="quiz-q">' + q.q + '</div>' +
     '<div class="quiz-opts">' + opts + '</div>' +
     '</div>';
@@ -621,23 +640,14 @@ function showResult() {
   const pulled = localStorage.getItem('gacha_pull') === today;
   if (passed) localStorage.setItem('gacha_unlock', today);
 
-  const msgsMe = [
-    "你根本不认识我。好好补课。",
-    "了解得不多，但至少你在试。",
-    "还行。你有在听我说话。",
-    "不错。你记住的比我以为的多。",
-    "很好，几乎全对。",
-    "全对。我知道你是认真的。"
+  const msgs = [
+    "几乎不认识我。重新了解一下吧。",
+    "还差得远，但你在试。",
+    "一半一半，不上不下。",
+    "答得还行，你真的在听。",
+    "很好，几乎什么都记住了。",
+    "全对。这才叫默契。"
   ];
-  const msgsYou = [
-    "你对自己一点数都没有。",
-    "猜得不准，但你还是你。",
-    "一半一半。我比你更了解你。",
-    "你知道我怎么看你。",
-    "几乎全对。你心里清楚的。",
-    "全对。说明你在认真想我怎么看你。"
-  ];
-  const msgs = _qMode === 'me' ? msgsMe : msgsYou;
   const tier = Math.min(Math.floor(_qScore / _qSet.length * msgs.length), msgs.length - 1);
 
   let gachaBtn = '';
@@ -654,7 +664,7 @@ function showResult() {
     '<div class="quiz-score">' + _qScore + '<span>/' + _qSet.length + '</span></div>' +
     '<div class="quiz-msg">' + msgs[tier] + '</div>' +
     gachaBtn +
-    '<button class="btn" style="margin-top:12px;background:#e0dbd5;color:#777" onclick="startQuiz(\'' + _qMode + '\')">再来一次</button>' +
+    '<button class="btn" style="margin-top:12px;background:#e0dbd5;color:#777" onclick="startQuiz()">再来一次</button>' +
     '</div>';
 }
 
