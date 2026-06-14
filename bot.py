@@ -51,7 +51,7 @@ def ask_claude(user_prompt, memories=None):
         mem_text = "\n".join(f"[{m['role']}] {m['content']}" for m in memories)
         system += f"\n\n近期记忆（仅供参考，不要直接重复）：\n{mem_text}"
     body = json.dumps({
-        "model": "deepseek/deepseek-chat-v3-0324:free",
+        "model": "meta-llama/llama-3.3-70b-instruct:free",
         "max_tokens": 60,
         "messages": [
             {"role": "system", "content": system},
