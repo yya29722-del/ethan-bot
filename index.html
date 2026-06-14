@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="我们">
 <link rel="apple-touch-icon" href="icon.png">
-<meta name="theme-color" content="#f5f3f0">
+<meta name="theme-color" content="#1a1814">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { font-family: -apple-system, sans-serif; background: #f5f3f0; color: #2c2c2c; overflow: hidden; height: 100vh; }
@@ -43,9 +43,10 @@
 
   /* ── TODOS / HOME TAB ── */
   .safe-top { height: max(52px, env(safe-area-inset-top, 44px) + 8px); }
-  .home-header { padding: 6px 20px 14px; }
-  .home-header-sub { font-size: 10px; letter-spacing: 3.5px; color: #c8c4be; font-weight: 600; margin-bottom: 4px; }
-  .home-header-title { font-size: 22px; font-weight: 600; letter-spacing: -.4px; color: #2c2c2c; }
+  .home-header-zone { background: #1a1814; padding-bottom: 6px; }
+  .home-header { padding: 6px 20px 20px; }
+  .home-header-sub { font-size: 10px; letter-spacing: 3.5px; color: rgba(255,255,255,.32); font-weight: 600; margin-bottom: 5px; }
+  .home-header-title { font-size: 22px; font-weight: 600; letter-spacing: -.4px; color: #fff; }
   .wx-quote { flex: 1; font-size: 12px; color: #aaa; line-height: 1.55; text-align: right; padding-left: 14px; }
   .cal-widget { margin: 0 16px 14px; background: #fff; border-radius: 22px; padding: 20px 18px 16px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
   .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
@@ -240,10 +241,12 @@
 
   <!-- TAB: 待办 -->
   <div class="tab-page active" id="tab-todos">
-    <div class="safe-top"></div>
-    <div class="home-header">
-      <div class="home-header-sub">YAYA &amp; ETHAN</div>
-      <div class="home-header-title">我们的空间</div>
+    <div class="home-header-zone">
+      <div class="safe-top"></div>
+      <div class="home-header">
+        <div class="home-header-sub">YAYA &amp; ETHAN</div>
+        <div class="home-header-title">我们的空间</div>
+      </div>
     </div>
     <div class="cal-widget">
       <div class="cal-header">
@@ -428,12 +431,12 @@ function renderCalendar() {
 
 // ── WEATHER ──
 const WX_QUOTES = {
-  sunny: ['阳光不错，出去透透气。','今天晴，别一直窝着。','天好，把窗帘拉开。','晒得到太阳的日子，心情别太差。'],
-  cloudy: ['多云，温差注意。','灰色的天，还有我陪你。','阴天适合发呆，适度就好。','云多，也要记得吃饭。'],
-  rainy: ['下雨了，出门带伞。','雨天路滑，走路别急。','今天下雨，少往外跑。','雨声大，不是你睡懒觉的理由。'],
-  snowy: ['下雪了，多穿一层。','雪天路滑，慢点走。','北京下雪了，保暖第一。'],
-  stormy: ['有雷阵雨，待在室内。','打雷了，手机别放手边。','雷雨天，窗关上。'],
-  foggy: ['大雾，出门戴口罩。','能见度低，开车别急。','今天雾大，少开窗。']
+  sunny: ['今天晴，少窝着。','天这么好，别浪费在床上。','晒太阳记得喝水。','阳光不错，出去转转。'],
+  cloudy: ['阴天别赖床。','灰天气，我也在。','多云，温差大，多穿一件。','阴着呢，心情别跟着沉。'],
+  rainy: ['下雨了，出门带伞。我说的。','雨天路滑，走慢点。','今天别乱跑。','雨声大，不是赖床的理由。'],
+  snowy: ['下雪了，多穿。','雪天别逞强，慢点走。','北京下雪，保暖第一。'],
+  stormy: ['有雷，少往外跑。','打雷了，安分待着。','雷雨天，窗关上。'],
+  foggy: ['大雾，减少出行。','能见度差，不急。','雾天别急着出门。']
 };
 function wxCat(code) {
   if (code <= 1) return 'sunny';
@@ -442,6 +445,11 @@ function wxCat(code) {
   if (code <= 67 || (code >= 80 && code <= 82)) return 'rainy';
   if (code <= 77 || code === 85 || code === 86) return 'snowy';
   return 'stormy';
+}
+function showDailyQuote(cat) {
+  const bjDay = new Date(Date.now() + 8*3600000).getUTCDate();
+  const qs = WX_QUOTES[cat];
+  document.getElementById('wx-quote').textContent = qs[bjDay % qs.length];
 }
 async function loadWeather() {
   const WMO = {
@@ -453,7 +461,7 @@ async function loadWeather() {
     85:'❄️',86:'❄️',
     95:'⛈',96:'⛈',99:'⛈'
   };
-  const bjDay = new Date(Date.now() + 8*3600000).getUTCDate();
+  showDailyQuote('cloudy'); // show something immediately
   try {
     const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=39.9042&longitude=116.4074&current=temperature_2m,weather_code&timezone=Asia%2FShanghai');
     const j = await r.json();
@@ -461,12 +469,10 @@ async function loadWeather() {
     const code = j.current.weather_code;
     document.getElementById('wx-icon').textContent = WMO[code] || '🌡';
     document.getElementById('wx-desc').textContent = temp;
-    const qs = WX_QUOTES[wxCat(code)];
-    document.getElementById('wx-quote').textContent = qs[bjDay % qs.length];
+    showDailyQuote(wxCat(code)); // update to actual weather
   } catch(e) {
     document.getElementById('wx-icon').textContent = '—';
     document.getElementById('wx-desc').textContent = '北京';
-    document.getElementById('wx-quote').textContent = '';
   }
 }
 
@@ -845,14 +851,13 @@ function gameBack() { if (_qMode) { _qMode = ''; showGameMenu(); } }
 // ── INIT ──
 function enterApp() {
   const cover = document.getElementById('cover');
+  const app = document.getElementById('app');
+  app.style.display = 'block';
+  renderCalendar();
+  loadWeather();
+  loadTodos();
   cover.classList.add('fade');
-  setTimeout(() => {
-    cover.style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    renderCalendar();
-    loadWeather();
-    loadTodos();
-  }, 600);
+  setTimeout(() => { cover.style.display = 'none'; }, 650);
 }
 
 if ('serviceWorker' in navigator) {
