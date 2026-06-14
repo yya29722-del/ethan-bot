@@ -851,9 +851,6 @@ function gameBack() { if (_qMode) { _qMode = ''; showGameMenu(); } }
 
 // ── INIT ──
 function enterApp() {
-  const el = document.documentElement;
-  if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
-  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
   const cover = document.getElementById('cover');
   const app = document.getElementById('app');
   app.style.display = 'block';
