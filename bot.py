@@ -51,7 +51,7 @@ def ask_claude(user_prompt, memories=None):
         mem_text = "\n".join(f"[{m['role']}] {m['content']}" for m in memories)
         system += f"\n\n近期记忆（仅供参考，不要直接重复）：\n{mem_text}"
     body = json.dumps({
-        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "model": "llama-3.3-70b-versatile",
         "max_tokens": 60,
         "messages": [
             {"role": "system", "content": system},
@@ -59,12 +59,11 @@ def ask_claude(user_prompt, memories=None):
         ]
     }).encode()
     req = urllib.request.Request(
-        "https://openrouter.ai/api/v1/chat/completions",
+        "https://api.groq.com/openai/v1/chat/completions",
         data=body,
         headers={
             "Authorization": "Bearer " + os.environ["AI_API_KEY"],
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/yya29722-del/ethan-bot",
         }
     )
     for attempt in range(3):
