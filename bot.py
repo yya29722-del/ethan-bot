@@ -4,8 +4,8 @@ from datetime import datetime, timezone, timedelta
 hour = (datetime.now(timezone.utc) + timedelta(hours=8)).hour
 
 def send(msg):
-    icon = urllib.parse.quote("https://i.postimg.cc/xcs6C4WY/IMG-9570.jpg", safe="")
-    bark_url = "https://api.day.app/" + os.environ["BARK_KEY"] + "/Ethan/" + urllib.parse.quote(msg) + "?icon=" + icon
+    icon = urllib.parse.quote("https://yya29722-del.github.io/ethan-bot/icon.png", safe="")
+    bark_url = "https://api.day.app/" + os.environ["BARK_KEY"] + "/Ethan/" + urllib.parse.quote(msg) + "?icon=" + icon + "&badge=0"
     urllib.request.urlopen(bark_url)
     print("sent:", msg)
 
