@@ -295,7 +295,7 @@
   #tarot-ink-canvas { position:fixed; inset:0; z-index:300; pointer-events:none; display:none; }
 
   /* ===== TAROT ===== */
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&family=Great+Vibes&display=swap');
   :root { --champagne:#F4EAD4;--ivory:#FFFDF9;--rose-quartz:#F6E7E8;--burgundy:#8B1E2F;--gold:#C9A84C;--gold-light:#E8C96B;--gold-dim:rgba(201,168,76,0.4);--text-primary:#2C1810;--text-secondary:#7A5C4A;--text-muted:#B09080;--shadow-warm:rgba(139,80,40,0.15);--card-w:160px;--card-h:272px; }
   #tarot-app { font-family:'Inter',sans-serif; min-height:100%; background: radial-gradient(ellipse at 50% 0%,rgba(140,70,5,0.72) 0%,rgba(180,100,20,0.3) 25%,transparent 55%), radial-gradient(ellipse at 80% 90%,rgba(246,231,232,0.6) 0%,transparent 50%), radial-gradient(ellipse at 20% 70%,rgba(201,168,76,0.15) 0%,transparent 40%), #F4EAD4; box-shadow:inset 0 0 120px rgba(80,30,10,0.12); display:flex; flex-direction:column; align-items:center; padding:max(48px, calc(env(safe-area-inset-top) + 32px)) 24px max(120px, calc(env(safe-area-inset-bottom) + 114px)); position:relative; overflow:hidden; }
   #tarot-app::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center,transparent 40%,rgba(50,20,10,0.18) 100%); pointer-events:none; z-index:0; }
@@ -303,8 +303,8 @@
   @keyframes drift { 0%{transform:translateY(0)} 100%{transform:translateY(-30px)} }
   .tarot-header { position:relative; z-index:1; text-align:center; margin-bottom:40px; }
   .tarot-eyebrow { font-family:'Cinzel',serif; font-size:13px; font-weight:500; letter-spacing:0.52em; text-transform:uppercase; color:rgba(255,252,238,0.95); margin-bottom:16px; text-shadow:0 0 24px rgba(201,168,76,0.9),0 0 60px rgba(201,168,76,0.4),0 1px 3px rgba(0,0,0,0.3); }
-  @keyframes goldShimmer { 0%{background-position:-250% center} 55%{background-position:250% center} 100%{background-position:250% center} }
-  .tarot-title { font-family:'Cinzel Decorative',serif; font-size:clamp(30px,8.5vw,48px); font-weight:700; line-height:1.2; margin:0 0 10px; letter-spacing:0.06em; width:100%; background:linear-gradient(90deg,#3D1F0E 10%,#2C1810 20%,#C9A84C 38%,#F0D882 50%,#C9A84C 62%,#2C1810 80%,#3D1F0E 90%); background-size:300% auto; -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; animation:goldShimmer 6s ease-in-out infinite; }
+  @keyframes inkWrite { 0%{opacity:0;-webkit-text-stroke:2.5px rgba(201,168,76,0.95);-webkit-text-fill-color:transparent} 18%{opacity:1;-webkit-text-stroke:2px rgba(201,168,76,0.85);-webkit-text-fill-color:transparent} 72%{-webkit-text-stroke:1.2px rgba(201,168,76,0.5);-webkit-text-fill-color:rgba(44,24,16,0.3)} 100%{-webkit-text-stroke:0.6px rgba(201,168,76,0.25);-webkit-text-fill-color:#2C1810;opacity:1} }
+  .tarot-title { font-family:'Great Vibes',cursive; font-size:clamp(44px,12vw,72px); font-weight:400; line-height:1.15; margin:0 0 6px; letter-spacing:0.02em; width:100%; animation:inkWrite 3s cubic-bezier(0.25,0.46,0.45,0.94) 0.4s both; }
   .tarot-subtitle { font-family:'IM Fell English',serif; font-size:16px; font-style:italic; color:rgba(80,40,15,0.75); letter-spacing:0.02em; line-height:1.6; }
   .gold-divider { display:flex; align-items:center; gap:12px; margin:16px auto; width:fit-content; }
   .gold-divider::before,.gold-divider::after { content:''; display:block; width:60px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
@@ -566,14 +566,14 @@
         </div>
       </div>
       <div class="deck-area" id="deck-area">
-        <p class="deck-label">点击牌堆，抽取一张</p>
+        <p class="deck-label">Tap the deck to draw a card</p>
         <div class="deck-fan" id="deck-fan" role="button" aria-label="抽牌">
           <div class="deck-card"><div class="card-inner"><div class="card-back"></div></div></div>
           <div class="deck-card"><div class="card-inner"><div class="card-back"></div></div></div>
           <div class="deck-card"><div class="card-inner"><div class="card-back"></div></div></div>
           <div class="deck-card"><div class="card-inner"><div class="card-back"></div></div></div>
         </div>
-        <button class="draw-btn" id="draw-btn">✦ 抽一张牌</button>
+        <button class="draw-btn" id="draw-btn">✦ Draw a Card</button>
       </div>
       <div class="reading-stage" id="reading-stage">
         <div class="drawn-card-wrap" id="drawn-card-wrap">
@@ -608,7 +608,7 @@
             <div class="particle"></div><div class="particle"></div>
           </div>
         </div>
-        <button class="reveal-btn" id="reveal-btn">✦ 翻开牌面</button>
+        <button class="reveal-btn" id="reveal-btn">✦ Reveal the Card</button>
         <div class="reading-result-wrap" id="reading-result-wrap">
           <h3 class="reading-card-name" id="result-card-name"></h3>
           <p class="reading-card-keywords" id="result-keywords"></p>
@@ -617,7 +617,7 @@
             <div id="tarot-reading-result"></div>
             <div class="reading-meta">
               <span class="reading-meta-q" id="reading-meta-q"></span>
-              <button class="reading-again-btn" id="again-btn">再抽一张</button>
+              <button class="reading-again-btn" id="again-btn">Draw Again</button>
             </div>
           </div>
         </div>
