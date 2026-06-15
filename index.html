@@ -537,16 +537,6 @@
       <div class="input-area">
         <textarea id="feed-input" rows="3" placeholder="Write something…"></textarea>
         <div class="input-row">
-          <select id="feed-type">
-            <option value="note">Note</option>
-            <option value="event">Event</option>
-            <option value="quote">Quote</option>
-            <option value="emotion">Mood</option>
-          </select>
-          <select id="feed-author">
-            <option value="yaya">yaya</option>
-            <option value="ethan">Ethan</option>
-          </select>
           <button class="btn" onclick="addFeed()">Post</button>
         </div>
       </div>
@@ -1093,8 +1083,8 @@ async function loadFeed() {
 async function addFeed() {
   var v = document.getElementById('feed-input').value.trim();
   if (!v) return;
-  var author = document.getElementById('feed-author').value;
-  var ftype = window._gachaFeed ? 'gacha' : document.getElementById('feed-type').value;
+  var author = 'yaya';
+  var ftype = window._gachaFeed ? 'gacha' : 'note';
   if (window._gachaFeed) {
     window._gachaFeed = false;
     var b = document.getElementById('gacha-banner');
