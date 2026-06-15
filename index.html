@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="我们">
+<meta name="apple-mobile-web-app-title" content="us">
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="theme-color" content="#f5f3f0">
 <style>
@@ -272,13 +272,13 @@
   </div>
   <div class="cover-title">YAYA &nbsp;&amp;&nbsp; ETHAN</div>
   <div class="cover-date">2026.06.10</div>
-  <button class="cover-btn" onclick="enterApp()">进入</button>
+  <button class="cover-btn" onclick="enterApp()">Enter</button>
 </div>
 
 <!-- APP -->
 <div id="app">
 
-  <!-- TAB: 首页 -->
+  <!-- TAB: Home -->
   <div class="tab-page active" id="tab-home">
     <div class="safe-top"></div>
     <div class="home-brand">
@@ -292,13 +292,13 @@
         <div class="cal-days-together" id="cal-days-together"></div>
       </div>
       <div class="cal-weekdays">
-        <div class="cal-wd">日</div>
-        <div class="cal-wd">一</div>
-        <div class="cal-wd">二</div>
-        <div class="cal-wd">三</div>
-        <div class="cal-wd">四</div>
-        <div class="cal-wd">五</div>
-        <div class="cal-wd">六</div>
+        <div class="cal-wd">Sun</div>
+        <div class="cal-wd">Mon</div>
+        <div class="cal-wd">Tue</div>
+        <div class="cal-wd">Wed</div>
+        <div class="cal-wd">Thu</div>
+        <div class="cal-wd">Fri</div>
+        <div class="cal-wd">Sat</div>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
@@ -317,60 +317,60 @@
     </div>
   </div>
 
-  <!-- TAB: 动态 -->
+  <!-- TAB: Feed -->
   <div class="tab-page" id="tab-feed">
     <div class="tab-section-header">
-      <h2>动态</h2>
+      <h2>Feed</h2>
     </div>
     <div class="section-body">
       <div class="input-area">
-        <textarea id="feed-input" rows="3" placeholder="记录此刻…"></textarea>
+        <textarea id="feed-input" rows="3" placeholder="Write something…"></textarea>
         <div class="input-row">
           <select id="feed-type">
-            <option value="note">随记</option>
-            <option value="event">事件</option>
-            <option value="quote">话语</option>
-            <option value="emotion">情感</option>
+            <option value="note">Note</option>
+            <option value="event">Event</option>
+            <option value="quote">Quote</option>
+            <option value="emotion">Mood</option>
           </select>
           <select id="feed-author">
             <option value="yaya">yaya</option>
             <option value="ethan">Ethan</option>
           </select>
-          <button class="btn" onclick="addFeed()">发布</button>
+          <button class="btn" onclick="addFeed()">Post</button>
         </div>
       </div>
-      <div id="feed-list"><div class="empty">暂无动态</div></div>
+      <div id="feed-list"><div class="empty">No posts yet</div></div>
     </div>
   </div>
 
-  <!-- TAB: 日记 -->
+  <!-- TAB: Diary -->
   <div class="tab-page" id="tab-diary">
     <div class="tab-section-header">
-      <h2>日记</h2>
+      <h2>Diary</h2>
     </div>
     <div class="section-body">
       <div class="input-area">
-        <textarea id="diary-input" rows="5" placeholder="今天…"></textarea>
+        <textarea id="diary-input" rows="5" placeholder="Today…"></textarea>
         <div class="input-row">
           <select id="diary-author">
             <option value="yaya">yaya</option>
             <option value="ethan">Ethan</option>
           </select>
           <label class="diary-toggle">
-            <input type="checkbox" id="diary-private"> 私密
+            <input type="checkbox" id="diary-private"> Private
           </label>
-          <button class="btn" onclick="addDiary()">写下</button>
+          <button class="btn" onclick="addDiary()">Write</button>
         </div>
       </div>
-      <div id="diary-list"><div class="empty">暂无日记</div></div>
+      <div id="diary-list"><div class="empty">No entries yet</div></div>
     </div>
   </div>
 
-  <!-- TAB: 关于你 -->
+  <!-- TAB: Notes -->
   <div class="tab-page" id="tab-notes">
     <div class="tab-section-header">
       <button class="back-btn" id="notes-back-btn" onclick="notesBack()" style="display:none">‹</button>
-      <h2 id="notes-title">关于你</h2>
+      <h2 id="notes-title">Notes</h2>
     </div>
     <div class="section-body">
       <div id="notes-cats" class="cat-grid"></div>
@@ -380,11 +380,11 @@
     </div>
   </div>
 
-  <!-- TAB: 测一测 -->
+  <!-- TAB: Quiz -->
   <div class="tab-page" id="tab-game">
     <div class="tab-section-header">
       <button class="back-btn" id="game-back-btn" onclick="gameBack()" style="display:none">‹</button>
-      <h2 id="game-title">测一测</h2>
+      <h2 id="game-title">Quiz</h2>
     </div>
     <div class="section-body" id="game-body"></div>
   </div>
@@ -396,33 +396,33 @@
         <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
         <path d="M9 21V12h6v9"/>
       </svg>
-      首页
+      Home
     </button>
     <button class="nav-tab" id="nav-feed" onclick="switchTab('feed')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="9"/>
         <circle cx="12" cy="12" r="3"/>
       </svg>
-      动态
+      Feed
     </button>
     <button class="nav-tab" id="nav-diary" onclick="switchTab('diary')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
       </svg>
-      日记
+      Diary
     </button>
     <button class="nav-tab" id="nav-notes" onclick="switchTab('notes')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
       </svg>
-      关于你
+      Notes
     </button>
     <button class="nav-tab" id="nav-game" onclick="switchTab('game')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
       </svg>
-      测一测
+      Quiz
     </button>
   </nav>
 </div>
@@ -476,15 +476,15 @@ function renderCalendar() {
   var month = now.getUTCMonth(); // 0-based
   var today = now.getUTCDate();
 
-  var monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
-  document.getElementById('cal-month').textContent = year + '年 ' + monthNames[month];
+  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month').textContent = monthNames[month] + ' ' + year;
 
   // days together
   var nowLocal = new Date(year, month, today);
   var diffMs = nowLocal - REL_START;
   var diffDays = Math.floor(diffMs / 86400000);
   if (diffDays >= 0) {
-    document.getElementById('cal-days-together').textContent = '在一起 ' + diffDays + ' 天';
+    document.getElementById('cal-days-together').textContent = diffDays + ' days together';
   } else {
     document.getElementById('cal-days-together').textContent = '';
   }
@@ -523,12 +523,12 @@ function renderCalendar() {
 
 // WEATHER
 var WX_QUOTES = {
-  sunny:  ['去晒太阳，但先吃饭。', '天好，心情也得好。', '阳光够了，别熬夜。'],
-  cloudy: ['阴天适合窝着学习。', '云厚，记得多喝水。', '别让天气影响心情。'],
-  rainy:  ['下雨了，出门带伞。', '雨天适合写日记。', '潮湿别着凉，加件衣服。'],
-  snowy:  ['下雪注意保暖。', '雪天路滑，慢点走。', '冷了多穿，别逞强。'],
-  stormy: ['外面有风，少出门。', '大风天气注意安全。', '今天乖乖待在室内。'],
-  foggy:  ['雾天出行注意安全。', '能见度低，慢点走。', '今天空气一般，少开窗。']
+  sunny:  ['Get some sun, but eat first.', 'Nice weather — keep your mood up too.', 'Plenty of sunlight. Don\'t stay up late.'],
+  cloudy: ['Cloudy day, good for studying.', 'Thick clouds — remember to drink water.', 'Don\'t let the weather affect your mood.'],
+  rainy:  ['It\'s raining — take an umbrella.', 'Rain is good for writing in your diary.', 'Damp out there — put on a layer.'],
+  snowy:  ['Snow — stay warm.', 'Slippery roads — walk slowly.', 'It\'s cold. Dress properly.'],
+  stormy: ['Windy out — stay in if you can.', 'Strong winds — stay safe.', 'Stay indoors today.'],
+  foggy:  ['Foggy out — be careful travelling.', 'Low visibility — slow down.', 'Air quality is average — keep windows closed.']
 };
 
 function showDailyQuote(cat) {
@@ -558,7 +558,7 @@ async function loadWeather() {
     document.getElementById('wx-quote').textContent = showDailyQuote(cat);
   } catch(e) {
     document.getElementById('wx-icon').textContent = '🌤️';
-    document.getElementById('wx-temp').textContent = '天气获取中';
+    document.getElementById('wx-temp').textContent = 'Loading weather…';
     document.getElementById('wx-quote').textContent = showDailyQuote('sunny');
   }
 }
@@ -568,7 +568,7 @@ async function loadTodos() {
   var data = await api('todos?select=*&order=created_at.desc');
   var el = document.getElementById('todos-list');
   if (el) {
-    if (!data.length) { el.innerHTML = '<div class="empty">暂无待办</div>'; }
+    if (!data.length) { el.innerHTML = '<div class="empty">No todos yet</div>'; }
     else {
       el.innerHTML = data.map(function(t) {
         return '<div class="card ' + (t.completed ? 'done' : '') + '">' +
@@ -579,7 +579,7 @@ async function loadTodos() {
           '<div class="meta">' + fmt(t.created_at) + '</div>' +
           '<div class="body">' + t.content + '</div>' +
           (t.ethan_comment ? '<div class="comment"><span>Ethan · </span>' + t.ethan_comment + '</div>' : '') +
-          (t.ethan_reminder ? '<div class="comment"><span>提醒 · </span>' + t.ethan_reminder + '</div>' : '') +
+          (t.ethan_reminder ? '<div class="comment"><span>Reminder · </span>' + t.ethan_reminder + '</div>' : '') +
           '</div></div></div>';
       }).join('');
     }
@@ -593,7 +593,7 @@ function renderTodoPeek(data) {
   if (!peekEl) return;
   var pending = data.filter(function(t) { return !t.completed; });
   if (!pending.length) {
-    peekEl.innerHTML = '<div class="todo-peek-item"><span class="todo-peek-text" style="color:#ccc">暂无待办</span></div>';
+    peekEl.innerHTML = '<div class="todo-peek-item"><span class="todo-peek-text" style="color:#ccc">No todos yet</span></div>';
     return;
   }
   var shown = pending.slice(0, 3);
@@ -604,7 +604,7 @@ function renderTodoPeek(data) {
       '</div>';
   }).join('');
   if (pending.length > 3) {
-    html += '<div class="todo-peek-more" onclick="switchTab(\'feed\')">还有 ' + (pending.length - 3) + ' 条…</div>';
+    html += '<div class="todo-peek-more" onclick="switchTab(\'feed\')">' + (pending.length - 3) + ' more…</div>';
   }
   peekEl.innerHTML = html;
 }
@@ -627,8 +627,8 @@ async function delTodo(id) { await api('todos?id=eq.' + id, 'DELETE'); loadTodos
 async function loadFeed() {
   var data = await api('feed?select=*&order=created_at.desc&limit=50');
   var el = document.getElementById('feed-list');
-  if (!data.length) { el.innerHTML = '<div class="empty">暂无动态</div>'; return; }
-  var typeMap = {note:'随记',event:'事件',quote:'话语',emotion:'情感',gacha:'扭蛋获得'};
+  if (!data.length) { el.innerHTML = '<div class="empty">No posts yet</div>'; return; }
+  var typeMap = {note:'Note',event:'Event',quote:'Quote',emotion:'Mood',gacha:'Gacha Prize'};
   el.innerHTML = data.map(function(f) {
     return '<div class="card stripe-' + f.author + '">' +
       '<button class="del-btn" onclick="delFeed(' + f.id + ')">×</button>' +
@@ -650,7 +650,7 @@ async function addFeed() {
     if (b) b.remove();
   }
   await api('feed', 'POST', { content: v, type: ftype, author: author });
-  if (author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan在动态里写了东西，去看看。' }); } catch(e) {} }
+  if (author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan posted something in the feed, go check it out.' }); } catch(e) {} }
   document.getElementById('feed-input').value = '';
   loadFeed();
 }
@@ -660,12 +660,12 @@ async function delFeed(id) { await api('feed?id=eq.' + id, 'DELETE'); loadFeed()
 async function loadDiary() {
   var data = await api('diary?select=*&order=created_at.desc&limit=30');
   var el = document.getElementById('diary-list');
-  if (!data.length) { el.innerHTML = '<div class="empty">暂无日记</div>'; return; }
+  if (!data.length) { el.innerHTML = '<div class="empty">No entries yet</div>'; return; }
   el.innerHTML = data.map(function(d) {
     return '<div class="card stripe-' + d.author + '">' +
       '<button class="del-btn" onclick="delDiary(' + d.id + ')">×</button>' +
       '<div class="meta">' + (d.author === 'ethan' ? 'Ethan' : 'yaya') + ' · ' + fmt(d.created_at) +
-      (!d.visible_to_other ? '<span class="private-badge">私密</span>' : '') + '</div>' +
+      (!d.visible_to_other ? '<span class="private-badge">Private</span>' : '') + '</div>' +
       '<div class="body">' + d.content + '</div>' +
       '</div>';
   }).join('');
@@ -682,14 +682,14 @@ async function addDiary() {
     if (b) b.remove();
   }
   await api('diary', 'POST', { content: v, author: author, visible_to_other: !priv });
-  if (!priv && author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan写了日记，去看看。' }); } catch(e) {} }
+  if (!priv && author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan wrote a diary entry, go check it out.' }); } catch(e) {} }
   document.getElementById('diary-input').value = '';
   loadDiary();
 }
 async function delDiary(id) { await api('diary?id=eq.' + id, 'DELETE'); loadDiary(); }
 
 // NOTES
-var NOTE_CATS = ['月经', '心情', '身体', '日常', '重要'];
+var NOTE_CATS = ['Period', 'Mood', 'Body', 'Daily', 'Important'];
 var _notesData = [];
 var _notesInDetail = false;
 
@@ -717,7 +717,7 @@ function renderNotesCats() {
 
   document.getElementById('notes-cats').style.display = '';
   document.getElementById('notes-detail').style.display = 'none';
-  document.getElementById('notes-title').textContent = '关于你';
+  document.getElementById('notes-title').textContent = 'Notes';
   document.getElementById('notes-back-btn').style.display = 'none';
   _notesInDetail = false;
 }
@@ -732,7 +732,7 @@ function openNotesCat(cat) {
           '<div class="body">' + n.content + '</div>' +
           '</div>';
       }).join('')
-    : '<div class="empty">暂无记录</div>';
+    : '<div class="empty">No records yet</div>';
 
   document.getElementById('notes-cats').style.display = 'none';
   document.getElementById('notes-detail').style.display = '';
