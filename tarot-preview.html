@@ -10,12 +10,8 @@
 
 :root {
   --gold: #c9a96e;
-  --gold2: #e2c07a;
+  --gold2: #f0d898;
   --gold-dim: rgba(201,169,110,0.3);
-  --pink: #f2c4ce;
-  --rose: #e8a0b0;
-  --blush: #fce8ed;
-  --white: #fffcfa;
   --text: #2a1a20;
   --text-mid: #8a6070;
   --text-light: #c0a0aa;
@@ -24,423 +20,216 @@
 body {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 20% 0%, #ffe8ef 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 10%, #fff3e0 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 100%, #fce8f0 0%, transparent 60%),
-    linear-gradient(160deg, #fff8fa 0%, #fff4f7 40%, #fffbf2 70%, #fff6f9 100%);
-  font-family: 'Cormorant Garamond', 'Georgia', serif;
+    radial-gradient(ellipse at 15% 0%, #ffe0ec 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 5%, #fff4d6 0%, transparent 48%),
+    radial-gradient(ellipse at 50% 100%, #ffdde8 0%, transparent 55%),
+    linear-gradient(160deg, #fff8fa 0%, #fff4f6 45%, #fffbf3 100%);
+  font-family: 'Cormorant Garamond', Georgia, serif;
   overflow-x: hidden;
 }
 
-/* ── Scattered deco stars ── */
-.deco-field {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
+/* ambient stars */
+.deco-field { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
 .deco-star {
   position: absolute;
-  color: var(--gold);
-  font-size: 0.9rem;
   opacity: 0;
   animation: twinkle ease-in-out infinite;
 }
 @keyframes twinkle {
-  0%,100% { opacity: 0; transform: scale(0.6) rotate(0deg); }
-  50%      { opacity: 0.55; transform: scale(1.1) rotate(20deg); }
+  0%,100% { opacity:0; transform:scale(0.5) rotate(0deg); }
+  50%      { opacity:0.5; transform:scale(1.1) rotate(18deg); }
 }
 
-/* ── Page wrap ── */
+/* wrap */
 .tarot-wrap {
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 52px 20px 70px;
+  position: relative; z-index:1;
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center;
+  padding: 50px 20px 70px;
 }
 
-/* ── Header ── */
-.tarot-header { text-align: center; margin-bottom: 10px; }
-
+/* header */
 .tarot-eyebrow {
-  font-size: 0.72rem;
-  letter-spacing: 0.38em;
-  color: var(--rose);
-  margin-bottom: 12px;
-  font-family: 'Cinzel Decorative', serif;
+  font-family:'Cinzel Decorative',serif;
+  font-size:0.7rem; letter-spacing:0.38em; color:#d4a0b0;
+  text-align:center; margin-bottom:12px;
 }
-
 .tarot-title {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 2.8rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  background: linear-gradient(135deg, #c9a96e 0%, #f0d898 45%, #c9a96e 70%, #e2b86a 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1;
-  margin-bottom: 10px;
-  filter: drop-shadow(0 2px 8px rgba(201,169,110,0.3));
+  font-family:'Cinzel Decorative',serif;
+  font-size:2.8rem; font-weight:700; letter-spacing:0.14em;
+  background: linear-gradient(135deg,#b8862a 0%,#e8c96a 40%,#c9a96e 65%,#f0d898 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  text-align:center; line-height:1; margin-bottom:10px;
 }
-
 .tarot-subtitle {
-  font-size: 1.0rem;
-  color: var(--text-mid);
-  letter-spacing: 0.1em;
-  font-style: italic;
+  font-size:1.05rem; color:var(--text-mid); letter-spacing:0.1em;
+  font-style:italic; text-align:center;
 }
 
-/* ── Ornament ── */
-.ornament {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 18px auto 26px;
+/* ornament */
+.orn { display:flex; align-items:center; gap:10px; margin:18px auto 28px; }
+.orn-l { width:44px; height:1px; background:linear-gradient(to right,transparent,#e8b0c0); }
+.orn-r { width:44px; height:1px; background:linear-gradient(to left,transparent,#e8b0c0); }
+.orn-c { font-size:0.8rem; color:var(--gold); letter-spacing:0.12em; }
+
+/* question */
+.q-wrap { width:100%; max-width:420px; margin-bottom:28px; }
+.q-label {
+  font-family:'Cinzel Decorative',serif;
+  font-size:0.62rem; letter-spacing:0.28em; color:var(--gold);
+  margin-bottom:10px; text-transform:uppercase;
 }
-.orn-line {
-  width: 48px;
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--pink));
+.q-wrap textarea {
+  width:100%; background:rgba(255,252,250,0.88);
+  border:1.5px solid rgba(201,169,110,0.38); border-radius:18px;
+  color:var(--text); font-family:'Cormorant Garamond',serif; font-size:1.05rem;
+  padding:16px 18px; resize:none; outline:none; line-height:1.8;
+  box-shadow:0 4px 20px rgba(240,180,200,0.18), inset 0 1px 0 rgba(255,255,255,0.9);
+  transition:border-color 0.3s, box-shadow 0.3s;
 }
-.orn-line.r { background: linear-gradient(to left, transparent, var(--pink)); }
-.orn-center {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--gold);
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
+.q-wrap textarea::placeholder { color:#d0b0ba; font-style:italic; }
+.q-wrap textarea:focus {
+  border-color:rgba(201,169,110,0.65);
+  box-shadow:0 4px 28px rgba(240,180,200,0.3), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
-/* ── Question ── */
-.question-wrap { width: 100%; max-width: 420px; margin-bottom: 28px; }
-
-.question-label {
-  font-size: 0.68rem;
-  letter-spacing: 0.28em;
-  color: var(--gold);
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  font-family: 'Cinzel Decorative', serif;
-}
-
-.question-wrap textarea {
-  width: 100%;
-  background: rgba(255,252,250,0.85);
-  border: 1.5px solid rgba(201,169,110,0.38);
-  border-radius: 18px;
-  color: var(--text);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.05rem;
-  padding: 16px 18px;
-  resize: none;
-  outline: none;
-  line-height: 1.8;
-  box-shadow: 0 4px 20px rgba(242,196,206,0.2), inset 0 1px 0 rgba(255,255,255,0.9);
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-.question-wrap textarea::placeholder { color: #d0b0ba; font-style: italic; }
-.question-wrap textarea:focus {
-  border-color: rgba(201,169,110,0.65);
-  box-shadow: 0 4px 28px rgba(242,196,206,0.35), inset 0 1px 0 rgba(255,255,255,0.9);
-}
-
-/* ── Button ── */
+/* button */
 .draw-btn {
-  background: linear-gradient(135deg, #c9a96e 0%, #f0d898 50%, #c9a96e 100%);
-  background-size: 200% 100%;
-  border: none;
-  color: #2a1a20;
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  padding: 15px 42px;
-  border-radius: 50px;
-  cursor: pointer;
-  box-shadow: 0 6px 22px rgba(201,169,110,0.4), 0 2px 8px rgba(201,169,110,0.2);
-  transition: background-position 0.4s, transform 0.15s, box-shadow 0.3s;
-  margin-bottom: 50px;
-  position: relative;
-  overflow: hidden;
+  background:linear-gradient(135deg,#c9a96e 0%,#f0d898 50%,#c9a96e 100%);
+  background-size:200% 100%;
+  border:none; color:#2a1810;
+  font-family:'Cinzel Decorative',serif; font-size:0.8rem; font-weight:700;
+  letter-spacing:0.22em; padding:15px 44px; border-radius:50px; cursor:pointer;
+  box-shadow:0 6px 24px rgba(201,169,110,0.42), 0 2px 8px rgba(201,169,110,0.2);
+  transition:background-position 0.4s, transform 0.15s, box-shadow 0.3s;
+  margin-bottom:50px; position:relative; overflow:hidden;
 }
 .draw-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.28), transparent 55%);
-  border-radius: inherit;
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.28),transparent 55%);
+  border-radius:inherit;
 }
-.draw-btn:hover { background-position: 100% 0; transform: translateY(-2px); box-shadow: 0 10px 32px rgba(201,169,110,0.5); }
-.draw-btn:active { transform: translateY(0); }
-.draw-btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+.draw-btn:hover { background-position:100% 0; transform:translateY(-2px); box-shadow:0 10px 32px rgba(201,169,110,0.5); }
+.draw-btn:active { transform:translateY(0); }
+.draw-btn:disabled { opacity:0.38; cursor:default; transform:none; box-shadow:none; }
 
-/* ── Card scene ── */
-.deck-area { display: flex; justify-content: center; margin-bottom: 44px; }
-
-.card-scene {
-  width: 190px;
-  height: 320px;
-  perspective: 1100px;
-}
+/* card scene */
+.deck-area { display:flex; justify-content:center; margin-bottom:44px; }
+.card-scene { width:200px; height:340px; perspective:1100px; }
 
 .tarot-card {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  transform-style: preserve-3d;
+  width:100%; height:100%;
+  position:relative; transform-style:preserve-3d;
 }
 
 .card-face {
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  overflow: hidden;
+  position:absolute; inset:0; border-radius:20px;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  overflow:hidden;
 }
 
-/* ── Card back ── */
-.card-back {
-  background: linear-gradient(160deg, #0e0a0c 0%, #1a0f14 50%, #0e0a0c 100%);
-  border: 2px solid var(--gold);
-  box-shadow:
-    0 20px 55px rgba(0,0,0,0.35),
-    0 6px 18px rgba(0,0,0,0.25),
-    inset 0 1px 0 rgba(201,169,110,0.2),
-    0 0 0 1px rgba(201,169,110,0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ── Card front ── */
-.card-front {
-  transform: rotateY(180deg);
-  background: linear-gradient(160deg, #fff8fa 0%, #fff2f5 60%, #fff8f0 100%);
-  border: 2px solid var(--gold);
-  box-shadow:
-    0 22px 60px rgba(201,169,110,0.22),
-    0 8px 24px rgba(0,0,0,0.08),
-    inset 0 1px 0 rgba(255,255,255,1),
-    0 0 0 1px rgba(201,169,110,0.25);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 22px 16px 18px;
-  gap: 9px;
-  position: relative;
-}
-
-/* ── Front inner frame ── */
-.front-frame-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.cf-number {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
-  color: var(--gold);
-  opacity: 0.85;
-  z-index: 1;
-}
-
-.cf-symbol {
-  font-size: 3.2rem;
-  line-height: 1;
-  color: var(--gold);
-  filter: drop-shadow(0 3px 10px rgba(201,169,110,0.55));
-  z-index: 1;
-}
-
-.cf-name {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 1.0rem;
-  color: var(--text);
-  text-align: center;
-  letter-spacing: 0.08em;
-  line-height: 1.4;
-  z-index: 1;
-}
-
-.cf-divider {
-  width: 50px;
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--gold), transparent);
-  z-index: 1;
-}
-
-.cf-keywords {
-  font-size: 0.72rem;
-  color: var(--text-mid);
-  text-align: center;
-  letter-spacing: 0.1em;
-  line-height: 1.8;
-  font-style: italic;
-  z-index: 1;
-}
-
-/* ── Hover float ── */
-.card-scene.hoverable .tarot-card {
-  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.card-scene.hoverable:hover .tarot-card {
-  transform: translateY(-14px) rotateX(4deg);
-}
-.card-scene.hoverable:hover .card-back {
-  box-shadow:
-    0 28px 65px rgba(0,0,0,0.4),
-    0 0 35px rgba(201,169,110,0.3),
-    inset 0 1px 0 rgba(201,169,110,0.2);
-}
-
-/* ── Flip animations ── */
+/* flip animations */
 @keyframes cardLift {
-  0%   { transform: translateY(0) rotateY(0deg) rotateX(0deg); }
-  25%  { transform: translateY(-28px) rotateY(0deg) rotateX(-9deg); }
-  100% { transform: translateY(-28px) rotateY(90deg) rotateX(0deg); }
+  0%   { transform:translateY(0) rotateY(0deg) rotateX(0deg); }
+  25%  { transform:translateY(-30px) rotateY(0deg) rotateX(-10deg); }
+  100% { transform:translateY(-30px) rotateY(90deg) rotateX(0deg); }
 }
 @keyframes cardReveal {
-  0%   { transform: translateY(-28px) rotateY(90deg); }
-  55%  { transform: translateY(-6px) rotateY(198deg); }
-  72%  { transform: translateY(-1px) rotateY(184deg); }
-  86%  { transform: translateY(0) rotateY(176deg); }
-  100% { transform: translateY(0) rotateY(180deg); }
+  0%   { transform:translateY(-30px) rotateY(90deg); }
+  55%  { transform:translateY(-8px) rotateY(198deg); }
+  72%  { transform:translateY(-1px) rotateY(184deg); }
+  86%  { transform:translateY(0) rotateY(176deg); }
+  100% { transform:translateY(0) rotateY(180deg); }
 }
+.tarot-card.flipping-out { animation:cardLift 0.5s cubic-bezier(0.55,0,1,0.45) forwards; }
+.tarot-card.flipping-in  { animation:cardReveal 0.9s cubic-bezier(0.25,1,0.5,1) forwards; }
 
-.tarot-card.flipping-out { animation: cardLift 0.5s cubic-bezier(0.55,0,1,0.45) forwards; }
-.tarot-card.flipping-in  { animation: cardReveal 0.9s cubic-bezier(0.25,1,0.5,1) forwards; }
+/* hover */
+.card-scene.hoverable .tarot-card { transition:transform 0.5s cubic-bezier(0.23,1,0.32,1); }
+.card-scene.hoverable:hover .tarot-card { transform:translateY(-14px) rotateX(4deg); }
 
-/* ── Burst ── */
+/* burst */
 .burst-p {
-  position: absolute;
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--gold2);
-  pointer-events: none;
-  z-index: 100;
-  animation: burstOut 0.7s ease-out forwards;
+  position:absolute; width:5px; height:5px; border-radius:50%;
+  pointer-events:none; z-index:100;
+  animation:burstOut 0.75s ease-out forwards;
 }
 @keyframes burstOut {
-  0%   { transform: translate(0,0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--bx),var(--by)) scale(0); opacity: 0; }
+  0%   { transform:translate(0,0) scale(1); opacity:1; }
+  100% { transform:translate(var(--bx),var(--by)) scale(0); opacity:0; }
 }
 
-/* ── Result ── */
+/* result */
 .tarot-result {
-  width: 100%; max-width: 420px;
-  opacity: 0; transform: translateY(14px);
-  transition: opacity 0.6s 0.8s, transform 0.6s 0.8s;
-  pointer-events: none;
+  width:100%; max-width:440px;
+  opacity:0; transform:translateY(14px);
+  transition:opacity 0.65s 0.8s, transform 0.65s 0.8s;
+  pointer-events:none;
 }
-.tarot-result.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.tarot-result.visible { opacity:1; transform:translateY(0); pointer-events:auto; }
 
 .result-name {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 1.45rem;
-  text-align: center;
-  letter-spacing: 0.1em;
-  background: linear-gradient(135deg, #c9a96e, #f0d898, #c9a96e);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 4px;
+  font-family:'Cinzel Decorative',serif;
+  font-size:1.5rem; text-align:center; letter-spacing:0.1em;
+  background:linear-gradient(135deg,#b8862a,#e8c96a,#c9a96e);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:4px;
 }
-
 .result-suit {
-  font-size: 0.85rem;
-  color: var(--text-mid);
-  text-align: center;
-  letter-spacing: 0.15em;
-  margin-bottom: 22px;
-  font-style: italic;
+  font-size:0.88rem; color:var(--text-mid);
+  text-align:center; letter-spacing:0.16em; margin-bottom:22px; font-style:italic;
 }
 
 .reading-box {
-  background: rgba(255,252,250,0.8);
-  backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(201,169,110,0.32);
-  border-radius: 22px;
-  padding: 26px 24px;
-  box-shadow: 0 6px 36px rgba(242,196,206,0.18), inset 0 1px 0 rgba(255,255,255,0.95);
-  position: relative;
-  overflow: hidden;
+  background:rgba(255,252,250,0.82); backdrop-filter:blur(10px);
+  border:1.5px solid rgba(201,169,110,0.32); border-radius:22px;
+  padding:28px 26px;
+  box-shadow:0 6px 36px rgba(240,180,200,0.15), inset 0 1px 0 rgba(255,255,255,0.95);
+  position:relative; overflow:hidden;
 }
 .reading-box::before {
-  content: '✦';
-  position: absolute;
-  top: 14px; left: 18px;
-  color: var(--gold);
-  font-size: 0.6rem;
-  opacity: 0.5;
+  content:'✦'; position:absolute; top:14px; left:18px;
+  color:var(--gold); font-size:0.55rem; opacity:0.45;
 }
 .reading-box::after {
-  content: '✦';
-  position: absolute;
-  bottom: 14px; right: 18px;
-  color: var(--gold);
-  font-size: 0.6rem;
-  opacity: 0.5;
+  content:'✦'; position:absolute; bottom:14px; right:18px;
+  color:var(--gold); font-size:0.55rem; opacity:0.45;
 }
-
 .reading-label {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 0.62rem;
-  letter-spacing: 0.3em;
-  color: var(--gold);
-  text-align: center;
-  margin-bottom: 12px;
+  font-family:'Cinzel Decorative',serif;
+  font-size:0.62rem; letter-spacing:0.3em; color:var(--gold);
+  text-align:center; margin-bottom:12px;
 }
-
-.reading-gold-line {
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
-  margin-bottom: 16px;
+.reading-sep {
+  height:1px;
+  background:linear-gradient(to right,transparent,rgba(201,169,110,0.4),transparent);
+  margin-bottom:16px;
 }
-
 .reading-content {
-  font-size: 1.05rem;
-  color: var(--text);
-  line-height: 2;
-  min-height: 64px;
-  text-align: center;
+  font-size:1.08rem; color:var(--text); line-height:2.1;
+  text-align:center; min-height:64px;
 }
-
-.reading-placeholder { color: var(--text-light); font-style: italic; }
+.reading-placeholder { color:var(--text-light); font-style:italic; }
 </style>
 </head>
 <body>
 
-<!-- Scattered star deco -->
 <div class="deco-field" id="decoField"></div>
 
 <div class="tarot-wrap">
 
-  <header class="tarot-header">
-    <div class="tarot-eyebrow">✦ 塔 罗 占 卜 ✦</div>
-    <div class="tarot-title">TAROT</div>
-    <div class="tarot-subtitle">问出你心中的困惑，让牌给你答案</div>
-  </header>
+  <div class="tarot-eyebrow">✦ 塔 罗 占 卜 ✦</div>
+  <div class="tarot-title">TAROT</div>
+  <div class="tarot-subtitle">问出你心中的困惑，让牌给你答案</div>
 
-  <div class="ornament">
-    <div class="orn-line"></div>
-    <div class="orn-center">☽ &nbsp;✦&nbsp; ☾</div>
-    <div class="orn-line r"></div>
+  <div class="orn">
+    <div class="orn-l"></div>
+    <div class="orn-c">☽ &nbsp;✦&nbsp; ☾</div>
+    <div class="orn-r"></div>
   </div>
 
-  <div class="question-wrap">
-    <div class="question-label">你 的 问 题</div>
+  <div class="q-wrap">
+    <div class="q-label">你 的 问 题</div>
     <textarea id="tarotQuestion" rows="3" placeholder="此刻，你想问什么…"></textarea>
   </div>
 
@@ -450,169 +239,302 @@ body {
     <div class="card-scene" id="cardScene">
       <div class="tarot-card" id="tarotCard">
 
-        <!-- ── Back face ── -->
-        <div class="card-face card-back">
-          <svg width="100%" height="100%" viewBox="0 0 190 320" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Outer gold border -->
-            <rect x="8" y="8" width="174" height="304" rx="14" stroke="#c9a96e" stroke-width="1.5" opacity="0.9"/>
-            <!-- Second inner border -->
-            <rect x="15" y="15" width="160" height="290" rx="10" stroke="#c9a96e" stroke-width="0.7" opacity="0.5"/>
-            <!-- Third inner border -->
-            <rect x="22" y="22" width="146" height="276" rx="7" stroke="#c9a96e" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.35"/>
+        <!-- ════════════════════ CARD BACK ════════════════════ -->
+        <div class="card-face" style="background:linear-gradient(155deg,#1a0818 0%,#2d0e24 40%,#3d1230 70%,#1a0818 100%); border:2px solid #c9a96e; box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(201,169,110,0.15),inset 0 1px 0 rgba(201,169,110,0.2);">
+          <svg width="200" height="340" viewBox="0 0 200 340" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-            <!-- Top center ribbon banner -->
-            <path d="M65 26 Q95 20 125 26 L128 38 Q95 32 62 38 Z" fill="#c9a96e" opacity="0.2"/>
-            <path d="M65 26 Q95 20 125 26 L128 38 Q95 32 62 38 Z" stroke="#c9a96e" stroke-width="0.7" opacity="0.6"/>
-            <!-- Bottom ribbon -->
-            <path d="M65 294 Q95 300 125 294 L128 282 Q95 288 62 282 Z" fill="#c9a96e" opacity="0.2"/>
-            <path d="M65 294 Q95 300 125 294 L128 282 Q95 288 62 282 Z" stroke="#c9a96e" stroke-width="0.7" opacity="0.6"/>
+            <!-- ── outermost decorative border ── -->
+            <rect x="6" y="6" width="188" height="328" rx="16" stroke="#c9a96e" stroke-width="1.6" opacity="0.95"/>
+            <rect x="11" y="11" width="178" height="318" rx="13" stroke="#c9a96e" stroke-width="0.7" opacity="0.5"/>
+            <rect x="16" y="16" width="168" height="308" rx="10" stroke="#c9a96e" stroke-width="0.5" stroke-dasharray="3 2.5" opacity="0.3"/>
 
-            <!-- Corner star ornaments -->
-            <!-- TL -->
-            <g transform="translate(30,36)">
-              <polygon points="0,-9 2,-3 8,-3 3,1 5,7 0,3 -5,7 -3,1 -8,-3 -2,-3" fill="#c9a96e" opacity="0.7"/>
-            </g>
-            <!-- TR -->
-            <g transform="translate(160,36)">
-              <polygon points="0,-9 2,-3 8,-3 3,1 5,7 0,3 -5,7 -3,1 -8,-3 -2,-3" fill="#c9a96e" opacity="0.7"/>
-            </g>
-            <!-- BL -->
-            <g transform="translate(30,284)">
-              <polygon points="0,-9 2,-3 8,-3 3,1 5,7 0,3 -5,7 -3,1 -8,-3 -2,-3" fill="#c9a96e" opacity="0.7"/>
-            </g>
-            <!-- BR -->
-            <g transform="translate(160,284)">
-              <polygon points="0,-9 2,-3 8,-3 3,1 5,7 0,3 -5,7 -3,1 -8,-3 -2,-3" fill="#c9a96e" opacity="0.7"/>
-            </g>
+            <!-- ── top banner ribbon ── -->
+            <path d="M40 18 Q100 10 160 18 L164 36 Q100 28 36 36 Z" fill="url(#bannerGrad)" opacity="0.9"/>
+            <path d="M40 18 Q100 10 160 18 L164 36 Q100 28 36 36 Z" stroke="#c9a96e" stroke-width="0.8" opacity="0.8"/>
+            <!-- ribbon center diamond -->
+            <polygon points="100,14 103,22 100,20 97,22" fill="#c9a96e" opacity="0.9"/>
 
-            <!-- Center large circle -->
-            <circle cx="95" cy="160" r="68" stroke="#c9a96e" stroke-width="0.8" opacity="0.35"/>
-            <circle cx="95" cy="160" r="54" stroke="#c9a96e" stroke-width="0.6" opacity="0.45"/>
-            <circle cx="95" cy="160" r="36" stroke="#c9a96e" stroke-width="1" opacity="0.55"/>
-            <!-- Center dot -->
-            <circle cx="95" cy="160" r="5" fill="#c9a96e" opacity="0.8"/>
-            <circle cx="95" cy="160" r="2" fill="#fff" opacity="0.6"/>
+            <!-- ── bottom banner ribbon ── -->
+            <path d="M40 322 Q100 330 160 322 L164 304 Q100 312 36 304 Z" fill="url(#bannerGrad)" opacity="0.9"/>
+            <path d="M40 322 Q100 330 160 322 L164 304 Q100 312 36 304 Z" stroke="#c9a96e" stroke-width="0.8" opacity="0.8"/>
+            <polygon points="100,326 103,318 100,320 97,318" fill="#c9a96e" opacity="0.9"/>
 
-            <!-- Cross lines through center -->
-            <line x1="95" y1="92" x2="95" y2="228" stroke="#c9a96e" stroke-width="0.5" opacity="0.3"/>
-            <line x1="27" y1="160" x2="163" y2="160" stroke="#c9a96e" stroke-width="0.5" opacity="0.3"/>
-
-            <!-- Diagonal lines -->
-            <line x1="47" y1="110" x2="143" y2="210" stroke="#c9a96e" stroke-width="0.4" opacity="0.18"/>
-            <line x1="143" y1="110" x2="47" y2="210" stroke="#c9a96e" stroke-width="0.4" opacity="0.18"/>
-
-            <!-- 4 cardinal small stars on circle edge -->
-            <g transform="translate(95,96)">
-              <polygon points="0,-7 1.5,-2.5 6,-2.5 2.5,0.8 4,5.5 0,2.5 -4,5.5 -2.5,0.8 -6,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.8"/>
+            <!-- ── 4 large corner star ornaments ── -->
+            <!-- top-left -->
+            <g transform="translate(32,44)">
+              <polygon points="0,-14 3,-5 13,-5 5,2 8,12 0,6 -8,12 -5,2 -13,-5 -3,-5" fill="#c9a96e" opacity="0.85"/>
+              <circle cx="0" cy="0" r="3" fill="#fff" opacity="0.3"/>
             </g>
-            <g transform="translate(95,224)">
-              <polygon points="0,-7 1.5,-2.5 6,-2.5 2.5,0.8 4,5.5 0,2.5 -4,5.5 -2.5,0.8 -6,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.8"/>
+            <!-- top-right -->
+            <g transform="translate(168,44)">
+              <polygon points="0,-14 3,-5 13,-5 5,2 8,12 0,6 -8,12 -5,2 -13,-5 -3,-5" fill="#c9a96e" opacity="0.85"/>
+              <circle cx="0" cy="0" r="3" fill="#fff" opacity="0.3"/>
             </g>
-            <g transform="translate(27,160)">
-              <polygon points="0,-7 1.5,-2.5 6,-2.5 2.5,0.8 4,5.5 0,2.5 -4,5.5 -2.5,0.8 -6,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.8"/>
+            <!-- bottom-left -->
+            <g transform="translate(32,296)">
+              <polygon points="0,-14 3,-5 13,-5 5,2 8,12 0,6 -8,12 -5,2 -13,-5 -3,-5" fill="#c9a96e" opacity="0.85"/>
+              <circle cx="0" cy="0" r="3" fill="#fff" opacity="0.3"/>
             </g>
-            <g transform="translate(163,160)">
-              <polygon points="0,-7 1.5,-2.5 6,-2.5 2.5,0.8 4,5.5 0,2.5 -4,5.5 -2.5,0.8 -6,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.8"/>
+            <!-- bottom-right -->
+            <g transform="translate(168,296)">
+              <polygon points="0,-14 3,-5 13,-5 5,2 8,12 0,6 -8,12 -5,2 -13,-5 -3,-5" fill="#c9a96e" opacity="0.85"/>
+              <circle cx="0" cy="0" r="3" fill="#fff" opacity="0.3"/>
             </g>
 
-            <!-- Moon crescent top-left area -->
-            <path d="M52 80 Q44 92 52 104 Q38 96 38 92 Q38 84 52 80Z" fill="#c9a96e" opacity="0.45"/>
-            <!-- Moon crescent bottom-right area -->
-            <path d="M138 216 Q146 228 138 240 Q152 232 152 228 Q152 220 138 216Z" fill="#c9a96e" opacity="0.45"/>
+            <!-- ── side moon crescent ornaments ── -->
+            <!-- left -->
+            <path d="M22 155 Q14 170 22 185 Q8 175 8 170 Q8 161 22 155Z" fill="#c9a96e" opacity="0.55"/>
+            <!-- right -->
+            <path d="M178 155 Q186 170 178 185 Q192 175 192 170 Q192 161 178 155Z" fill="#c9a96e" opacity="0.55"/>
 
-            <!-- Tiny star scatter inside circle -->
-            <text x="68" y="140" font-size="7" fill="#c9a96e" opacity="0.5" text-anchor="middle">✦</text>
-            <text x="122" y="145" font-size="5" fill="#c9a96e" opacity="0.4" text-anchor="middle">✦</text>
-            <text x="80" y="182" font-size="6" fill="#c9a96e" opacity="0.4" text-anchor="middle">✦</text>
-            <text x="112" y="178" font-size="8" fill="#c9a96e" opacity="0.35" text-anchor="middle">✦</text>
+            <!-- ── vertical side column dot ornaments ── -->
+            <line x1="26" y1="65" x2="26" y2="275" stroke="#c9a96e" stroke-width="0.5" opacity="0.3" stroke-dasharray="1 6"/>
+            <line x1="174" y1="65" x2="174" y2="275" stroke="#c9a96e" stroke-width="0.5" opacity="0.3" stroke-dasharray="1 6"/>
+            <circle cx="26" cy="130" r="2.5" fill="#c9a96e" opacity="0.5"/>
+            <circle cx="26" cy="170" r="2.5" fill="#c9a96e" opacity="0.5"/>
+            <circle cx="26" cy="210" r="2.5" fill="#c9a96e" opacity="0.5"/>
+            <circle cx="174" cy="130" r="2.5" fill="#c9a96e" opacity="0.5"/>
+            <circle cx="174" cy="170" r="2.5" fill="#c9a96e" opacity="0.5"/>
+            <circle cx="174" cy="210" r="2.5" fill="#c9a96e" opacity="0.5"/>
 
-            <!-- Side vertical ornament lines -->
-            <line x1="28" y1="56" x2="28" y2="264" stroke="#c9a96e" stroke-width="0.5" opacity="0.25" stroke-dasharray="2 4"/>
-            <line x1="162" y1="56" x2="162" y2="264" stroke="#c9a96e" stroke-width="0.5" opacity="0.25" stroke-dasharray="2 4"/>
+            <!-- ── central composition ── -->
+            <!-- outermost glow ring -->
+            <circle cx="100" cy="170" r="88" stroke="#c9a96e" stroke-width="0.4" opacity="0.15"/>
+            <!-- outer ring -->
+            <circle cx="100" cy="170" r="76" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.4"/>
+            <!-- middle ring -->
+            <circle cx="100" cy="170" r="60" stroke="#c9a96e" stroke-width="0.6" opacity="0.5"/>
+            <!-- inner ring -->
+            <circle cx="100" cy="170" r="44" stroke="#c9a96e" stroke-width="1.2" opacity="0.7"/>
+            <!-- innermost ring -->
+            <circle cx="100" cy="170" r="28" stroke="#c9a96e" stroke-width="0.7" opacity="0.6"/>
+
+            <!-- ── large 8-pointed star (main motif) ── -->
+            <polygon points="
+              100,94 106,158 100,142 94,158
+              176,170 112,176 128,170 112,164
+              100,246 94,182 100,198 106,182
+              24,170 88,164 72,170 88,176
+            " fill="#c9a96e" opacity="0.18"/>
+            <polygon points="
+              100,94 106,158 100,142 94,158
+              176,170 112,176 128,170 112,164
+              100,246 94,182 100,198 106,182
+              24,170 88,164 72,170 88,176
+            " stroke="#c9a96e" stroke-width="0.6" opacity="0.7" fill="none"/>
+
+            <!-- ── diagonal cross lines ── -->
+            <line x1="46" y1="116" x2="154" y2="224" stroke="#c9a96e" stroke-width="0.4" opacity="0.22"/>
+            <line x1="154" y1="116" x2="46" y2="224" stroke="#c9a96e" stroke-width="0.4" opacity="0.22"/>
+
+            <!-- ── 8 small stars on middle ring ── -->
+            <g transform="translate(100,110)">
+              <polygon points="0,-6 1.3,-2.2 5.7,-2.2 2.2,0.8 3.5,5 0,2.5 -3.5,5 -2.2,0.8 -5.7,-2.2 -1.3,-2.2" fill="#c9a96e" opacity="0.9"/>
+            </g>
+            <g transform="translate(100,230)">
+              <polygon points="0,-6 1.3,-2.2 5.7,-2.2 2.2,0.8 3.5,5 0,2.5 -3.5,5 -2.2,0.8 -5.7,-2.2 -1.3,-2.2" fill="#c9a96e" opacity="0.9"/>
+            </g>
+            <g transform="translate(40,170)">
+              <polygon points="0,-6 1.3,-2.2 5.7,-2.2 2.2,0.8 3.5,5 0,2.5 -3.5,5 -2.2,0.8 -5.7,-2.2 -1.3,-2.2" fill="#c9a96e" opacity="0.9"/>
+            </g>
+            <g transform="translate(160,170)">
+              <polygon points="0,-6 1.3,-2.2 5.7,-2.2 2.2,0.8 3.5,5 0,2.5 -3.5,5 -2.2,0.8 -5.7,-2.2 -1.3,-2.2" fill="#c9a96e" opacity="0.9"/>
+            </g>
+            <!-- diagonal cardinal small stars -->
+            <g transform="translate(57,127)">
+              <polygon points="0,-5 1,-1.8 4.8,-1.8 1.8,0.7 2.9,4.2 0,2 -2.9,4.2 -1.8,0.7 -4.8,-1.8 -1,-1.8" fill="#c9a96e" opacity="0.65"/>
+            </g>
+            <g transform="translate(143,127)">
+              <polygon points="0,-5 1,-1.8 4.8,-1.8 1.8,0.7 2.9,4.2 0,2 -2.9,4.2 -1.8,0.7 -4.8,-1.8 -1,-1.8" fill="#c9a96e" opacity="0.65"/>
+            </g>
+            <g transform="translate(57,213)">
+              <polygon points="0,-5 1,-1.8 4.8,-1.8 1.8,0.7 2.9,4.2 0,2 -2.9,4.2 -1.8,0.7 -4.8,-1.8 -1,-1.8" fill="#c9a96e" opacity="0.65"/>
+            </g>
+            <g transform="translate(143,213)">
+              <polygon points="0,-5 1,-1.8 4.8,-1.8 1.8,0.7 2.9,4.2 0,2 -2.9,4.2 -1.8,0.7 -4.8,-1.8 -1,-1.8" fill="#c9a96e" opacity="0.65"/>
+            </g>
+
+            <!-- ── SUN center motif ── -->
+            <!-- sun rays -->
+            <g transform="translate(100,170)">
+              <line x1="0" y1="-22" x2="0" y2="-28" stroke="#c9a96e" stroke-width="1.5" opacity="0.8"/>
+              <line x1="0" y1="22" x2="0" y2="28" stroke="#c9a96e" stroke-width="1.5" opacity="0.8"/>
+              <line x1="-22" y1="0" x2="-28" y2="0" stroke="#c9a96e" stroke-width="1.5" opacity="0.8"/>
+              <line x1="22" y1="0" x2="28" y2="0" stroke="#c9a96e" stroke-width="1.5" opacity="0.8"/>
+              <line x1="-15.5" y1="-15.5" x2="-20" y2="-20" stroke="#c9a96e" stroke-width="1" opacity="0.6"/>
+              <line x1="15.5" y1="-15.5" x2="20" y2="-20" stroke="#c9a96e" stroke-width="1" opacity="0.6"/>
+              <line x1="-15.5" y1="15.5" x2="-20" y2="20" stroke="#c9a96e" stroke-width="1" opacity="0.6"/>
+              <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="#c9a96e" stroke-width="1" opacity="0.6"/>
+            </g>
+            <!-- sun circle -->
+            <circle cx="100" cy="170" r="18" fill="url(#sunGrad)" stroke="#c9a96e" stroke-width="1.2"/>
+            <circle cx="100" cy="170" r="10" fill="#c9a96e" opacity="0.5"/>
+            <circle cx="100" cy="170" r="5" fill="#f0d898" opacity="0.9"/>
+            <circle cx="100" cy="170" r="2" fill="#fff" opacity="0.8"/>
+
+            <!-- ── scattered tiny inner stars ── -->
+            <text x="72" y="152" font-size="8" fill="#c9a96e" opacity="0.45" text-anchor="middle" font-family="serif">✦</text>
+            <text x="128" y="152" font-size="7" fill="#c9a96e" opacity="0.35" text-anchor="middle" font-family="serif">✦</text>
+            <text x="72" y="194" font-size="7" fill="#c9a96e" opacity="0.35" text-anchor="middle" font-family="serif">✦</text>
+            <text x="128" y="194" font-size="8" fill="#c9a96e" opacity="0.45" text-anchor="middle" font-family="serif">✦</text>
+
+            <!-- gradients -->
+            <defs>
+              <linearGradient id="bannerGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#6a2040" stop-opacity="0"/>
+                <stop offset="25%" stop-color="#8a2a50" stop-opacity="0.95"/>
+                <stop offset="50%" stop-color="#c9a96e" stop-opacity="0.25"/>
+                <stop offset="75%" stop-color="#8a2a50" stop-opacity="0.95"/>
+                <stop offset="100%" stop-color="#6a2040" stop-opacity="0"/>
+              </linearGradient>
+              <radialGradient id="sunGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#f0d898"/>
+                <stop offset="60%" stop-color="#c9a96e"/>
+                <stop offset="100%" stop-color="#8a6a30"/>
+              </radialGradient>
+            </defs>
           </svg>
         </div>
 
-        <!-- ── Front face ── -->
-        <div class="card-face card-front">
-          <!-- Ornate frame SVG overlay -->
-          <svg class="front-frame-svg" viewBox="0 0 190 320" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Double border -->
-            <rect x="7" y="7" width="176" height="306" rx="15" stroke="#c9a96e" stroke-width="1.2" opacity="0.7"/>
-            <rect x="13" y="13" width="164" height="294" rx="11" stroke="#c9a96e" stroke-width="0.6" opacity="0.4"/>
-            <!-- Corner flourishes -->
-            <g transform="translate(20,22)">
-              <polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6 0,3 -4,6 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.65"/>
+        <!-- ════════════════════ CARD FRONT ════════════════════ -->
+        <div class="card-face" id="cardFront" style="transform:rotateY(180deg); background:linear-gradient(155deg,#fff8fa 0%,#fff2f4 50%,#fff8f2 100%); border:2px solid #c9a96e; box-shadow:0 22px 60px rgba(201,169,110,0.22),0 8px 24px rgba(0,0,0,0.07),inset 0 1px 0 #fff,0 0 0 1px rgba(201,169,110,0.22); position:relative;">
+
+          <!-- ornate SVG frame overlay -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" viewBox="0 0 200 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- triple border -->
+            <rect x="6" y="6" width="188" height="328" rx="16" stroke="#c9a96e" stroke-width="1.5" opacity="0.8"/>
+            <rect x="11" y="11" width="178" height="318" rx="12" stroke="#c9a96e" stroke-width="0.6" opacity="0.45"/>
+            <rect x="16" y="16" width="168" height="308" rx="9" stroke="#c9a96e" stroke-width="0.45" stroke-dasharray="2.5 2.5" opacity="0.25"/>
+
+            <!-- top arch decorative area -->
+            <path d="M30 56 Q100 42 170 56" stroke="#c9a96e" stroke-width="0.8" opacity="0.5" fill="none"/>
+            <path d="M30 60 Q100 46 170 60" stroke="#c9a96e" stroke-width="0.4" opacity="0.3" fill="none"/>
+            <!-- bottom arch -->
+            <path d="M30 284 Q100 298 170 284" stroke="#c9a96e" stroke-width="0.8" opacity="0.5" fill="none"/>
+            <path d="M30 280 Q100 294 170 280" stroke="#c9a96e" stroke-width="0.4" opacity="0.3" fill="none"/>
+
+            <!-- corner 5-point star ornaments -->
+            <g transform="translate(24,30)">
+              <polygon points="0,-12 2.6,-4.5 11,-4.5 4.5,1.8 7,10 0,5.5 -7,10 -4.5,1.8 -11,-4.5 -2.6,-4.5" fill="#c9a96e" opacity="0.7"/>
             </g>
-            <g transform="translate(170,22)">
-              <polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6 0,3 -4,6 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.65"/>
+            <g transform="translate(176,30)">
+              <polygon points="0,-12 2.6,-4.5 11,-4.5 4.5,1.8 7,10 0,5.5 -7,10 -4.5,1.8 -11,-4.5 -2.6,-4.5" fill="#c9a96e" opacity="0.7"/>
             </g>
-            <g transform="translate(20,298)">
-              <polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6 0,3 -4,6 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.65"/>
+            <g transform="translate(24,310)">
+              <polygon points="0,-12 2.6,-4.5 11,-4.5 4.5,1.8 7,10 0,5.5 -7,10 -4.5,1.8 -11,-4.5 -2.6,-4.5" fill="#c9a96e" opacity="0.7"/>
             </g>
-            <g transform="translate(170,298)">
-              <polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6 0,3 -4,6 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.65"/>
+            <g transform="translate(176,310)">
+              <polygon points="0,-12 2.6,-4.5 11,-4.5 4.5,1.8 7,10 0,5.5 -7,10 -4.5,1.8 -11,-4.5 -2.6,-4.5" fill="#c9a96e" opacity="0.7"/>
             </g>
-            <!-- Top ribbon area line -->
-            <line x1="30" y1="55" x2="160" y2="55" stroke="#c9a96e" stroke-width="0.7" opacity="0.4"/>
-            <!-- Bottom ribbon area line -->
-            <line x1="30" y1="265" x2="160" y2="265" stroke="#c9a96e" stroke-width="0.7" opacity="0.4"/>
-            <!-- Side dash lines -->
-            <line x1="20" y1="68" x2="20" y2="252" stroke="#c9a96e" stroke-width="0.5" opacity="0.2" stroke-dasharray="2 5"/>
-            <line x1="170" y1="68" x2="170" y2="252" stroke="#c9a96e" stroke-width="0.5" opacity="0.2" stroke-dasharray="2 5"/>
-            <!-- Tiny corner moons -->
-            <path d="M26 32 Q22 38 26 44 Q18 40 18 38 Q18 34 26 32Z" fill="#c9a96e" opacity="0.4"/>
-            <path d="M164 32 Q168 38 164 44 Q172 40 172 38 Q172 34 164 32Z" fill="#c9a96e" opacity="0.4"/>
+
+            <!-- side moon decorations -->
+            <path d="M22,140 Q15,155 22,170 Q9,160 9,155 Q9,147 22,140Z" fill="#c9a96e" opacity="0.35"/>
+            <path d="M178,140 Q185,155 178,170 Q191,160 191,155 Q191,147 178,140Z" fill="#c9a96e" opacity="0.35"/>
+
+            <!-- side vertical dashes -->
+            <line x1="23" y1="72" x2="23" y2="268" stroke="#c9a96e" stroke-width="0.45" opacity="0.2" stroke-dasharray="1 6"/>
+            <line x1="177" y1="72" x2="177" y2="268" stroke="#c9a96e" stroke-width="0.45" opacity="0.2" stroke-dasharray="1 6"/>
+
+            <!-- center decorative ring around symbol area -->
+            <circle cx="100" cy="168" r="52" stroke="#c9a96e" stroke-width="0.6" opacity="0.3"/>
+            <circle cx="100" cy="168" r="44" stroke="#c9a96e" stroke-width="0.9" opacity="0.4" stroke-dasharray="3 2"/>
+
+            <!-- 4 tiny stars on circle -->
+            <g transform="translate(100,116)">
+              <polygon points="0,-5 1,-1.8 4.8,-1.8 1.8,0.7 2.9,4.2 0,2 -2.9,4.2 -1.8,0.7 -4.8,-1.8 -1,-1.8" fill="#c9a96e" opacity="0.6"/>
+            </g>
+            <g transform="translate(100,220)">
+              <polygon points="0,-5 1,-1.8 4.8,-1.8 1.8,0.7 2.9,4.2 0,2 -2.9,4.2 -1.8,0.7 -4.8,-1.8 -1,-1.8" fill="#c9a96e" opacity="0.6"/>
+            </g>
+            <g transform="translate(48,168)">
+              <polygon points="0,-5 1,-1.8 4.8,-1.8 1.8,0.7 2.9,4.2 0,2 -2.9,4.2 -1.8,0.7 -4.8,-1.8 -1,-1.8" fill="#c9a96e" opacity="0.6"/>
+            </g>
+            <g transform="translate(152,168)">
+              <polygon points="0,-5 1,-1.8 4.8,-1.8 1.8,0.7 2.9,4.2 0,2 -2.9,4.2 -1.8,0.7 -4.8,-1.8 -1,-1.8" fill="#c9a96e" opacity="0.6"/>
+            </g>
+
+            <!-- horizontal separator lines -->
+            <line x1="28" y1="72" x2="172" y2="72" stroke="#c9a96e" stroke-width="0.6" opacity="0.35"/>
+            <line x1="28" y1="268" x2="172" y2="268" stroke="#c9a96e" stroke-width="0.6" opacity="0.35"/>
+
+            <!-- tiny ✦ corner accents inside frame -->
+            <text x="40" y="90" font-size="7" fill="#c9a96e" opacity="0.4" text-anchor="middle">✦</text>
+            <text x="160" y="90" font-size="7" fill="#c9a96e" opacity="0.4" text-anchor="middle">✦</text>
+            <text x="40" y="260" font-size="7" fill="#c9a96e" opacity="0.4" text-anchor="middle">✦</text>
+            <text x="160" y="260" font-size="7" fill="#c9a96e" opacity="0.4" text-anchor="middle">✦</text>
           </svg>
 
-          <div class="cf-number" id="cfNumber"></div>
-          <div class="cf-symbol" id="cfSymbol"></div>
-          <div class="cf-name" id="cfName"></div>
-          <div class="cf-divider"></div>
-          <div class="cf-keywords" id="cfKeywords"></div>
+          <!-- card content -->
+          <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:22px 18px;">
+            <div id="cfSuit" style="font-family:'Cinzel Decorative',serif;font-size:0.58rem;letter-spacing:0.28em;color:#c9a96e;opacity:0.75;"></div>
+            <div id="cfNumber" style="font-family:'Cinzel Decorative',serif;font-size:0.68rem;letter-spacing:0.22em;color:#c9a96e;"></div>
+
+            <!-- symbol in decorative circle -->
+            <div style="position:relative;display:flex;align-items:center;justify-content:center;width:88px;height:88px;">
+              <!-- glow bg -->
+              <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(201,169,110,0.12) 0%,transparent 70%);"></div>
+              <!-- outer ring -->
+              <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 88 88">
+                <circle cx="44" cy="44" r="40" stroke="#c9a96e" stroke-width="1" opacity="0.55"/>
+                <circle cx="44" cy="44" r="34" stroke="#c9a96e" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.3"/>
+                <!-- 8 tiny star points on ring -->
+                <g transform="translate(44,4)"><polygon points="0,-4 0.8,-1.5 3.8,-1.5 1.5,0.6 2.3,3.3 0,1.9 -2.3,3.3 -1.5,0.6 -3.8,-1.5 -0.8,-1.5" fill="#c9a96e" opacity="0.7"/></g>
+                <g transform="translate(44,84)"><polygon points="0,-4 0.8,-1.5 3.8,-1.5 1.5,0.6 2.3,3.3 0,1.9 -2.3,3.3 -1.5,0.6 -3.8,-1.5 -0.8,-1.5" fill="#c9a96e" opacity="0.7"/></g>
+                <g transform="translate(4,44)"><polygon points="0,-4 0.8,-1.5 3.8,-1.5 1.5,0.6 2.3,3.3 0,1.9 -2.3,3.3 -1.5,0.6 -3.8,-1.5 -0.8,-1.5" fill="#c9a96e" opacity="0.7"/></g>
+                <g transform="translate(84,44)"><polygon points="0,-4 0.8,-1.5 3.8,-1.5 1.5,0.6 2.3,3.3 0,1.9 -2.3,3.3 -1.5,0.6 -3.8,-1.5 -0.8,-1.5" fill="#c9a96e" opacity="0.7"/></g>
+              </svg>
+              <div id="cfSymbol" style="font-size:3.4rem;line-height:1;color:#c9a96e;filter:drop-shadow(0 2px 8px rgba(201,169,110,0.6));position:relative;z-index:1;"></div>
+            </div>
+
+            <div style="width:50px;height:1px;background:linear-gradient(to right,transparent,#c9a96e,transparent);"></div>
+
+            <div id="cfName" style="font-family:'Cinzel Decorative',serif;font-size:1.0rem;color:#2a1a20;text-align:center;letter-spacing:0.08em;line-height:1.5;"></div>
+
+            <div style="width:36px;height:1px;background:linear-gradient(to right,transparent,rgba(201,169,110,0.5),transparent);"></div>
+
+            <div id="cfKeywords" style="font-size:0.72rem;color:#8a6070;text-align:center;letter-spacing:0.1em;line-height:1.9;font-style:italic;"></div>
+          </div>
         </div>
 
-      </div>
-    </div>
-  </div>
+      </div><!-- tarot-card -->
+    </div><!-- card-scene -->
+  </div><!-- deck-area -->
 
-  <!-- Result -->
+  <!-- RESULT -->
   <div class="tarot-result" id="tarotResult">
     <div class="result-name" id="resultName"></div>
     <div class="result-suit" id="resultSuit"></div>
-
-    <div class="ornament" style="margin-bottom:18px">
-      <div class="orn-line"></div>
-      <div class="orn-center">✦</div>
-      <div class="orn-line r"></div>
+    <div class="orn" style="margin-bottom:18px">
+      <div class="orn-l"></div>
+      <div class="orn-c">✦</div>
+      <div class="orn-r"></div>
     </div>
-
     <div class="reading-box">
       <div class="reading-label">✦ 解 读 ✦</div>
-      <div class="reading-gold-line"></div>
+      <div class="reading-sep"></div>
       <div class="reading-content" id="readingContent">
         <span class="reading-placeholder">等待解读…</span>
       </div>
     </div>
   </div>
 
-</div>
+</div><!-- tarot-wrap -->
 
 <script>
-// ── Scattered background deco ──
+// ambient deco
 (function() {
   const field = document.getElementById('decoField');
-  const symbols = ['✦','✧','☽','★','◇','✦','☾'];
+  const sym = ['✦','✧','☽','★','☾','◇','✦'];
   for (let i = 0; i < 22; i++) {
     const el = document.createElement('div');
     el.className = 'deco-star';
-    el.textContent = symbols[i % symbols.length];
+    el.textContent = sym[i % sym.length];
     el.style.cssText = `
-      left:${Math.random()*100}%;
-      top:${Math.random()*100}%;
-      font-size:${0.5 + Math.random()*0.8}rem;
-      animation-duration:${4 + Math.random()*6}s;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      font-size:${0.5+Math.random()*0.75}rem;
+      animation-duration:${4+Math.random()*6}s;
       animation-delay:${Math.random()*6}s;
-      color: ${Math.random() > 0.5 ? '#c9a96e' : '#e8a0b0'};
+      color:${Math.random()>.5?'#c9a96e':'#e8a0b0'};
     `;
     field.appendChild(el);
   }
@@ -699,20 +621,20 @@ const DECK = [
   { id:77, name:"星币国王", suit:"星币",     symbol:"🜃", number:"King",  keywords:"财富 · 领导 · 安全",     meaning:"以智慧和经验管理资源，建立持久的成功。" },
 ];
 
-let current = null, isDrawn = false, animating = false;
+let current=null, isDrawn=false, animating=false;
 
 function spawnBurst(scene) {
-  for (let i = 0; i < 16; i++) {
+  const colors = ['#c9a96e','#f0d898','#f2c4ce','#e8a0b0'];
+  for (let i=0;i<18;i++) {
     const p = document.createElement('div');
     p.className = 'burst-p';
-    const angle = (i / 16) * 360;
-    const dist = 55 + Math.random() * 65;
-    const rad = angle * Math.PI / 180;
-    p.style.setProperty('--bx', `${Math.cos(rad)*dist}px`);
-    p.style.setProperty('--by', `${Math.sin(rad)*dist}px`);
-    p.style.cssText += `left:50%;top:50%;margin:-2.5px;animation-delay:${Math.random()*0.1}s;background:${Math.random()>.5?'#c9a96e':'#f2c4ce'}`;
+    const angle = (i/18)*360, dist = 50+Math.random()*70;
+    const rad = angle*Math.PI/180;
+    p.style.setProperty('--bx',`${Math.cos(rad)*dist}px`);
+    p.style.setProperty('--by',`${Math.sin(rad)*dist}px`);
+    p.style.cssText += `left:50%;top:50%;margin:-2.5px 0 0 -2.5px;background:${colors[i%colors.length]};animation-delay:${Math.random()*0.08}s`;
     scene.appendChild(p);
-    setTimeout(() => p.remove(), 900);
+    setTimeout(()=>p.remove(),900);
   }
 }
 
@@ -720,76 +642,74 @@ function drawTarot() {
   if (animating) return;
   if (isDrawn) { resetTarot(); return; }
 
-  const deck = document.getElementById('deckArea');
-  const card = document.getElementById('tarotCard');
-  const scene = document.getElementById('cardScene');
-  const btn = document.getElementById('tarotDrawBtn');
+  const deck=document.getElementById('deckArea');
+  const card=document.getElementById('tarotCard');
+  const scene=document.getElementById('cardScene');
+  const btn=document.getElementById('tarotDrawBtn');
 
-  current = DECK[Math.floor(Math.random() * DECK.length)];
+  current = DECK[Math.floor(Math.random()*DECK.length)];
+  document.getElementById('cfSuit').textContent = current.suit;
   document.getElementById('cfNumber').textContent = current.number;
   document.getElementById('cfSymbol').textContent = current.symbol;
   document.getElementById('cfName').textContent = current.name;
   document.getElementById('cfKeywords').textContent = current.keywords;
 
-  deck.style.display = 'flex';
-  btn.disabled = true;
-  animating = true;
-
+  deck.style.display='flex';
+  btn.disabled=true;
+  animating=true;
   card.classList.add('flipping-out');
-  setTimeout(() => {
+
+  setTimeout(()=>{
     spawnBurst(scene);
     card.classList.remove('flipping-out');
     card.classList.add('flipping-in');
-    setTimeout(() => {
+    setTimeout(()=>{
       card.classList.remove('flipping-in');
-      card.style.transform = 'rotateY(180deg)';
+      card.style.transform='rotateY(180deg)';
       scene.classList.add('hoverable');
       showResult();
-      btn.disabled = false;
-      btn.textContent = '✦ 再 抽 一 张 ✦';
-      isDrawn = true;
-      animating = false;
-    }, 900);
-  }, 500);
+      btn.disabled=false;
+      btn.textContent='✦ 再 抽 一 张 ✦';
+      isDrawn=true; animating=false;
+    },900);
+  },500);
 }
 
 function showResult() {
-  const result = document.getElementById('tarotResult');
-  document.getElementById('resultName').textContent = current.name;
-  document.getElementById('resultSuit').textContent = current.suit + '  ·  ' + current.number;
-  const content = document.getElementById('readingContent');
-  content.innerHTML = '<span class="reading-placeholder">正在解读…</span>';
+  const result=document.getElementById('tarotResult');
+  document.getElementById('resultName').textContent=current.name;
+  document.getElementById('resultSuit').textContent=current.suit+'  ·  '+current.number;
+  const content=document.getElementById('readingContent');
+  content.innerHTML='<span class="reading-placeholder">正在解读…</span>';
   result.classList.add('visible');
 
-  // ── Replace with Edge Function ──
-  // fetch('/functions/v1/tarot-reading', { method:'POST', headers:{'Content-Type':'application/json'},
-  //   body: JSON.stringify({ question: document.getElementById('tarotQuestion').value, card: current })
-  // }).then(r=>r.json()).then(d=>{ content.textContent = d.reading; });
+  // ── Replace with your Edge Function ──
+  // fetch('/functions/v1/tarot-reading',{method:'POST',headers:{'Content-Type':'application/json'},
+  //   body:JSON.stringify({question:document.getElementById('tarotQuestion').value,card:current})
+  // }).then(r=>r.json()).then(d=>{content.textContent=d.reading;});
 
-  setTimeout(() => {
-    if (content.querySelector('.reading-placeholder')) content.textContent = current.meaning;
-  }, 1400);
+  setTimeout(()=>{
+    if(content.querySelector('.reading-placeholder')) content.textContent=current.meaning;
+  },1400);
 }
 
 function resetTarot() {
-  if (animating) return;
-  animating = true;
-  const card = document.getElementById('tarotCard');
-  const result = document.getElementById('tarotResult');
-  const scene = document.getElementById('cardScene');
-  const btn = document.getElementById('tarotDrawBtn');
-
+  if(animating)return;
+  animating=true;
+  const card=document.getElementById('tarotCard');
+  const result=document.getElementById('tarotResult');
+  const scene=document.getElementById('cardScene');
+  const btn=document.getElementById('tarotDrawBtn');
   result.classList.remove('visible');
   scene.classList.remove('hoverable');
-  card.style.transition = 'transform 0.5s ease-in';
-  card.style.transform = 'rotateY(0deg)';
-
-  setTimeout(() => {
-    card.style.transition = '';
-    document.getElementById('deckArea').style.display = 'none';
-    btn.textContent = '✦ 抽 一 张 牌 ✦';
-    isDrawn = false; animating = false; current = null;
-  }, 600);
+  card.style.transition='transform 0.5s ease-in';
+  card.style.transform='rotateY(0deg)';
+  setTimeout(()=>{
+    card.style.transition='';
+    document.getElementById('deckArea').style.display='none';
+    btn.textContent='✦ 抽 一 张 牌 ✦';
+    isDrawn=false;animating=false;current=null;
+  },600);
 }
 </script>
 </body>
