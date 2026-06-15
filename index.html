@@ -297,25 +297,28 @@
   /* ===== TAROT ===== */
   @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&display=swap');
   :root { --champagne:#F4EAD4;--ivory:#FFFDF9;--rose-quartz:#F6E7E8;--burgundy:#8B1E2F;--gold:#C9A84C;--gold-light:#E8C96B;--gold-dim:rgba(201,168,76,0.4);--text-primary:#2C1810;--text-secondary:#7A5C4A;--text-muted:#B09080;--shadow-warm:rgba(139,80,40,0.15);--card-w:160px;--card-h:272px; }
-  #tarot-app { font-family:'Inter',sans-serif; min-height:100%; background: radial-gradient(ellipse at 50% 0%,rgba(140,70,5,0.72) 0%,rgba(180,100,20,0.3) 25%,transparent 55%), radial-gradient(ellipse at 80% 90%,rgba(246,231,232,0.6) 0%,transparent 50%), radial-gradient(ellipse at 20% 70%,rgba(201,168,76,0.15) 0%,transparent 40%), #F4EAD4; box-shadow:inset 0 0 120px rgba(80,30,10,0.12); display:flex; flex-direction:column; align-items:center; padding:max(48px, calc(env(safe-area-inset-top) + 32px)) 24px 80px; position:relative; overflow:hidden; }
+  #tarot-app { font-family:'Inter',sans-serif; min-height:100%; background: radial-gradient(ellipse at 50% 0%,rgba(140,70,5,0.72) 0%,rgba(180,100,20,0.3) 25%,transparent 55%), radial-gradient(ellipse at 80% 90%,rgba(246,231,232,0.6) 0%,transparent 50%), radial-gradient(ellipse at 20% 70%,rgba(201,168,76,0.15) 0%,transparent 40%), #F4EAD4; box-shadow:inset 0 0 120px rgba(80,30,10,0.12); display:flex; flex-direction:column; align-items:center; padding:max(48px, calc(env(safe-area-inset-top) + 32px)) 24px max(120px, calc(env(safe-area-inset-bottom) + 114px)); position:relative; overflow:hidden; }
   #tarot-app::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center,transparent 40%,rgba(50,20,10,0.18) 100%); pointer-events:none; z-index:0; }
   #tarot-app::after { content:''; position:absolute; inset:0; background-image:radial-gradient(circle,rgba(201,168,76,0.15) 1px,transparent 1px),radial-gradient(circle,rgba(201,168,76,0.08) 1px,transparent 1px); background-size:60px 60px,30px 30px; background-position:0 0,15px 15px; animation:drift 20s linear infinite; pointer-events:none; z-index:0; opacity:0.5; }
   @keyframes drift { 0%{transform:translateY(0)} 100%{transform:translateY(-30px)} }
   .tarot-header { position:relative; z-index:1; text-align:center; margin-bottom:40px; }
-  .tarot-eyebrow { font-family:'Cinzel',serif; font-size:9px; font-weight:400; letter-spacing:0.55em; text-transform:uppercase; color:var(--gold); margin-bottom:14px; text-shadow:0 0 20px rgba(201,168,76,0.4); }
-  .tarot-title { font-family:'Cinzel Decorative',serif; font-size:24px; font-weight:700; color:var(--text-primary); line-height:1.25; margin:0 0 8px; letter-spacing:0.04em; text-shadow:0 2px 12px rgba(44,24,16,0.12),0 0 40px rgba(201,168,76,0.1); }
-  .tarot-subtitle { font-family:'IM Fell English',serif; font-size:15px; font-style:italic; color:var(--text-muted); letter-spacing:0.02em; line-height:1.6; }
+  .tarot-eyebrow { font-family:'Cinzel',serif; font-size:13px; font-weight:500; letter-spacing:0.52em; text-transform:uppercase; color:rgba(255,252,238,0.95); margin-bottom:16px; text-shadow:0 0 24px rgba(201,168,76,0.9),0 0 60px rgba(201,168,76,0.4),0 1px 3px rgba(0,0,0,0.3); }
+  @keyframes goldShimmer { 0%{background-position:-250% center} 55%{background-position:250% center} 100%{background-position:250% center} }
+  .tarot-title { font-family:'Cinzel Decorative',serif; font-size:clamp(30px,8.5vw,48px); font-weight:700; line-height:1.2; margin:0 0 10px; letter-spacing:0.06em; width:100%; background:linear-gradient(90deg,#3D1F0E 10%,#2C1810 20%,#C9A84C 38%,#F0D882 50%,#C9A84C 62%,#2C1810 80%,#3D1F0E 90%); background-size:300% auto; -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; animation:goldShimmer 6s ease-in-out infinite; }
+  .tarot-subtitle { font-family:'IM Fell English',serif; font-size:16px; font-style:italic; color:rgba(80,40,15,0.75); letter-spacing:0.02em; line-height:1.6; }
   .gold-divider { display:flex; align-items:center; gap:12px; margin:16px auto; width:fit-content; }
   .gold-divider::before,.gold-divider::after { content:''; display:block; width:60px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
   .gold-divider-gem { width:5px; height:5px; background:var(--gold); transform:rotate(45deg); flex-shrink:0; }
   .question-area { position:relative; z-index:1; width:100%; max-width:520px; margin-bottom:48px; }
-  .question-label { font-family:'Cinzel',serif; font-size:10px; font-weight:500; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:12px; text-align:center; }
+  .question-ornament { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .question-ornament-line { flex:1; height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,0.45),transparent); }
+  .question-ornament-gem { width:5px; height:5px; background:rgba(201,168,76,0.6); transform:rotate(45deg); flex-shrink:0; }
   .question-input-wrap { position:relative; }
   .question-input { width:100%; background:rgba(255,253,249,0.8); border:1px solid rgba(201,168,76,0.35); border-radius:12px; padding:16px 20px; font-family:'IM Fell English',serif; font-size:17px; color:var(--text-primary); outline:none; box-sizing:border-box; box-shadow:inset 0 2px 8px rgba(139,80,40,0.06),0 1px 3px rgba(139,80,40,0.08); transition:border-color 0.3s,box-shadow 0.3s; resize:none; }
   .question-input::placeholder { color:var(--text-muted); font-style:italic; }
   .question-input:focus { border-color:rgba(201,168,76,0.7); box-shadow:inset 0 2px 8px rgba(139,80,40,0.06),0 0 0 3px rgba(201,168,76,0.1),0 2px 12px rgba(139,80,40,0.1); }
   .deck-area { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:32px; width:100%; }
-  .deck-label { font-family:'Cinzel',serif; font-size:9px; font-weight:400; letter-spacing:0.35em; text-transform:uppercase; color:var(--text-muted); }
+  .deck-label { font-family:'Cinzel',serif; font-size:13px; font-weight:500; letter-spacing:0.28em; text-transform:uppercase; color:var(--text-secondary); }
   .deck-fan { position:relative; height:calc(var(--card-h) + 40px); width:340px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
   .deck-card { position:absolute; width:var(--card-w); height:var(--card-h); transition:transform 0.6s cubic-bezier(0.25,1,0.5,1),box-shadow 0.4s ease; transform-style:preserve-3d; perspective:1000px; }
   .deck-card:nth-child(1){transform:rotate(-8deg) translateX(-80px);z-index:1}
@@ -550,12 +553,16 @@
         <p class="tarot-eyebrow">✦ Arcana · 塔罗 ✦</p>
         <h2 class="tarot-title">Thus Spoke Ethan</h2>
         <div class="gold-divider"><span class="gold-divider-gem"></span></div>
-        <p class="tarot-subtitle">写下心中的问题，让牌为你开口</p>
+        <p class="tarot-subtitle" id="tarot-subtitle">宝宝，问吧。</p>
       </header>
       <div class="question-area">
-        <label class="question-label" for="tarot-question">你想问的问题</label>
+        <div class="question-ornament">
+          <span class="question-ornament-line"></span>
+          <span class="question-ornament-gem"></span>
+          <span class="question-ornament-line"></span>
+        </div>
         <div class="question-input-wrap">
-          <textarea id="tarot-question" class="question-input" rows="2" placeholder="我现在面临的选择，哪条路更适合我？" maxlength="120"></textarea>
+          <textarea id="tarot-question" class="question-input" rows="2" placeholder="What lies heavy on your heart?" maxlength="120"></textarea>
         </div>
       </div>
       <div class="deck-area" id="deck-area">
@@ -1393,6 +1400,25 @@ function startTarotEntry() {
   canvas.height = window.innerHeight;
   canvas.style.opacity = '1';
   canvas.style.display = 'block';
+
+  // Random Ethan prompt
+  var _prompts = [
+    "Yaya，你遇到什么问题了？",
+    "宝宝，问吧。",
+    "哥哥在，说出来。",
+    "哥哥会诚实回答你，yaya会诚实地对哥哥吗？",
+    "问。我在听。",
+    "什么让你今天来这里了？",
+    "乖，说给我听。",
+    "今天心里装着什么？",
+    "别憋着，说出来。",
+    "说吧，sweet。",
+    "你想知道什么，我告诉你。",
+    "乖孩子，问吧。",
+    "有什么不确定的，问我。"
+  ];
+  var subtitleEl = document.getElementById('tarot-subtitle');
+  if (subtitleEl) subtitleEl.textContent = _prompts[Math.floor(Math.random() * _prompts.length)];
 
   var W = canvas.width, H = canvas.height;
   var cx = W * 0.5, cy = H * 0.5;
