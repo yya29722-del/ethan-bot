@@ -112,17 +112,66 @@
   .wx-quote { font-size: 12px; color: #aaa; line-height: 1.5; }
 
   /* TODO PEEK */
-  .todo-peek { margin: 0 16px 12px; }
-  .todo-peek-label { font-size: 10px; letter-spacing: 2px; color: #bbb; font-weight: 600; margin-bottom: 8px; }
+  .todo-peek { margin: 0 16px 16px; }
+  .todo-peek-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .todo-peek-label { font-size: 10px; letter-spacing: 2px; color: #bbb; font-weight: 600; }
   .todo-peek-item {
-    display: flex; align-items: flex-start; gap: 8px;
-    padding: 8px 12px; background: #fff; border-radius: 10px;
-    margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; background: #fff; border-radius: 14px;
+    margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    border-left: 3px solid #e8d4b4;
   }
-  .todo-peek-item input[type=checkbox] { margin-top: 2px; accent-color: #c9a96e; flex-shrink: 0; }
-  .todo-peek-text { font-size: 14px; color: #2c2c2c; line-height: 1.4; }
+  .todo-check-circle {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid #e0dbd5; flex-shrink: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s; background: #fff;
+  }
+  .todo-check-circle.checked { background: #c9a96e; border-color: #c9a96e; }
+  .todo-check-circle.checked::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 600; }
+  .todo-peek-text { font-size: 15px; color: #2c2c2c; line-height: 1.45; flex: 1; }
   .todo-peek-text.done { text-decoration: line-through; color: #ccc; }
+  .todo-peek-comment { font-size: 11px; color: #c9a96e; margin-top: 2px; font-style: italic; }
+  .todo-peek-del { background: none; border: none; color: #ddd; font-size: 18px; cursor: pointer; padding: 0 2px; flex-shrink: 0; }
+  .todo-peek-del:active { color: #e08080; }
   .todo-peek-more { text-align: center; font-size: 12px; color: #c9a96e; padding: 6px; cursor: pointer; }
+
+  /* CALENDAR DAY MODAL */
+  #cal-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.35); display: none; align-items: flex-end; }
+  #cal-modal.open { display: flex; }
+  #cal-modal-sheet {
+    width: 100%; background: #f7f4f0; border-radius: 22px 22px 0 0;
+    padding: 20px 20px 36px; max-height: 72vh; display: flex; flex-direction: column;
+    animation: slideUp .25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .cal-modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+  .cal-modal-title { font-size: 17px; font-weight: 500; color: #2c2c2c; margin-bottom: 14px; }
+  #cal-modal-list { flex: 1; overflow-y: auto; margin-bottom: 12px; }
+  .cal-todo-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 14px; background: #fff; border-radius: 12px;
+    margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    border-left: 3px solid #e8d4b4;
+  }
+  .cal-todo-item.done-item { border-left-color: #e0e0e0; }
+  .cal-todo-item .todo-check-circle { flex-shrink: 0; }
+  .cal-todo-body { flex: 1; font-size: 15px; color: #2c2c2c; line-height: 1.4; }
+  .cal-todo-body.done { text-decoration: line-through; color: #ccc; }
+  .cal-todo-del { background: none; border: none; color: #ddd; font-size: 18px; cursor: pointer; }
+  .cal-todo-del:active { color: #e08080; }
+  .cal-modal-input-row { display: flex; gap: 8px; flex-shrink: 0; }
+  .cal-modal-input-row input {
+    flex: 1; padding: 11px 14px; border: 1.5px solid #e0dbd5;
+    border-radius: 12px; font-size: 14px; outline: none; background: #fff;
+    font-family: -apple-system, sans-serif;
+  }
+  .cal-modal-input-row input:focus { border-color: #c9a96e; }
+  .cal-modal-input-row button {
+    padding: 11px 18px; background: #c9a96e; color: #fff;
+    border: none; border-radius: 12px; font-size: 14px; cursor: pointer;
+    font-family: -apple-system, sans-serif;
+  }
 
   /* SECTION HEADER (inside tab pages) */
   .tab-section-header {
@@ -312,8 +361,23 @@
     </div>
     <!-- Todo Peek -->
     <div class="todo-peek">
-      <div class="todo-peek-label">T O D O</div>
+      <div class="todo-peek-header">
+        <div class="todo-peek-label">T O D O</div>
+      </div>
       <div id="todo-peek-list"></div>
+    </div>
+  </div>
+
+  <!-- Calendar Day Modal -->
+  <div id="cal-modal" onclick="closeCalModal()">
+    <div id="cal-modal-sheet" onclick="event.stopPropagation()">
+      <div class="cal-modal-handle"></div>
+      <div class="cal-modal-title" id="cal-modal-title"></div>
+      <div id="cal-modal-list"></div>
+      <div class="cal-modal-input-row">
+        <input id="cal-modal-input" type="text" placeholder="Add a todo for this day…">
+        <button onclick="addCalTodo()">Add</button>
+      </div>
     </div>
   </div>
 
@@ -517,7 +581,11 @@ function renderCalendar() {
   }
 
   document.getElementById('cal-grid').innerHTML = cells.map(function(c) {
-    return '<div class="' + c.cls + '">' + c.day + '</div>';
+    if (c.cls.indexOf('other-month') >= 0) {
+      return '<div class="' + c.cls + '">' + c.day + '</div>';
+    }
+    var dateStr = year + '-' + String(month + 1).padStart(2,'0') + '-' + String(c.day).padStart(2,'0');
+    return '<div class="' + c.cls + '" onclick="openCalModal(\'' + dateStr + '\')" style="cursor:pointer">' + c.day + '</div>';
   }).join('');
 }
 
@@ -593,26 +661,42 @@ function renderTodoPeek(data) {
   if (!peekEl) return;
   var pending = data.filter(function(t) { return !t.completed; });
   if (!pending.length) {
-    peekEl.innerHTML = '<div class="todo-peek-item"><span class="todo-peek-text" style="color:#ccc">No todos yet</span></div>';
+    peekEl.innerHTML = '<div class="todo-peek-item"><span class="todo-peek-text" style="color:#ccc">All clear ✓</span></div>';
     return;
   }
-  var shown = pending.slice(0, 3);
+  var shown = pending.slice(0, 4);
   var html = shown.map(function(t) {
     return '<div class="todo-peek-item">' +
-      '<input type="checkbox" onchange="toggleTodo(' + t.id + ', this.checked)">' +
-      '<span class="todo-peek-text">' + t.content + '</span>' +
+      '<div class="todo-check-circle" onclick="toggleTodoCircle(' + t.id + ', true, this)"></div>' +
+      '<div style="flex:1"><div class="todo-peek-text">' + t.content + '</div>' +
+      (t.ethan_comment ? '<div class="todo-peek-comment">' + t.ethan_comment + '</div>' : '') +
+      '</div>' +
+      '<button class="todo-peek-del" onclick="delTodoPeek(' + t.id + ')">×</button>' +
       '</div>';
   }).join('');
-  if (pending.length > 3) {
-    html += '<div class="todo-peek-more" onclick="switchTab(\'feed\')">' + (pending.length - 3) + ' more…</div>';
+  if (pending.length > 4) {
+    html += '<div class="todo-peek-more">' + (pending.length - 4) + ' more…</div>';
   }
   peekEl.innerHTML = html;
+}
+
+async function toggleTodoCircle(id, completed, el) {
+  el.classList.toggle('checked');
+  await api('todos?id=eq.' + id, 'PATCH', { completed: completed });
+  loadTodos();
+}
+
+async function delTodoPeek(id) {
+  await api('todos?id=eq.' + id, 'DELETE');
+  loadTodos();
 }
 
 async function addTodo() {
   var v = document.getElementById('todo-input').value.trim();
   if (!v) return;
-  await api('todos', 'POST', { content: v });
+  var nowBJ = new Date(new Date().getTime() + 8 * 3600000);
+  var dateStr = nowBJ.getUTCFullYear() + '-' + String(nowBJ.getUTCMonth()+1).padStart(2,'0') + '-' + String(nowBJ.getUTCDate()).padStart(2,'0');
+  await api('todos', 'POST', { content: v, date: dateStr });
   document.getElementById('todo-input').value = '';
   loadTodos();
 }
@@ -622,6 +706,59 @@ async function toggleTodo(id, completed) {
   loadTodos();
 }
 async function delTodo(id) { await api('todos?id=eq.' + id, 'DELETE'); loadTodos(); }
+
+// CALENDAR MODAL
+var _calModalDate = '';
+var _calModalData = [];
+
+async function openCalModal(dateStr) {
+  _calModalDate = dateStr;
+  var d = new Date(dateStr + 'T00:00:00');
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('cal-modal-title').textContent = months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  document.getElementById('cal-modal-input').value = '';
+  document.getElementById('cal-modal').classList.add('open');
+  await refreshCalModal();
+}
+
+function closeCalModal() {
+  document.getElementById('cal-modal').classList.remove('open');
+  loadTodos();
+}
+
+async function refreshCalModal() {
+  _calModalData = await api('todos?date=eq.' + _calModalDate + '&order=created_at.asc');
+  var el = document.getElementById('cal-modal-list');
+  if (!_calModalData.length) {
+    el.innerHTML = '<div style="color:#ccc;text-align:center;padding:20px;font-size:14px">No todos for this day</div>';
+    return;
+  }
+  el.innerHTML = _calModalData.map(function(t) {
+    return '<div class="cal-todo-item ' + (t.completed ? 'done-item' : '') + '">' +
+      '<div class="todo-check-circle ' + (t.completed ? 'checked' : '') + '" onclick="toggleCalTodo(' + t.id + ', ' + !t.completed + ')"></div>' +
+      '<div class="cal-todo-body ' + (t.completed ? 'done' : '') + '">' + t.content + '</div>' +
+      '<button class="cal-todo-del" onclick="delCalTodo(' + t.id + ')">×</button>' +
+      '</div>';
+  }).join('');
+}
+
+async function addCalTodo() {
+  var v = document.getElementById('cal-modal-input').value.trim();
+  if (!v) return;
+  await api('todos', 'POST', { content: v, date: _calModalDate });
+  document.getElementById('cal-modal-input').value = '';
+  await refreshCalModal();
+}
+
+async function toggleCalTodo(id, completed) {
+  await api('todos?id=eq.' + id, 'PATCH', { completed: completed });
+  await refreshCalModal();
+}
+
+async function delCalTodo(id) {
+  await api('todos?id=eq.' + id, 'DELETE');
+  await refreshCalModal();
+}
 
 // FEED
 async function loadFeed() {
