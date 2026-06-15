@@ -3,83 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tarot Preview</title>
+<title>Tarot</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0d0d0d; }
 
+:root {
+  --gold: #c9a96e;
+  --gold-light: #e8c98a;
+  --gold-dim: rgba(201,169,110,0.35);
+  --cream: #FFFDF9;
+  --champagne: #F4EAD4;
+  --rose: #F6E7E8;
+  --text-dark: #3a2e22;
+  --text-mid: #7a6a55;
+  --text-light: #b0a090;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(145deg, #FFFDF9 0%, #F4EAD4 40%, #F6E7E8 70%, #EDE5FA 100%);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  overflow-x: hidden;
+}
+
+/* ── Floating particles ── */
+.particle-field {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,169,110,0.6) 0%, transparent 70%);
+  animation: floatParticle linear infinite;
+  opacity: 0;
+}
+
+@keyframes floatParticle {
+  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+}
+
+/* ── Wrap ── */
 .tarot-wrap {
-  background: #0d0d0d;
-  color: #e8e0d4;
-  font-family: 'Georgia', serif;
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding: 48px 20px 60px;
+}
+
+/* ── Header ── */
+.tarot-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.tarot-eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.35em;
+  color: var(--gold);
+  margin-bottom: 10px;
+  text-transform: uppercase;
 }
 
 .tarot-title {
-  font-size: 1.4rem;
-  letter-spacing: 0.2em;
-  color: #c9a96e;
-  margin-bottom: 8px;
+  font-size: 2.6rem;
   font-weight: normal;
+  letter-spacing: 0.18em;
+  color: var(--text-dark);
+  line-height: 1;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #8a6a35, #c9a96e, #8a6a35);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .tarot-subtitle {
-  font-size: 0.78rem;
-  color: #7a7068;
-  letter-spacing: 0.15em;
-  margin-bottom: 36px;
+  font-size: 0.9rem;
+  color: var(--text-mid);
+  letter-spacing: 0.12em;
+  font-style: italic;
 }
 
-.tarot-question-wrap {
-  width: 100%;
-  max-width: 420px;
-  margin-bottom: 28px;
+/* ── Ornament divider ── */
+.ornament {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px auto;
+  width: fit-content;
+}
+.ornament-line {
+  width: 50px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim));
+}
+.ornament-line.r { background: linear-gradient(to left, transparent, var(--gold-dim)); }
+.ornament-diamond {
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  opacity: 0.7;
 }
 
-.tarot-question-wrap textarea {
+/* ── Question input ── */
+.question-wrap {
   width: 100%;
-  background: transparent;
-  border: 1px solid #c9a96e44;
-  border-radius: 12px;
-  color: #e8e0d4;
+  max-width: 440px;
+  margin-bottom: 32px;
+}
+
+.question-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.question-wrap textarea {
+  width: 100%;
+  background: rgba(255,253,249,0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(201,169,110,0.4);
+  border-radius: 16px;
+  color: var(--text-dark);
   font-family: inherit;
-  font-size: 0.88rem;
-  padding: 14px 16px;
+  font-size: 1rem;
+  padding: 16px 18px;
   resize: none;
   outline: none;
-  line-height: 1.7;
-  transition: border-color 0.3s;
+  line-height: 1.8;
+  box-shadow: 0 4px 24px rgba(201,169,110,0.1), inset 0 1px 0 rgba(255,255,255,0.8);
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.tarot-question-wrap textarea::placeholder { color: #5a524a; }
-.tarot-question-wrap textarea:focus { border-color: #c9a96e99; }
+.question-wrap textarea::placeholder { color: #c0b0a0; font-style: italic; }
+.question-wrap textarea:focus {
+  border-color: rgba(201,169,110,0.7);
+  box-shadow: 0 4px 32px rgba(201,169,110,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+}
 
-.tarot-draw-btn {
-  background: transparent;
-  border: 1px solid #c9a96e;
-  color: #c9a96e;
+/* ── Draw button ── */
+.draw-btn {
+  background: linear-gradient(135deg, #c9a96e, #e8c98a, #c9a96e);
+  background-size: 200% 100%;
+  border: none;
+  color: #3a2e22;
   font-family: inherit;
-  font-size: 0.82rem;
-  letter-spacing: 0.18em;
-  padding: 12px 32px;
-  border-radius: 40px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  padding: 15px 44px;
+  border-radius: 50px;
   cursor: pointer;
-  transition: background 0.25s, color 0.25s;
-  margin-bottom: 48px;
+  box-shadow: 0 6px 24px rgba(201,169,110,0.45), 0 2px 8px rgba(201,169,110,0.2);
+  transition: background-position 0.4s, box-shadow 0.3s, transform 0.15s;
+  margin-bottom: 52px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
 }
 
-.tarot-draw-btn:hover { background: #c9a96e18; }
-.tarot-draw-btn:disabled { opacity: 0.35; cursor: default; }
+.draw-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.25), transparent 60%);
+  border-radius: inherit;
+}
 
-.tarot-scene {
-  width: 160px;
-  height: 260px;
-  perspective: 900px;
-  margin-bottom: 36px;
+.draw-btn:hover {
+  background-position: 100% 0;
+  box-shadow: 0 10px 36px rgba(201,169,110,0.55), 0 4px 12px rgba(201,169,110,0.3);
+  transform: translateY(-2px);
+}
+
+.draw-btn:active { transform: translateY(0); }
+
+.draw-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Card deck container ── */
+.deck-area {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 52px;
+}
+
+/* ── Card scene ── */
+.card-scene {
+  width: 175px;
+  height: 300px;
+  perspective: 1000px;
 }
 
 .tarot-card {
@@ -87,126 +218,347 @@ body { background: #0d0d0d; }
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+  transition: none; /* managed by JS / keyframes */
 }
 
-.tarot-card.flipped { transform: rotateY(180deg); }
-
-.tarot-card-face {
+.card-face {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 14px;
+  inset: 0;
+  border-radius: 18px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
-.tarot-card-back {
-  background: #111;
-  border: 1px solid #c9a96e55;
+/* Back face */
+.card-back {
+  background: linear-gradient(150deg, #6b1e2e 0%, #9b2335 40%, #c0384a 70%, #8a1c2a 100%);
+  border: 2px solid rgba(201,169,110,0.7);
+  box-shadow:
+    0 20px 60px rgba(107,30,46,0.35),
+    0 8px 24px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 0 0 1px rgba(201,169,110,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.tarot-card-back svg { width: 80%; height: 80%; opacity: 0.5; }
+.card-back-inner {
+  width: 85%;
+  height: 90%;
+  border: 1px solid rgba(201,169,110,0.5);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
 
-.tarot-card-front {
-  background: #131210;
-  border: 1px solid #c9a96e;
+.card-back-inner::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(201,169,110,0.25);
+  border-radius: 8px;
+}
+
+.card-back-svg {
+  width: 75%;
+  height: 75%;
+  opacity: 0.85;
+}
+
+/* Front face */
+.card-front {
   transform: rotateY(180deg);
+  background: linear-gradient(160deg, #FFFDF9 0%, #F9F3E8 60%, #F4EAD4 100%);
+  border: 2px solid rgba(201,169,110,0.8);
+  box-shadow:
+    0 24px 64px rgba(0,0,0,0.15),
+    0 8px 24px rgba(0,0,0,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    0 0 0 1px rgba(201,169,110,0.3);
+  display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 14px;
   gap: 10px;
-  padding: 16px;
 }
 
-.tarot-card-front .card-number { font-size: 0.65rem; color: #c9a96e88; letter-spacing: 0.15em; }
-.tarot-card-front .card-symbol { font-size: 2rem; color: #c9a96e; line-height: 1; }
-.tarot-card-front .card-name { font-size: 0.72rem; color: #c9a96e; text-align: center; letter-spacing: 0.1em; line-height: 1.4; }
-.tarot-card-front .card-divider { width: 40px; height: 1px; background: #c9a96e55; }
-.tarot-card-front .card-keywords { font-size: 0.6rem; color: #9a8e82; text-align: center; letter-spacing: 0.08em; line-height: 1.6; }
-
-.tarot-result {
-  width: 100%;
-  max-width: 420px;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.5s 0.6s, transform 0.5s 0.6s;
+.card-front-frame {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(201,169,110,0.4);
+  border-radius: 12px;
   pointer-events: none;
 }
 
-.tarot-result.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
-
-.tarot-result-name { font-size: 1.05rem; color: #c9a96e; text-align: center; letter-spacing: 0.15em; margin-bottom: 4px; }
-.tarot-result-suit { font-size: 0.7rem; color: #7a7068; text-align: center; letter-spacing: 0.12em; margin-bottom: 24px; }
-
-.tarot-reading-box {
-  background: #111;
-  border: 1px solid #c9a96e22;
-  border-radius: 14px;
-  padding: 20px;
-  min-height: 100px;
-  font-size: 0.85rem;
-  color: #9a8e82;
-  line-height: 1.8;
+.card-front-frame::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(201,169,110,0.2);
+  border-radius: 8px;
 }
 
-.tarot-reading-box .reading-label { font-size: 0.62rem; letter-spacing: 0.18em; color: #c9a96e66; margin-bottom: 12px; }
-.tarot-reading-box .reading-content { color: #c8bfb4; min-height: 60px; }
-.tarot-reading-box .reading-placeholder { color: #4a4440; font-style: italic; font-size: 0.78rem; }
+.cf-number {
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  opacity: 0.8;
+  z-index: 1;
+}
 
-.tarot-ornament {
-  width: 60px;
+.cf-symbol {
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--gold);
+  filter: drop-shadow(0 2px 8px rgba(201,169,110,0.5));
+  z-index: 1;
+}
+
+.cf-name {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  text-align: center;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  z-index: 1;
+}
+
+.cf-divider {
+  width: 44px;
   height: 1px;
-  background: linear-gradient(to right, transparent, #c9a96e66, transparent);
-  margin: 24px auto;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  z-index: 1;
 }
+
+.cf-keywords {
+  font-size: 0.7rem;
+  color: var(--text-mid);
+  text-align: center;
+  letter-spacing: 0.1em;
+  line-height: 1.7;
+  font-style: italic;
+  z-index: 1;
+}
+
+/* ── Hover glow (added via JS) ── */
+.card-scene.hoverable .tarot-card {
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s;
+}
+.card-scene.hoverable:hover .tarot-card {
+  transform: translateY(-14px) rotateX(4deg);
+}
+.card-scene.hoverable:hover .card-back {
+  box-shadow:
+    0 28px 70px rgba(107,30,46,0.45),
+    0 12px 32px rgba(0,0,0,0.2),
+    0 0 40px rgba(201,169,110,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* ── Card flip animation ── */
+@keyframes cardLift {
+  0%   { transform: translateY(0) rotateY(0deg) rotateX(0deg); }
+  20%  { transform: translateY(-30px) rotateY(0deg) rotateX(-8deg); }
+  100% { transform: translateY(-30px) rotateY(90deg) rotateX(0deg); }
+}
+
+@keyframes cardReveal {
+  0%   { transform: translateY(-30px) rotateY(90deg) rotateX(0deg); }
+  60%  { transform: translateY(-8px) rotateY(195deg) rotateX(0deg); }
+  75%  { transform: translateY(-2px) rotateY(183deg) rotateX(2deg); }
+  88%  { transform: translateY(0px) rotateY(177deg) rotateX(-1deg); }
+  100% { transform: translateY(0px) rotateY(180deg) rotateX(0deg); }
+}
+
+.tarot-card.flipping-out {
+  animation: cardLift 0.5s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+
+.tarot-card.flipping-in {
+  animation: cardReveal 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* ── Particle burst ── */
+.burst-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold-light);
+  pointer-events: none;
+  z-index: 100;
+  animation: burst 0.7s ease-out forwards;
+}
+
+@keyframes burst {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--bx), var(--by)) scale(0); opacity: 0; }
+}
+
+/* ── Result area ── */
+.tarot-result {
+  width: 100%;
+  max-width: 440px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s 0.8s ease, transform 0.6s 0.8s ease;
+  pointer-events: none;
+}
+
+.tarot-result.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.result-card-name {
+  font-size: 1.55rem;
+  color: var(--text-dark);
+  text-align: center;
+  letter-spacing: 0.16em;
+  margin-bottom: 4px;
+  background: linear-gradient(135deg, #8a6a35, #c9a96e, #8a6a35);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.result-card-suit {
+  font-size: 0.82rem;
+  color: var(--text-mid);
+  text-align: center;
+  letter-spacing: 0.16em;
+  margin-bottom: 26px;
+  font-style: italic;
+}
+
+.reading-box {
+  background: rgba(255,253,249,0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(201,169,110,0.35);
+  border-radius: 20px;
+  padding: 26px 24px;
+  box-shadow:
+    0 8px 40px rgba(201,169,110,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.reading-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.reading-gold-line {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+  margin-bottom: 18px;
+}
+
+.reading-content {
+  font-size: 1.0rem;
+  color: var(--text-dark);
+  line-height: 2;
+  min-height: 70px;
+}
+
+.reading-placeholder {
+  color: var(--text-light);
+  font-style: italic;
+  font-size: 0.92rem;
+}
+
+/* ── Scene hidden ── */
+.deck-area[hidden] { display: none; }
 </style>
 </head>
 <body>
-<div class="tarot-wrap" id="tarotComponent">
-  <div class="tarot-title">TAROT</div>
-  <div class="tarot-subtitle">问出你的困惑，让牌回答</div>
 
-  <div class="tarot-question-wrap">
+<!-- Floating particles -->
+<div class="particle-field" id="particleField"></div>
+
+<div class="tarot-wrap">
+  <header class="tarot-header">
+    <div class="tarot-eyebrow">★ 塔 罗 占 卜 ★</div>
+    <div class="tarot-title">TAROT</div>
+    <div class="tarot-subtitle">问出你心中的困惑，让牌给你答案</div>
+  </header>
+
+  <div class="ornament">
+    <div class="ornament-line"></div>
+    <div class="ornament-diamond"></div>
+    <div class="ornament-line r"></div>
+  </div>
+
+  <div class="question-wrap">
+    <div class="question-label">你的问题</div>
     <textarea id="tarotQuestion" rows="3" placeholder="此刻，你想问什么…"></textarea>
   </div>
 
-  <button class="tarot-draw-btn" id="tarotDrawBtn" onclick="drawTarot()">抽 一 张 牌</button>
+  <button class="draw-btn" id="tarotDrawBtn" onclick="drawTarot()">
+    抽 一 张 牌
+  </button>
 
-  <div class="tarot-scene" id="tarotScene" style="display:none;">
-    <div class="tarot-card" id="tarotCard">
-      <div class="tarot-card-face tarot-card-back">
-        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="10" y="10" width="80" height="80" stroke="#c9a96e" stroke-width="0.8"/>
-          <rect x="16" y="16" width="68" height="68" stroke="#c9a96e" stroke-width="0.4"/>
-          <line x1="50" y1="16" x2="50" y2="84" stroke="#c9a96e" stroke-width="0.4"/>
-          <line x1="16" y1="50" x2="84" y2="50" stroke="#c9a96e" stroke-width="0.4"/>
-          <circle cx="50" cy="50" r="14" stroke="#c9a96e" stroke-width="0.6"/>
-          <circle cx="50" cy="50" r="3" fill="#c9a96e" opacity="0.6"/>
-          <polygon points="50,22 54,32 50,30 46,32" fill="#c9a96e" opacity="0.4"/>
-          <polygon points="50,78 54,68 50,70 46,68" fill="#c9a96e" opacity="0.4"/>
-          <polygon points="22,50 32,46 30,50 32,54" fill="#c9a96e" opacity="0.4"/>
-          <polygon points="78,50 68,46 70,50 68,54" fill="#c9a96e" opacity="0.4"/>
-        </svg>
-      </div>
-      <div class="tarot-card-face tarot-card-front" id="tarotCardFront">
-        <div class="card-number" id="cardNumber"></div>
-        <div class="card-symbol" id="cardSymbol"></div>
-        <div class="card-name" id="cardName"></div>
-        <div class="card-divider"></div>
-        <div class="card-keywords" id="cardKeywords"></div>
+  <div class="deck-area" id="deckArea" hidden>
+    <div class="card-scene" id="cardScene">
+      <div class="tarot-card" id="tarotCard">
+        <!-- Back -->
+        <div class="card-face card-back">
+          <div class="card-back-inner">
+            <svg class="card-back-svg" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Outer ring -->
+              <circle cx="60" cy="60" r="52" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.6"/>
+              <!-- Middle ring -->
+              <circle cx="60" cy="60" r="38" stroke="#c9a96e" stroke-width="0.6" opacity="0.5"/>
+              <!-- Inner circle -->
+              <circle cx="60" cy="60" r="18" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
+              <circle cx="60" cy="60" r="4" fill="#c9a96e" opacity="0.9"/>
+              <!-- Cross lines -->
+              <line x1="60" y1="8" x2="60" y2="112" stroke="#c9a96e" stroke-width="0.5" opacity="0.4"/>
+              <line x1="8" y1="60" x2="112" y2="60" stroke="#c9a96e" stroke-width="0.5" opacity="0.4"/>
+              <!-- Diagonal lines -->
+              <line x1="22" y1="22" x2="98" y2="98" stroke="#c9a96e" stroke-width="0.4" opacity="0.25"/>
+              <line x1="98" y1="22" x2="22" y2="98" stroke="#c9a96e" stroke-width="0.4" opacity="0.25"/>
+              <!-- Star points -->
+              <polygon points="60,12 63,22 60,20 57,22" fill="#c9a96e" opacity="0.7"/>
+              <polygon points="60,108 63,98 60,100 57,98" fill="#c9a96e" opacity="0.7"/>
+              <polygon points="12,60 22,63 20,60 22,57" fill="#c9a96e" opacity="0.7"/>
+              <polygon points="108,60 98,63 100,60 98,57" fill="#c9a96e" opacity="0.7"/>
+              <!-- Corner ornaments -->
+              <circle cx="22" cy="22" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
+              <circle cx="98" cy="22" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
+              <circle cx="22" cy="98" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
+              <circle cx="98" cy="98" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
+            </svg>
+          </div>
+        </div>
+        <!-- Front -->
+        <div class="card-face card-front">
+          <div class="card-front-frame"></div>
+          <div class="cf-number" id="cfNumber"></div>
+          <div class="cf-symbol" id="cfSymbol"></div>
+          <div class="cf-name" id="cfName"></div>
+          <div class="cf-divider"></div>
+          <div class="cf-keywords" id="cfKeywords"></div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="tarot-result" id="tarotResult">
-    <div class="tarot-result-name" id="resultName"></div>
-    <div class="tarot-result-suit" id="resultSuit"></div>
-    <div class="tarot-ornament"></div>
-    <div class="tarot-reading-box">
+    <div class="result-card-name" id="resultName"></div>
+    <div class="result-card-suit" id="resultSuit"></div>
+    <div class="reading-box">
       <div class="reading-label">解 读</div>
+      <div class="reading-gold-line"></div>
       <div class="reading-content" id="readingContent">
         <span class="reading-placeholder">等待解读…</span>
       </div>
@@ -215,7 +567,25 @@ body { background: #0d0d0d; }
 </div>
 
 <script>
-const TAROT_DECK = [
+// ── Ambient floating particles ──
+(function() {
+  const field = document.getElementById('particleField');
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 3 + Math.random() * 8;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      animation-duration:${10 + Math.random()*16}s;
+      animation-delay:${Math.random()*12}s;
+    `;
+    field.appendChild(p);
+  }
+})();
+
+// ── Tarot deck ──
+const DECK = [
   { id:0,  name:"愚者",     suit:"大阿卡纳", symbol:"☀", number:"0",     keywords:"自由 · 新起点 · 冒险",   meaning:"新的旅程开始，带着无限可能踏入未知。" },
   { id:1,  name:"魔法师",   suit:"大阿卡纳", symbol:"∞", number:"I",     keywords:"意志 · 技巧 · 创造",     meaning:"你拥有实现目标的一切工具，专注并行动。" },
   { id:2,  name:"女祭司",   suit:"大阿卡纳", symbol:"☽", number:"II",    keywords:"直觉 · 神秘 · 内在智慧", meaning:"倾听内心深处的声音，答案已在其中。" },
@@ -234,74 +604,184 @@ const TAROT_DECK = [
   { id:15, name:"恶魔",     suit:"大阿卡纳", symbol:"♟", number:"XV",    keywords:"束缚 · 物质 · 阴影",     meaning:"审视让你受困的执念，你有能力挣脱。" },
   { id:16, name:"塔",       suit:"大阿卡纳", symbol:"⚡", number:"XVI",   keywords:"突变 · 动荡 · 启示",     meaning:"动摇的根基需要崩塌，真相在混乱后显现。" },
   { id:17, name:"星星",     suit:"大阿卡纳", symbol:"★", number:"XVII",  keywords:"希望 · 治愈 · 灵感",     meaning:"在黑暗后你仍有光，怀抱希望继续前行。" },
-  { id:18, name:"月亮",     suit:"大阿卡纳", symbol:"☾", number:"XVIII", keywords:"幻觉 · 潜意识 · 恐惧",  meaning:"事情并非表面那样，留意内心深处的信号。" },
+  { id:18, name:"月亮",     suit:"大阿卡纳", symbol:"☾", number:"XVIII", keywords:"幻觉 · 潜意识 · 恐惧",   meaning:"事情并非表面那样，留意内心深处的信号。" },
   { id:19, name:"太阳",     suit:"大阿卡纳", symbol:"☀", number:"XIX",   keywords:"喜悦 · 成功 · 活力",     meaning:"光明与欢乐，成功与清晰属于你。" },
   { id:20, name:"审判",     suit:"大阿卡纳", symbol:"🔔", number:"XX",    keywords:"觉醒 · 更新 · 呼唤",     meaning:"听见内心的召唤，是时候做出重大决定。" },
   { id:21, name:"世界",     suit:"大阿卡纳", symbol:"◎", number:"XXI",   keywords:"完成 · 整合 · 圆满",     meaning:"一个完整的循环结束，成就感与圆满感降临。" },
-  { id:22, name:"权杖王牌", suit:"权杖",     symbol:"🜂", number:"Ace",   keywords:"灵感 · 潜力 · 开始",   meaning:"新的热情与创意能量正在萌发。" },
-  { id:36, name:"圣杯王牌", suit:"圣杯",     symbol:"🜄", number:"Ace",   keywords:"情感 · 直觉 · 新爱",   meaning:"情感上的新开始，爱与直觉正在涌现。" },
-  { id:50, name:"宝剑王牌", suit:"宝剑",     symbol:"🜁", number:"Ace",   keywords:"真相 · 清晰 · 突破",   meaning:"以理性与清醒切开迷雾，真相浮出水面。" },
-  { id:64, name:"星币王牌", suit:"星币",     symbol:"🜃", number:"Ace",   keywords:"繁荣 · 机会 · 物质",   meaning:"物质与财富上的新开始，机会已经出现。" },
+  { id:22, name:"权杖王牌", suit:"权杖",     symbol:"🜂", number:"Ace",   keywords:"灵感 · 潜力 · 开始",     meaning:"新的热情与创意能量正在萌发。" },
+  { id:23, name:"权杖二",   suit:"权杖",     symbol:"🜂", number:"II",    keywords:"计划 · 远见 · 等待",     meaning:"你已踏出第一步，现在需要更宏观的规划。" },
+  { id:24, name:"权杖三",   suit:"权杖",     symbol:"🜂", number:"III",   keywords:"扩张 · 探索 · 预见",     meaning:"机会已在路上，放眼更广阔的可能性。" },
+  { id:25, name:"权杖四",   suit:"权杖",     symbol:"🜂", number:"IV",    keywords:"庆祝 · 稳定 · 归属",     meaning:"值得庆祝的成就，享受当下的安稳与喜悦。" },
+  { id:26, name:"权杖五",   suit:"权杖",     symbol:"🜂", number:"V",     keywords:"竞争 · 冲突 · 挑战",     meaning:"面对纷乱，在竞争中磨砺自己。" },
+  { id:27, name:"权杖六",   suit:"权杖",     symbol:"🜂", number:"VI",    keywords:"胜利 · 认可 · 自信",     meaning:"你的努力得到认可，自信迎接成功。" },
+  { id:28, name:"权杖七",   suit:"权杖",     symbol:"🜂", number:"VII",   keywords:"坚守 · 挑战 · 优势",     meaning:"坚持立场，你有能力守住自己的位置。" },
+  { id:29, name:"权杖八",   suit:"权杖",     symbol:"🜂", number:"VIII",  keywords:"速度 · 行动 · 信息",     meaning:"事情迅速推进，快速行动抓住时机。" },
+  { id:30, name:"权杖九",   suit:"权杖",     symbol:"🜂", number:"IX",    keywords:"韧性 · 防御 · 坚持",     meaning:"虽然疲惫，继续坚守，胜利近在眼前。" },
+  { id:31, name:"权杖十",   suit:"权杖",     symbol:"🜂", number:"X",     keywords:"重担 · 压力 · 责任",     meaning:"承担了太多，考虑放下不属于你的重量。" },
+  { id:32, name:"权杖侍从", suit:"权杖",     symbol:"🜂", number:"Page",  keywords:"热情 · 探索 · 消息",     meaning:"新的热情与好奇心引领你探索未知领域。" },
+  { id:33, name:"权杖骑士", suit:"权杖",     symbol:"🜂", number:"Knight",keywords:"冒险 · 冲劲 · 行动",     meaning:"充满活力地冲向目标，但注意不要莽撞。" },
+  { id:34, name:"权杖王后", suit:"权杖",     symbol:"🜂", number:"Queen", keywords:"自信 · 魅力 · 热情",     meaning:"以自信和热情散发你的个人魅力与影响力。" },
+  { id:35, name:"权杖国王", suit:"权杖",     symbol:"🜂", number:"King",  keywords:"领导 · 远见 · 创业",     meaning:"以魄力和远见引领他人，掌舵自己的事业。" },
+  { id:36, name:"圣杯王牌", suit:"圣杯",     symbol:"🜄", number:"Ace",   keywords:"情感 · 直觉 · 新爱",     meaning:"情感上的新开始，爱与直觉正在涌现。" },
+  { id:37, name:"圣杯二",   suit:"圣杯",     symbol:"🜄", number:"II",    keywords:"联结 · 伙伴 · 和谐",     meaning:"两心相遇，真诚的连接与相互理解。" },
+  { id:38, name:"圣杯三",   suit:"圣杯",     symbol:"🜄", number:"III",   keywords:"庆祝 · 友谊 · 喜悦",     meaning:"与重要的人共享欢乐时光，值得庆贺。" },
+  { id:39, name:"圣杯四",   suit:"圣杯",     symbol:"🜄", number:"IV",    keywords:"沉思 · 冷漠 · 内省",     meaning:"退出行动，向内审视，留意被忽视的机会。" },
+  { id:40, name:"圣杯五",   suit:"圣杯",     symbol:"🜄", number:"V",     keywords:"失落 · 悔恨 · 悲伤",     meaning:"面对失去，但别忘了还剩下的美好。" },
+  { id:41, name:"圣杯六",   suit:"圣杯",     symbol:"🜄", number:"VI",    keywords:"怀旧 · 童年 · 给予",     meaning:"回望过去带来温暖，珍惜那些纯粹的美好。" },
+  { id:42, name:"圣杯七",   suit:"圣杯",     symbol:"🜄", number:"VII",   keywords:"幻想 · 选择 · 迷惑",     meaning:"面对太多诱人的选项，辨别幻想与现实。" },
+  { id:43, name:"圣杯八",   suit:"圣杯",     symbol:"🜄", number:"VIII",  keywords:"离开 · 追寻 · 放弃",     meaning:"放下已有的去追寻更深的意义，需要勇气。" },
+  { id:44, name:"圣杯九",   suit:"圣杯",     symbol:"🜄", number:"IX",    keywords:"满足 · 愿望 · 幸福",     meaning:"愿望成真，享受当下内心的丰盛与满足。" },
+  { id:45, name:"圣杯十",   suit:"圣杯",     symbol:"🜄", number:"X",     keywords:"圆满 · 家庭 · 幸福",     meaning:"情感圆满，家庭与爱的理想状态正在实现。" },
+  { id:46, name:"圣杯侍从", suit:"圣杯",     symbol:"🜄", number:"Page",  keywords:"创意 · 消息 · 直觉",     meaning:"保持开放与好奇，留意来自内心的创意灵感。" },
+  { id:47, name:"圣杯骑士", suit:"圣杯",     symbol:"🜄", number:"Knight",keywords:"浪漫 · 追求 · 理想",     meaning:"带着热情与情感追逐心中的理想与爱。" },
+  { id:48, name:"圣杯王后", suit:"圣杯",     symbol:"🜄", number:"Queen", keywords:"同理 · 关怀 · 直觉",     meaning:"以深厚的同情心和直觉滋养身边的人。" },
+  { id:49, name:"圣杯国王", suit:"圣杯",     symbol:"🜄", number:"King",  keywords:"成熟 · 情感 · 外交",     meaning:"以成熟的情感智慧处理关系，保持平衡。" },
+  { id:50, name:"宝剑王牌", suit:"宝剑",     symbol:"🜁", number:"Ace",   keywords:"真相 · 清晰 · 突破",     meaning:"以理性与清醒切开迷雾，真相浮出水面。" },
+  { id:51, name:"宝剑二",   suit:"宝剑",     symbol:"🜁", number:"II",    keywords:"僵局 · 决策 · 回避",     meaning:"面临两难，无法回避，需要做出抉择。" },
+  { id:52, name:"宝剑三",   suit:"宝剑",     symbol:"🜁", number:"III",   keywords:"悲伤 · 心痛 · 分离",     meaning:"承认痛苦，允许自己哀伤，才能真正愈合。" },
+  { id:53, name:"宝剑四",   suit:"宝剑",     symbol:"🜁", number:"IV",    keywords:"休息 · 恢复 · 沉淀",     meaning:"在战斗之间暂停休息，积蓄力量再出发。" },
+  { id:54, name:"宝剑五",   suit:"宝剑",     symbol:"🜁", number:"V",     keywords:"冲突 · 失败 · 自私",     meaning:"赢得代价太高的胜利，重新审视争斗的意义。" },
+  { id:55, name:"宝剑六",   suit:"宝剑",     symbol:"🜁", number:"VI",    keywords:"过渡 · 离开 · 平静",     meaning:"离开动荡，驶向更平静的水域，改变正在发生。" },
+  { id:56, name:"宝剑七",   suit:"宝剑",     symbol:"🜁", number:"VII",   keywords:"欺骗 · 策略 · 逃避",     meaning:"留意身边的不诚实，或审视自己是否在逃避。" },
+  { id:57, name:"宝剑八",   suit:"宝剑",     symbol:"🜁", number:"VIII",  keywords:"束缚 · 限制 · 恐惧",     meaning:"你比自己以为的更自由，恐惧让你看不见出路。" },
+  { id:58, name:"宝剑九",   suit:"宝剑",     symbol:"🜁", number:"IX",    keywords:"焦虑 · 噩梦 · 担忧",     meaning:"深夜的恐惧往往被放大，白天来临一切会不同。" },
+  { id:59, name:"宝剑十",   suit:"宝剑",     symbol:"🜁", number:"X",     keywords:"终结 · 崩溃 · 重生",     meaning:"最黑暗的时刻已经过去，从此只会更好。" },
+  { id:60, name:"宝剑侍从", suit:"宝剑",     symbol:"🜁", number:"Page",  keywords:"好奇 · 警觉 · 沟通",     meaning:"敏锐地观察与学习，用思考与言语表达自己。" },
+  { id:61, name:"宝剑骑士", suit:"宝剑",     symbol:"🜁", number:"Knight",keywords:"行动 · 锋利 · 冲动",     meaning:"迅速果断地行动，但确保有所考量再出击。" },
+  { id:62, name:"宝剑王后", suit:"宝剑",     symbol:"🜁", number:"Queen", keywords:"独立 · 清醒 · 直接",     meaning:"以清晰的头脑和直接的方式面对现实。" },
+  { id:63, name:"宝剑国王", suit:"宝剑",     symbol:"🜁", number:"King",  keywords:"权威 · 逻辑 · 公正",     meaning:"以理性与智识的权威做出公正的判断。" },
+  { id:64, name:"星币王牌", suit:"星币",     symbol:"🜃", number:"Ace",   keywords:"繁荣 · 机会 · 物质",     meaning:"物质与财富上的新开始，机会已经出现。" },
+  { id:65, name:"星币二",   suit:"星币",     symbol:"🜃", number:"II",    keywords:"平衡 · 适应 · 灵活",     meaning:"保持灵活，在多件事情之间找到平衡点。" },
+  { id:66, name:"星币三",   suit:"星币",     symbol:"🜃", number:"III",   keywords:"合作 · 技艺 · 成就",     meaning:"团队合作与精湛技艺带来切实的成果。" },
+  { id:67, name:"星币四",   suit:"星币",     symbol:"🜃", number:"IV",    keywords:"安全 · 保守 · 积累",     meaning:"对稳定的追求是好的，但也留意是否过于封闭。" },
+  { id:68, name:"星币五",   suit:"星币",     symbol:"🜃", number:"V",     keywords:"困难 · 贫乏 · 孤立",     meaning:"暂时的困苦，寻求帮助是允许的，你不是一个人。" },
+  { id:69, name:"星币六",   suit:"星币",     symbol:"🜃", number:"VI",    keywords:"给予 · 施受 · 慷慨",     meaning:"慷慨地给予或谦逊地接受，流动创造丰盛。" },
+  { id:70, name:"星币七",   suit:"星币",     symbol:"🜃", number:"VII",   keywords:"耐心 · 评估 · 回报",     meaning:"付出已久，评估现在的方向，长远回报值得等待。" },
+  { id:71, name:"星币八",   suit:"星币",     symbol:"🜃", number:"VIII",  keywords:"专注 · 技能 · 勤劳",     meaning:"专注于磨练技能，持续的努力带来专业成就。" },
+  { id:72, name:"星币九",   suit:"星币",     symbol:"🜃", number:"IX",    keywords:"富足 · 独立 · 优雅",     meaning:"通过努力赢得的自给自足与物质丰盛。" },
+  { id:73, name:"星币十",   suit:"星币",     symbol:"🜃", number:"X",     keywords:"遗产 · 家族 · 圆满",     meaning:"长久的成果与财富传承，家族与根基稳固。" },
+  { id:74, name:"星币侍从", suit:"星币",     symbol:"🜃", number:"Page",  keywords:"学习 · 机会 · 踏实",     meaning:"带着实际与好奇心学习新技能，新机会在等你。" },
+  { id:75, name:"星币骑士", suit:"星币",     symbol:"🜃", number:"Knight",keywords:"稳健 · 可靠 · 勤勉",     meaning:"缓慢而稳定地前进，可靠与勤劳是你的优势。" },
+  { id:76, name:"星币王后", suit:"星币",     symbol:"🜃", number:"Queen", keywords:"慷慨 · 务实 · 滋养",     meaning:"以踏实与温暖滋养生活，创造安全与丰盛的家园。" },
+  { id:77, name:"星币国王", suit:"星币",     symbol:"🜃", number:"King",  keywords:"财富 · 领导 · 安全",     meaning:"以智慧和经验管理资源，建立持久的成功。" },
 ];
 
-let currentCard = null;
+let current = null;
 let isDrawn = false;
+let animating = false;
+
+function spawnBurst(scene) {
+  for (let i = 0; i < 14; i++) {
+    const p = document.createElement('div');
+    p.className = 'burst-particle';
+    const angle = (i / 14) * 360;
+    const dist = 50 + Math.random() * 60;
+    const rad = angle * Math.PI / 180;
+    p.style.setProperty('--bx', `${Math.cos(rad)*dist}px`);
+    p.style.setProperty('--by', `${Math.sin(rad)*dist}px`);
+    p.style.left = '50%';
+    p.style.top = '50%';
+    p.style.marginLeft = '-3px';
+    p.style.marginTop = '-3px';
+    p.style.animationDelay = `${Math.random()*0.1}s`;
+    scene.appendChild(p);
+    setTimeout(() => p.remove(), 900);
+  }
+}
 
 function drawTarot() {
+  if (animating) return;
   if (isDrawn) { resetTarot(); return; }
 
-  const scene = document.getElementById('tarotScene');
+  const deck = document.getElementById('deckArea');
   const card = document.getElementById('tarotCard');
+  const scene = document.getElementById('cardScene');
   const btn = document.getElementById('tarotDrawBtn');
 
-  currentCard = TAROT_DECK[Math.floor(Math.random() * TAROT_DECK.length)];
+  current = DECK[Math.floor(Math.random() * DECK.length)];
 
-  document.getElementById('cardNumber').textContent = currentCard.number;
-  document.getElementById('cardSymbol').textContent = currentCard.symbol;
-  document.getElementById('cardName').textContent = currentCard.name;
-  document.getElementById('cardKeywords').textContent = currentCard.keywords;
+  document.getElementById('cfNumber').textContent = current.number;
+  document.getElementById('cfSymbol').textContent = current.symbol;
+  document.getElementById('cfName').textContent = current.name;
+  document.getElementById('cfKeywords').textContent = current.keywords;
 
-  card.classList.remove('flipped');
-  scene.style.display = 'block';
+  deck.hidden = false;
   btn.disabled = true;
+  animating = true;
+
+  // Phase 1: lift & tilt
+  card.classList.add('flipping-out');
 
   setTimeout(() => {
-    card.classList.add('flipped');
-    showResult();
-    btn.disabled = false;
-    btn.textContent = '再 抽 一 张';
-    isDrawn = true;
-  }, 150);
+    // Burst at midpoint
+    spawnBurst(scene);
+
+    // Phase 2: snap reveal
+    card.classList.remove('flipping-out');
+    card.classList.add('flipping-in');
+
+    setTimeout(() => {
+      card.classList.remove('flipping-in');
+      card.style.transform = 'rotateY(180deg)';
+      scene.classList.add('hoverable'); // re-enable hover after flip
+      showResult();
+      btn.disabled = false;
+      btn.textContent = '再 抽 一 张';
+      isDrawn = true;
+      animating = false;
+    }, 900);
+  }, 500);
 }
 
 function showResult() {
   const result = document.getElementById('tarotResult');
-  document.getElementById('resultName').textContent = currentCard.name;
-  document.getElementById('resultSuit').textContent = currentCard.suit + '  ·  ' + currentCard.number;
+  document.getElementById('resultName').textContent = current.name;
+  document.getElementById('resultSuit').textContent = current.suit + '  ·  ' + current.number;
 
   const content = document.getElementById('readingContent');
   content.innerHTML = '<span class="reading-placeholder">正在解读…</span>';
   result.classList.add('visible');
 
+  // ── Call your Edge Function here ──
+  // fetch('/functions/v1/tarot-reading', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({
+  //     question: document.getElementById('tarotQuestion').value,
+  //     card: current
+  //   })
+  // }).then(r => r.json()).then(d => { content.textContent = d.reading; });
+
   setTimeout(() => {
     if (content.querySelector('.reading-placeholder')) {
-      content.textContent = currentCard.meaning;
+      content.textContent = current.meaning;
     }
-  }, 1200);
+  }, 1400);
 }
 
 function resetTarot() {
+  if (animating) return;
+  animating = true;
   const card = document.getElementById('tarotCard');
   const result = document.getElementById('tarotResult');
+  const scene = document.getElementById('cardScene');
   const btn = document.getElementById('tarotDrawBtn');
-  card.classList.remove('flipped');
+
   result.classList.remove('visible');
-  isDrawn = false;
+  scene.classList.remove('hoverable');
+
+  // Flip back to back face
+  card.style.transition = 'transform 0.5s ease-in';
+  card.style.transform = 'rotateY(0deg)';
+
   setTimeout(() => {
-    document.getElementById('tarotScene').style.display = 'none';
+    card.style.transition = '';
+    document.getElementById('deckArea').hidden = true;
     btn.textContent = '抽 一 张 牌';
-    currentCard = null;
-  }, 500);
+    isDrawn = false;
+    animating = false;
+    current = null;
+  }, 600);
 }
 </script>
 </body>
