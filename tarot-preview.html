@@ -4,53 +4,55 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tarot</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
   --gold: #c9a96e;
-  --gold-light: #e8c98a;
-  --gold-dim: rgba(201,169,110,0.35);
-  --cream: #FFFDF9;
-  --champagne: #F4EAD4;
-  --rose: #F6E7E8;
-  --text-dark: #3a2e22;
-  --text-mid: #7a6a55;
-  --text-light: #b0a090;
+  --gold2: #e2c07a;
+  --gold-dim: rgba(201,169,110,0.3);
+  --pink: #f2c4ce;
+  --rose: #e8a0b0;
+  --blush: #fce8ed;
+  --white: #fffcfa;
+  --text: #2a1a20;
+  --text-mid: #8a6070;
+  --text-light: #c0a0aa;
 }
 
 body {
   min-height: 100vh;
-  background: linear-gradient(145deg, #FFFDF9 0%, #F4EAD4 40%, #F6E7E8 70%, #EDE5FA 100%);
-  font-family: 'Georgia', 'Times New Roman', serif;
+  background:
+    radial-gradient(ellipse at 20% 0%, #ffe8ef 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 10%, #fff3e0 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, #fce8f0 0%, transparent 60%),
+    linear-gradient(160deg, #fff8fa 0%, #fff4f7 40%, #fffbf2 70%, #fff6f9 100%);
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
   overflow-x: hidden;
 }
 
-/* ── Floating particles ── */
-.particle-field {
+/* ── Scattered deco stars ── */
+.deco-field {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  overflow: hidden;
   z-index: 0;
+  overflow: hidden;
 }
-
-.particle {
+.deco-star {
   position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,169,110,0.6) 0%, transparent 70%);
-  animation: floatParticle linear infinite;
+  color: var(--gold);
+  font-size: 0.9rem;
   opacity: 0;
+  animation: twinkle ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%,100% { opacity: 0; transform: scale(0.6) rotate(0deg); }
+  50%      { opacity: 0.55; transform: scale(1.1) rotate(20deg); }
 }
 
-@keyframes floatParticle {
-  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
-  10%  { opacity: 0.6; }
-  90%  { opacity: 0.3; }
-  100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
-}
-
-/* ── Wrap ── */
+/* ── Page wrap ── */
 .tarot-wrap {
   position: relative;
   z-index: 1;
@@ -58,159 +60,133 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 48px 20px 60px;
+  padding: 52px 20px 70px;
 }
 
 /* ── Header ── */
-.tarot-header {
-  text-align: center;
-  margin-bottom: 40px;
-}
+.tarot-header { text-align: center; margin-bottom: 10px; }
 
 .tarot-eyebrow {
-  font-size: 0.75rem;
-  letter-spacing: 0.35em;
-  color: var(--gold);
-  margin-bottom: 10px;
-  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.38em;
+  color: var(--rose);
+  margin-bottom: 12px;
+  font-family: 'Cinzel Decorative', serif;
 }
 
 .tarot-title {
-  font-size: 2.6rem;
-  font-weight: normal;
-  letter-spacing: 0.18em;
-  color: var(--text-dark);
-  line-height: 1;
-  margin-bottom: 8px;
-  background: linear-gradient(135deg, #8a6a35, #c9a96e, #8a6a35);
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 2.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  background: linear-gradient(135deg, #c9a96e 0%, #f0d898 45%, #c9a96e 70%, #e2b86a 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 2px 8px rgba(201,169,110,0.3));
 }
 
 .tarot-subtitle {
-  font-size: 0.9rem;
+  font-size: 1.0rem;
   color: var(--text-mid);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   font-style: italic;
 }
 
-/* ── Ornament divider ── */
+/* ── Ornament ── */
 .ornament {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 20px auto;
-  width: fit-content;
+  gap: 10px;
+  margin: 18px auto 26px;
 }
-.ornament-line {
-  width: 50px;
+.orn-line {
+  width: 48px;
   height: 1px;
-  background: linear-gradient(to right, transparent, var(--gold-dim));
+  background: linear-gradient(to right, transparent, var(--pink));
 }
-.ornament-line.r { background: linear-gradient(to left, transparent, var(--gold-dim)); }
-.ornament-diamond {
-  width: 6px;
-  height: 6px;
-  background: var(--gold);
-  transform: rotate(45deg);
-  opacity: 0.7;
+.orn-line.r { background: linear-gradient(to left, transparent, var(--pink)); }
+.orn-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
 }
 
-/* ── Question input ── */
-.question-wrap {
-  width: 100%;
-  max-width: 440px;
-  margin-bottom: 32px;
-}
+/* ── Question ── */
+.question-wrap { width: 100%; max-width: 420px; margin-bottom: 28px; }
 
 .question-label {
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
+  font-size: 0.68rem;
+  letter-spacing: 0.28em;
   color: var(--gold);
   margin-bottom: 10px;
   text-transform: uppercase;
+  font-family: 'Cinzel Decorative', serif;
 }
 
 .question-wrap textarea {
   width: 100%;
-  background: rgba(255,253,249,0.7);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(201,169,110,0.4);
-  border-radius: 16px;
-  color: var(--text-dark);
-  font-family: inherit;
-  font-size: 1rem;
+  background: rgba(255,252,250,0.85);
+  border: 1.5px solid rgba(201,169,110,0.38);
+  border-radius: 18px;
+  color: var(--text);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
   padding: 16px 18px;
   resize: none;
   outline: none;
   line-height: 1.8;
-  box-shadow: 0 4px 24px rgba(201,169,110,0.1), inset 0 1px 0 rgba(255,255,255,0.8);
+  box-shadow: 0 4px 20px rgba(242,196,206,0.2), inset 0 1px 0 rgba(255,255,255,0.9);
   transition: border-color 0.3s, box-shadow 0.3s;
 }
-
-.question-wrap textarea::placeholder { color: #c0b0a0; font-style: italic; }
+.question-wrap textarea::placeholder { color: #d0b0ba; font-style: italic; }
 .question-wrap textarea:focus {
-  border-color: rgba(201,169,110,0.7);
-  box-shadow: 0 4px 32px rgba(201,169,110,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+  border-color: rgba(201,169,110,0.65);
+  box-shadow: 0 4px 28px rgba(242,196,206,0.35), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 
-/* ── Draw button ── */
+/* ── Button ── */
 .draw-btn {
-  background: linear-gradient(135deg, #c9a96e, #e8c98a, #c9a96e);
+  background: linear-gradient(135deg, #c9a96e 0%, #f0d898 50%, #c9a96e 100%);
   background-size: 200% 100%;
   border: none;
-  color: #3a2e22;
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 600;
+  color: #2a1a20;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.82rem;
+  font-weight: 700;
   letter-spacing: 0.22em;
-  padding: 15px 44px;
+  padding: 15px 42px;
   border-radius: 50px;
   cursor: pointer;
-  box-shadow: 0 6px 24px rgba(201,169,110,0.45), 0 2px 8px rgba(201,169,110,0.2);
-  transition: background-position 0.4s, box-shadow 0.3s, transform 0.15s;
-  margin-bottom: 52px;
-  text-transform: uppercase;
+  box-shadow: 0 6px 22px rgba(201,169,110,0.4), 0 2px 8px rgba(201,169,110,0.2);
+  transition: background-position 0.4s, transform 0.15s, box-shadow 0.3s;
+  margin-bottom: 50px;
   position: relative;
   overflow: hidden;
 }
-
 .draw-btn::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.25), transparent 60%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.28), transparent 55%);
   border-radius: inherit;
 }
-
-.draw-btn:hover {
-  background-position: 100% 0;
-  box-shadow: 0 10px 36px rgba(201,169,110,0.55), 0 4px 12px rgba(201,169,110,0.3);
-  transform: translateY(-2px);
-}
-
+.draw-btn:hover { background-position: 100% 0; transform: translateY(-2px); box-shadow: 0 10px 32px rgba(201,169,110,0.5); }
 .draw-btn:active { transform: translateY(0); }
-
-.draw-btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-  transform: none;
-  box-shadow: none;
-}
-
-/* ── Card deck container ── */
-.deck-area {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 52px;
-}
+.draw-btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
 
 /* ── Card scene ── */
+.deck-area { display: flex; justify-content: center; margin-bottom: 44px; }
+
 .card-scene {
-  width: 175px;
-  height: 300px;
-  perspective: 1000px;
+  width: 190px;
+  height: 320px;
+  perspective: 1100px;
 }
 
 .tarot-card {
@@ -218,373 +194,430 @@ body {
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  cursor: default;
-  transition: none; /* managed by JS / keyframes */
 }
 
 .card-face {
   position: absolute;
   inset: 0;
-  border-radius: 18px;
+  border-radius: 20px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   overflow: hidden;
 }
 
-/* Back face */
+/* ── Card back ── */
 .card-back {
-  background: linear-gradient(150deg, #6b1e2e 0%, #9b2335 40%, #c0384a 70%, #8a1c2a 100%);
-  border: 2px solid rgba(201,169,110,0.7);
+  background: linear-gradient(160deg, #0e0a0c 0%, #1a0f14 50%, #0e0a0c 100%);
+  border: 2px solid var(--gold);
   box-shadow:
-    0 20px 60px rgba(107,30,46,0.35),
-    0 8px 24px rgba(0,0,0,0.2),
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    0 0 0 1px rgba(201,169,110,0.2);
+    0 20px 55px rgba(0,0,0,0.35),
+    0 6px 18px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(201,169,110,0.2),
+    0 0 0 1px rgba(201,169,110,0.15);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.card-back-inner {
-  width: 85%;
-  height: 90%;
-  border: 1px solid rgba(201,169,110,0.5);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.card-back-inner::before {
-  content: '';
-  position: absolute;
-  inset: 6px;
-  border: 1px solid rgba(201,169,110,0.25);
-  border-radius: 8px;
-}
-
-.card-back-svg {
-  width: 75%;
-  height: 75%;
-  opacity: 0.85;
-}
-
-/* Front face */
+/* ── Card front ── */
 .card-front {
   transform: rotateY(180deg);
-  background: linear-gradient(160deg, #FFFDF9 0%, #F9F3E8 60%, #F4EAD4 100%);
-  border: 2px solid rgba(201,169,110,0.8);
+  background: linear-gradient(160deg, #fff8fa 0%, #fff2f5 60%, #fff8f0 100%);
+  border: 2px solid var(--gold);
   box-shadow:
-    0 24px 64px rgba(0,0,0,0.15),
-    0 8px 24px rgba(0,0,0,0.1),
-    inset 0 1px 0 rgba(255,255,255,0.9),
-    0 0 0 1px rgba(201,169,110,0.3);
+    0 22px 60px rgba(201,169,110,0.22),
+    0 8px 24px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 0 0 1px rgba(201,169,110,0.25);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 18px 14px;
-  gap: 10px;
+  padding: 22px 16px 18px;
+  gap: 9px;
+  position: relative;
 }
 
-.card-front-frame {
+/* ── Front inner frame ── */
+.front-frame-svg {
   position: absolute;
-  inset: 8px;
-  border: 1px solid rgba(201,169,110,0.4);
-  border-radius: 12px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
-.card-front-frame::before {
-  content: '';
-  position: absolute;
-  inset: 5px;
-  border: 1px solid rgba(201,169,110,0.2);
-  border-radius: 8px;
-}
-
 .cf-number {
-  font-size: 0.75rem;
-  letter-spacing: 0.22em;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
   color: var(--gold);
-  opacity: 0.8;
+  opacity: 0.85;
   z-index: 1;
 }
 
 .cf-symbol {
-  font-size: 2.6rem;
+  font-size: 3.2rem;
   line-height: 1;
   color: var(--gold);
-  filter: drop-shadow(0 2px 8px rgba(201,169,110,0.5));
+  filter: drop-shadow(0 3px 10px rgba(201,169,110,0.55));
   z-index: 1;
 }
 
 .cf-name {
-  font-size: 0.9rem;
-  color: var(--text-dark);
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.0rem;
+  color: var(--text);
   text-align: center;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   line-height: 1.4;
   z-index: 1;
 }
 
 .cf-divider {
-  width: 44px;
+  width: 50px;
   height: 1px;
   background: linear-gradient(to right, transparent, var(--gold), transparent);
   z-index: 1;
 }
 
 .cf-keywords {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: var(--text-mid);
   text-align: center;
   letter-spacing: 0.1em;
-  line-height: 1.7;
+  line-height: 1.8;
   font-style: italic;
   z-index: 1;
 }
 
-/* ── Hover glow (added via JS) ── */
+/* ── Hover float ── */
 .card-scene.hoverable .tarot-card {
-  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
 }
 .card-scene.hoverable:hover .tarot-card {
   transform: translateY(-14px) rotateX(4deg);
 }
 .card-scene.hoverable:hover .card-back {
   box-shadow:
-    0 28px 70px rgba(107,30,46,0.45),
-    0 12px 32px rgba(0,0,0,0.2),
-    0 0 40px rgba(201,169,110,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.15);
+    0 28px 65px rgba(0,0,0,0.4),
+    0 0 35px rgba(201,169,110,0.3),
+    inset 0 1px 0 rgba(201,169,110,0.2);
 }
 
-/* ── Card flip animation ── */
+/* ── Flip animations ── */
 @keyframes cardLift {
   0%   { transform: translateY(0) rotateY(0deg) rotateX(0deg); }
-  20%  { transform: translateY(-30px) rotateY(0deg) rotateX(-8deg); }
-  100% { transform: translateY(-30px) rotateY(90deg) rotateX(0deg); }
+  25%  { transform: translateY(-28px) rotateY(0deg) rotateX(-9deg); }
+  100% { transform: translateY(-28px) rotateY(90deg) rotateX(0deg); }
 }
-
 @keyframes cardReveal {
-  0%   { transform: translateY(-30px) rotateY(90deg) rotateX(0deg); }
-  60%  { transform: translateY(-8px) rotateY(195deg) rotateX(0deg); }
-  75%  { transform: translateY(-2px) rotateY(183deg) rotateX(2deg); }
-  88%  { transform: translateY(0px) rotateY(177deg) rotateX(-1deg); }
-  100% { transform: translateY(0px) rotateY(180deg) rotateX(0deg); }
+  0%   { transform: translateY(-28px) rotateY(90deg); }
+  55%  { transform: translateY(-6px) rotateY(198deg); }
+  72%  { transform: translateY(-1px) rotateY(184deg); }
+  86%  { transform: translateY(0) rotateY(176deg); }
+  100% { transform: translateY(0) rotateY(180deg); }
 }
 
-.tarot-card.flipping-out {
-  animation: cardLift 0.5s cubic-bezier(0.55, 0, 1, 0.45) forwards;
-}
+.tarot-card.flipping-out { animation: cardLift 0.5s cubic-bezier(0.55,0,1,0.45) forwards; }
+.tarot-card.flipping-in  { animation: cardReveal 0.9s cubic-bezier(0.25,1,0.5,1) forwards; }
 
-.tarot-card.flipping-in {
-  animation: cardReveal 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
-
-/* ── Particle burst ── */
-.burst-particle {
+/* ── Burst ── */
+.burst-p {
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 5px; height: 5px;
   border-radius: 50%;
-  background: var(--gold-light);
+  background: var(--gold2);
   pointer-events: none;
   z-index: 100;
-  animation: burst 0.7s ease-out forwards;
+  animation: burstOut 0.7s ease-out forwards;
 }
-
-@keyframes burst {
+@keyframes burstOut {
   0%   { transform: translate(0,0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--bx), var(--by)) scale(0); opacity: 0; }
+  100% { transform: translate(var(--bx),var(--by)) scale(0); opacity: 0; }
 }
 
-/* ── Result area ── */
+/* ── Result ── */
 .tarot-result {
-  width: 100%;
-  max-width: 440px;
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.6s 0.8s ease, transform 0.6s 0.8s ease;
+  width: 100%; max-width: 420px;
+  opacity: 0; transform: translateY(14px);
+  transition: opacity 0.6s 0.8s, transform 0.6s 0.8s;
   pointer-events: none;
 }
+.tarot-result.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-.tarot-result.visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.result-card-name {
-  font-size: 1.55rem;
-  color: var(--text-dark);
+.result-name {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.45rem;
   text-align: center;
-  letter-spacing: 0.16em;
-  margin-bottom: 4px;
-  background: linear-gradient(135deg, #8a6a35, #c9a96e, #8a6a35);
+  letter-spacing: 0.1em;
+  background: linear-gradient(135deg, #c9a96e, #f0d898, #c9a96e);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  margin-bottom: 4px;
 }
 
-.result-card-suit {
-  font-size: 0.82rem;
+.result-suit {
+  font-size: 0.85rem;
   color: var(--text-mid);
   text-align: center;
-  letter-spacing: 0.16em;
-  margin-bottom: 26px;
+  letter-spacing: 0.15em;
+  margin-bottom: 22px;
   font-style: italic;
 }
 
 .reading-box {
-  background: rgba(255,253,249,0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(201,169,110,0.35);
-  border-radius: 20px;
+  background: rgba(255,252,250,0.8);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(201,169,110,0.32);
+  border-radius: 22px;
   padding: 26px 24px;
-  box-shadow:
-    0 8px 40px rgba(201,169,110,0.12),
-    inset 0 1px 0 rgba(255,255,255,0.9);
+  box-shadow: 0 6px 36px rgba(242,196,206,0.18), inset 0 1px 0 rgba(255,255,255,0.95);
+  position: relative;
+  overflow: hidden;
+}
+.reading-box::before {
+  content: '✦';
+  position: absolute;
+  top: 14px; left: 18px;
+  color: var(--gold);
+  font-size: 0.6rem;
+  opacity: 0.5;
+}
+.reading-box::after {
+  content: '✦';
+  position: absolute;
+  bottom: 14px; right: 18px;
+  color: var(--gold);
+  font-size: 0.6rem;
+  opacity: 0.5;
 }
 
 .reading-label {
-  font-size: 0.7rem;
-  letter-spacing: 0.28em;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
   color: var(--gold);
-  text-transform: uppercase;
-  margin-bottom: 14px;
+  text-align: center;
+  margin-bottom: 12px;
 }
 
 .reading-gold-line {
   height: 1px;
   background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .reading-content {
-  font-size: 1.0rem;
-  color: var(--text-dark);
+  font-size: 1.05rem;
+  color: var(--text);
   line-height: 2;
-  min-height: 70px;
+  min-height: 64px;
+  text-align: center;
 }
 
-.reading-placeholder {
-  color: var(--text-light);
-  font-style: italic;
-  font-size: 0.92rem;
-}
-
-/* ── Scene hidden ── */
-.deck-area[hidden] { display: none; }
+.reading-placeholder { color: var(--text-light); font-style: italic; }
 </style>
 </head>
 <body>
 
-<!-- Floating particles -->
-<div class="particle-field" id="particleField"></div>
+<!-- Scattered star deco -->
+<div class="deco-field" id="decoField"></div>
 
 <div class="tarot-wrap">
+
   <header class="tarot-header">
-    <div class="tarot-eyebrow">★ 塔 罗 占 卜 ★</div>
+    <div class="tarot-eyebrow">✦ 塔 罗 占 卜 ✦</div>
     <div class="tarot-title">TAROT</div>
     <div class="tarot-subtitle">问出你心中的困惑，让牌给你答案</div>
   </header>
 
   <div class="ornament">
-    <div class="ornament-line"></div>
-    <div class="ornament-diamond"></div>
-    <div class="ornament-line r"></div>
+    <div class="orn-line"></div>
+    <div class="orn-center">☽ &nbsp;✦&nbsp; ☾</div>
+    <div class="orn-line r"></div>
   </div>
 
   <div class="question-wrap">
-    <div class="question-label">你的问题</div>
+    <div class="question-label">你 的 问 题</div>
     <textarea id="tarotQuestion" rows="3" placeholder="此刻，你想问什么…"></textarea>
   </div>
 
-  <button class="draw-btn" id="tarotDrawBtn" onclick="drawTarot()">
-    抽 一 张 牌
-  </button>
+  <button class="draw-btn" id="tarotDrawBtn" onclick="drawTarot()">✦ 抽 一 张 牌 ✦</button>
 
-  <div class="deck-area" id="deckArea" hidden>
+  <div class="deck-area" id="deckArea" style="display:none">
     <div class="card-scene" id="cardScene">
       <div class="tarot-card" id="tarotCard">
-        <!-- Back -->
+
+        <!-- ── Back face ── -->
         <div class="card-face card-back">
-          <div class="card-back-inner">
-            <svg class="card-back-svg" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Outer ring -->
-              <circle cx="60" cy="60" r="52" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.6"/>
-              <!-- Middle ring -->
-              <circle cx="60" cy="60" r="38" stroke="#c9a96e" stroke-width="0.6" opacity="0.5"/>
-              <!-- Inner circle -->
-              <circle cx="60" cy="60" r="18" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
-              <circle cx="60" cy="60" r="4" fill="#c9a96e" opacity="0.9"/>
-              <!-- Cross lines -->
-              <line x1="60" y1="8" x2="60" y2="112" stroke="#c9a96e" stroke-width="0.5" opacity="0.4"/>
-              <line x1="8" y1="60" x2="112" y2="60" stroke="#c9a96e" stroke-width="0.5" opacity="0.4"/>
-              <!-- Diagonal lines -->
-              <line x1="22" y1="22" x2="98" y2="98" stroke="#c9a96e" stroke-width="0.4" opacity="0.25"/>
-              <line x1="98" y1="22" x2="22" y2="98" stroke="#c9a96e" stroke-width="0.4" opacity="0.25"/>
-              <!-- Star points -->
-              <polygon points="60,12 63,22 60,20 57,22" fill="#c9a96e" opacity="0.7"/>
-              <polygon points="60,108 63,98 60,100 57,98" fill="#c9a96e" opacity="0.7"/>
-              <polygon points="12,60 22,63 20,60 22,57" fill="#c9a96e" opacity="0.7"/>
-              <polygon points="108,60 98,63 100,60 98,57" fill="#c9a96e" opacity="0.7"/>
-              <!-- Corner ornaments -->
-              <circle cx="22" cy="22" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
-              <circle cx="98" cy="22" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
-              <circle cx="22" cy="98" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
-              <circle cx="98" cy="98" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
-            </svg>
-          </div>
+          <svg width="100%" height="100%" viewBox="0 0 190 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Outer gold border -->
+            <rect x="8" y="8" width="174" height="304" rx="14" stroke="#c9a96e" stroke-width="1.5" opacity="0.9"/>
+            <!-- Second inner border -->
+            <rect x="15" y="15" width="160" height="290" rx="10" stroke="#c9a96e" stroke-width="0.7" opacity="0.5"/>
+            <!-- Third inner border -->
+            <rect x="22" y="22" width="146" height="276" rx="7" stroke="#c9a96e" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.35"/>
+
+            <!-- Top center ribbon banner -->
+            <path d="M65 26 Q95 20 125 26 L128 38 Q95 32 62 38 Z" fill="#c9a96e" opacity="0.2"/>
+            <path d="M65 26 Q95 20 125 26 L128 38 Q95 32 62 38 Z" stroke="#c9a96e" stroke-width="0.7" opacity="0.6"/>
+            <!-- Bottom ribbon -->
+            <path d="M65 294 Q95 300 125 294 L128 282 Q95 288 62 282 Z" fill="#c9a96e" opacity="0.2"/>
+            <path d="M65 294 Q95 300 125 294 L128 282 Q95 288 62 282 Z" stroke="#c9a96e" stroke-width="0.7" opacity="0.6"/>
+
+            <!-- Corner star ornaments -->
+            <!-- TL -->
+            <g transform="translate(30,36)">
+              <polygon points="0,-9 2,-3 8,-3 3,1 5,7 0,3 -5,7 -3,1 -8,-3 -2,-3" fill="#c9a96e" opacity="0.7"/>
+            </g>
+            <!-- TR -->
+            <g transform="translate(160,36)">
+              <polygon points="0,-9 2,-3 8,-3 3,1 5,7 0,3 -5,7 -3,1 -8,-3 -2,-3" fill="#c9a96e" opacity="0.7"/>
+            </g>
+            <!-- BL -->
+            <g transform="translate(30,284)">
+              <polygon points="0,-9 2,-3 8,-3 3,1 5,7 0,3 -5,7 -3,1 -8,-3 -2,-3" fill="#c9a96e" opacity="0.7"/>
+            </g>
+            <!-- BR -->
+            <g transform="translate(160,284)">
+              <polygon points="0,-9 2,-3 8,-3 3,1 5,7 0,3 -5,7 -3,1 -8,-3 -2,-3" fill="#c9a96e" opacity="0.7"/>
+            </g>
+
+            <!-- Center large circle -->
+            <circle cx="95" cy="160" r="68" stroke="#c9a96e" stroke-width="0.8" opacity="0.35"/>
+            <circle cx="95" cy="160" r="54" stroke="#c9a96e" stroke-width="0.6" opacity="0.45"/>
+            <circle cx="95" cy="160" r="36" stroke="#c9a96e" stroke-width="1" opacity="0.55"/>
+            <!-- Center dot -->
+            <circle cx="95" cy="160" r="5" fill="#c9a96e" opacity="0.8"/>
+            <circle cx="95" cy="160" r="2" fill="#fff" opacity="0.6"/>
+
+            <!-- Cross lines through center -->
+            <line x1="95" y1="92" x2="95" y2="228" stroke="#c9a96e" stroke-width="0.5" opacity="0.3"/>
+            <line x1="27" y1="160" x2="163" y2="160" stroke="#c9a96e" stroke-width="0.5" opacity="0.3"/>
+
+            <!-- Diagonal lines -->
+            <line x1="47" y1="110" x2="143" y2="210" stroke="#c9a96e" stroke-width="0.4" opacity="0.18"/>
+            <line x1="143" y1="110" x2="47" y2="210" stroke="#c9a96e" stroke-width="0.4" opacity="0.18"/>
+
+            <!-- 4 cardinal small stars on circle edge -->
+            <g transform="translate(95,96)">
+              <polygon points="0,-7 1.5,-2.5 6,-2.5 2.5,0.8 4,5.5 0,2.5 -4,5.5 -2.5,0.8 -6,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.8"/>
+            </g>
+            <g transform="translate(95,224)">
+              <polygon points="0,-7 1.5,-2.5 6,-2.5 2.5,0.8 4,5.5 0,2.5 -4,5.5 -2.5,0.8 -6,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.8"/>
+            </g>
+            <g transform="translate(27,160)">
+              <polygon points="0,-7 1.5,-2.5 6,-2.5 2.5,0.8 4,5.5 0,2.5 -4,5.5 -2.5,0.8 -6,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.8"/>
+            </g>
+            <g transform="translate(163,160)">
+              <polygon points="0,-7 1.5,-2.5 6,-2.5 2.5,0.8 4,5.5 0,2.5 -4,5.5 -2.5,0.8 -6,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.8"/>
+            </g>
+
+            <!-- Moon crescent top-left area -->
+            <path d="M52 80 Q44 92 52 104 Q38 96 38 92 Q38 84 52 80Z" fill="#c9a96e" opacity="0.45"/>
+            <!-- Moon crescent bottom-right area -->
+            <path d="M138 216 Q146 228 138 240 Q152 232 152 228 Q152 220 138 216Z" fill="#c9a96e" opacity="0.45"/>
+
+            <!-- Tiny star scatter inside circle -->
+            <text x="68" y="140" font-size="7" fill="#c9a96e" opacity="0.5" text-anchor="middle">✦</text>
+            <text x="122" y="145" font-size="5" fill="#c9a96e" opacity="0.4" text-anchor="middle">✦</text>
+            <text x="80" y="182" font-size="6" fill="#c9a96e" opacity="0.4" text-anchor="middle">✦</text>
+            <text x="112" y="178" font-size="8" fill="#c9a96e" opacity="0.35" text-anchor="middle">✦</text>
+
+            <!-- Side vertical ornament lines -->
+            <line x1="28" y1="56" x2="28" y2="264" stroke="#c9a96e" stroke-width="0.5" opacity="0.25" stroke-dasharray="2 4"/>
+            <line x1="162" y1="56" x2="162" y2="264" stroke="#c9a96e" stroke-width="0.5" opacity="0.25" stroke-dasharray="2 4"/>
+          </svg>
         </div>
-        <!-- Front -->
+
+        <!-- ── Front face ── -->
         <div class="card-face card-front">
-          <div class="card-front-frame"></div>
+          <!-- Ornate frame SVG overlay -->
+          <svg class="front-frame-svg" viewBox="0 0 190 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Double border -->
+            <rect x="7" y="7" width="176" height="306" rx="15" stroke="#c9a96e" stroke-width="1.2" opacity="0.7"/>
+            <rect x="13" y="13" width="164" height="294" rx="11" stroke="#c9a96e" stroke-width="0.6" opacity="0.4"/>
+            <!-- Corner flourishes -->
+            <g transform="translate(20,22)">
+              <polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6 0,3 -4,6 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.65"/>
+            </g>
+            <g transform="translate(170,22)">
+              <polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6 0,3 -4,6 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.65"/>
+            </g>
+            <g transform="translate(20,298)">
+              <polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6 0,3 -4,6 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.65"/>
+            </g>
+            <g transform="translate(170,298)">
+              <polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6 0,3 -4,6 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.65"/>
+            </g>
+            <!-- Top ribbon area line -->
+            <line x1="30" y1="55" x2="160" y2="55" stroke="#c9a96e" stroke-width="0.7" opacity="0.4"/>
+            <!-- Bottom ribbon area line -->
+            <line x1="30" y1="265" x2="160" y2="265" stroke="#c9a96e" stroke-width="0.7" opacity="0.4"/>
+            <!-- Side dash lines -->
+            <line x1="20" y1="68" x2="20" y2="252" stroke="#c9a96e" stroke-width="0.5" opacity="0.2" stroke-dasharray="2 5"/>
+            <line x1="170" y1="68" x2="170" y2="252" stroke="#c9a96e" stroke-width="0.5" opacity="0.2" stroke-dasharray="2 5"/>
+            <!-- Tiny corner moons -->
+            <path d="M26 32 Q22 38 26 44 Q18 40 18 38 Q18 34 26 32Z" fill="#c9a96e" opacity="0.4"/>
+            <path d="M164 32 Q168 38 164 44 Q172 40 172 38 Q172 34 164 32Z" fill="#c9a96e" opacity="0.4"/>
+          </svg>
+
           <div class="cf-number" id="cfNumber"></div>
           <div class="cf-symbol" id="cfSymbol"></div>
           <div class="cf-name" id="cfName"></div>
           <div class="cf-divider"></div>
           <div class="cf-keywords" id="cfKeywords"></div>
         </div>
+
       </div>
     </div>
   </div>
 
+  <!-- Result -->
   <div class="tarot-result" id="tarotResult">
-    <div class="result-card-name" id="resultName"></div>
-    <div class="result-card-suit" id="resultSuit"></div>
+    <div class="result-name" id="resultName"></div>
+    <div class="result-suit" id="resultSuit"></div>
+
+    <div class="ornament" style="margin-bottom:18px">
+      <div class="orn-line"></div>
+      <div class="orn-center">✦</div>
+      <div class="orn-line r"></div>
+    </div>
+
     <div class="reading-box">
-      <div class="reading-label">解 读</div>
+      <div class="reading-label">✦ 解 读 ✦</div>
       <div class="reading-gold-line"></div>
       <div class="reading-content" id="readingContent">
         <span class="reading-placeholder">等待解读…</span>
       </div>
     </div>
   </div>
+
 </div>
 
 <script>
-// ── Ambient floating particles ──
+// ── Scattered background deco ──
 (function() {
-  const field = document.getElementById('particleField');
-  for (let i = 0; i < 18; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const size = 3 + Math.random() * 8;
-    p.style.cssText = `
-      width:${size}px; height:${size}px;
+  const field = document.getElementById('decoField');
+  const symbols = ['✦','✧','☽','★','◇','✦','☾'];
+  for (let i = 0; i < 22; i++) {
+    const el = document.createElement('div');
+    el.className = 'deco-star';
+    el.textContent = symbols[i % symbols.length];
+    el.style.cssText = `
       left:${Math.random()*100}%;
-      animation-duration:${10 + Math.random()*16}s;
-      animation-delay:${Math.random()*12}s;
+      top:${Math.random()*100}%;
+      font-size:${0.5 + Math.random()*0.8}rem;
+      animation-duration:${4 + Math.random()*6}s;
+      animation-delay:${Math.random()*6}s;
+      color: ${Math.random() > 0.5 ? '#c9a96e' : '#e8a0b0'};
     `;
-    field.appendChild(p);
+    field.appendChild(el);
   }
 })();
 
-// ── Tarot deck ──
 const DECK = [
   { id:0,  name:"愚者",     suit:"大阿卡纳", symbol:"☀", number:"0",     keywords:"自由 · 新起点 · 冒险",   meaning:"新的旅程开始，带着无限可能踏入未知。" },
   { id:1,  name:"魔法师",   suit:"大阿卡纳", symbol:"∞", number:"I",     keywords:"意志 · 技巧 · 创造",     meaning:"你拥有实现目标的一切工具，专注并行动。" },
@@ -666,24 +699,18 @@ const DECK = [
   { id:77, name:"星币国王", suit:"星币",     symbol:"🜃", number:"King",  keywords:"财富 · 领导 · 安全",     meaning:"以智慧和经验管理资源，建立持久的成功。" },
 ];
 
-let current = null;
-let isDrawn = false;
-let animating = false;
+let current = null, isDrawn = false, animating = false;
 
 function spawnBurst(scene) {
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 16; i++) {
     const p = document.createElement('div');
-    p.className = 'burst-particle';
-    const angle = (i / 14) * 360;
-    const dist = 50 + Math.random() * 60;
+    p.className = 'burst-p';
+    const angle = (i / 16) * 360;
+    const dist = 55 + Math.random() * 65;
     const rad = angle * Math.PI / 180;
     p.style.setProperty('--bx', `${Math.cos(rad)*dist}px`);
     p.style.setProperty('--by', `${Math.sin(rad)*dist}px`);
-    p.style.left = '50%';
-    p.style.top = '50%';
-    p.style.marginLeft = '-3px';
-    p.style.marginTop = '-3px';
-    p.style.animationDelay = `${Math.random()*0.1}s`;
+    p.style.cssText += `left:50%;top:50%;margin:-2.5px;animation-delay:${Math.random()*0.1}s;background:${Math.random()>.5?'#c9a96e':'#f2c4ce'}`;
     scene.appendChild(p);
     setTimeout(() => p.remove(), 900);
   }
@@ -699,34 +726,27 @@ function drawTarot() {
   const btn = document.getElementById('tarotDrawBtn');
 
   current = DECK[Math.floor(Math.random() * DECK.length)];
-
   document.getElementById('cfNumber').textContent = current.number;
   document.getElementById('cfSymbol').textContent = current.symbol;
   document.getElementById('cfName').textContent = current.name;
   document.getElementById('cfKeywords').textContent = current.keywords;
 
-  deck.hidden = false;
+  deck.style.display = 'flex';
   btn.disabled = true;
   animating = true;
 
-  // Phase 1: lift & tilt
   card.classList.add('flipping-out');
-
   setTimeout(() => {
-    // Burst at midpoint
     spawnBurst(scene);
-
-    // Phase 2: snap reveal
     card.classList.remove('flipping-out');
     card.classList.add('flipping-in');
-
     setTimeout(() => {
       card.classList.remove('flipping-in');
       card.style.transform = 'rotateY(180deg)';
-      scene.classList.add('hoverable'); // re-enable hover after flip
+      scene.classList.add('hoverable');
       showResult();
       btn.disabled = false;
-      btn.textContent = '再 抽 一 张';
+      btn.textContent = '✦ 再 抽 一 张 ✦';
       isDrawn = true;
       animating = false;
     }, 900);
@@ -737,25 +757,17 @@ function showResult() {
   const result = document.getElementById('tarotResult');
   document.getElementById('resultName').textContent = current.name;
   document.getElementById('resultSuit').textContent = current.suit + '  ·  ' + current.number;
-
   const content = document.getElementById('readingContent');
   content.innerHTML = '<span class="reading-placeholder">正在解读…</span>';
   result.classList.add('visible');
 
-  // ── Call your Edge Function here ──
-  // fetch('/functions/v1/tarot-reading', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({
-  //     question: document.getElementById('tarotQuestion').value,
-  //     card: current
-  //   })
-  // }).then(r => r.json()).then(d => { content.textContent = d.reading; });
+  // ── Replace with Edge Function ──
+  // fetch('/functions/v1/tarot-reading', { method:'POST', headers:{'Content-Type':'application/json'},
+  //   body: JSON.stringify({ question: document.getElementById('tarotQuestion').value, card: current })
+  // }).then(r=>r.json()).then(d=>{ content.textContent = d.reading; });
 
   setTimeout(() => {
-    if (content.querySelector('.reading-placeholder')) {
-      content.textContent = current.meaning;
-    }
+    if (content.querySelector('.reading-placeholder')) content.textContent = current.meaning;
   }, 1400);
 }
 
@@ -769,18 +781,14 @@ function resetTarot() {
 
   result.classList.remove('visible');
   scene.classList.remove('hoverable');
-
-  // Flip back to back face
   card.style.transition = 'transform 0.5s ease-in';
   card.style.transform = 'rotateY(0deg)';
 
   setTimeout(() => {
     card.style.transition = '';
-    document.getElementById('deckArea').hidden = true;
-    btn.textContent = '抽 一 张 牌';
-    isDrawn = false;
-    animating = false;
-    current = null;
+    document.getElementById('deckArea').style.display = 'none';
+    btn.textContent = '✦ 抽 一 张 牌 ✦';
+    isDrawn = false; animating = false; current = null;
   }, 600);
 }
 </script>
