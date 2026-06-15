@@ -1137,18 +1137,18 @@ var _notesInDetail = false;
 
 var CAT_BUCKET = {
   '月经':'Her','心情':'Her','情绪':'Her','身体':'Her','日常':'Her','昨日心情':'Her',
-  '她说的话':'Her','我观察到':'Her',
+  '她说的话':'Her','我观察到':'Her','学业':'Her','错题本':'Her',
   '关于我们':'Us',
   '重要':'Matters','重要的一天':'Matters',
-  'Period':'Her','Mood':'Her','Body':'Her','Daily':'Her','Important':'Matters'
+  'Period':'Her','Mood':'Her','Body':'Her','Daily':'Her','Important':'Matters','Mistake':'Her'
 };
 function bucketOf(n) { return CAT_BUCKET[n.category] || 'Her'; }
 
 var TAG_EN = {
   '月经':'Period','心情':'Mood','情绪':'Mood','身体':'Body','日常':'Daily',
-  '她说的话':'Her Words','我观察到':'Observed','昨日心情':'Yesterday',
-  '关于我们':'About Us','重要':'Matters','重要的一天':'Milestone',
-  'Period':'Period','Mood':'Mood','Body':'Body','Daily':'Daily','Important':'Matters'
+  '她说的话':'Her Words','我观察到':'Observed','昨日心情':'Yesterday','学业':'Study',
+  '错题本':'Mistake','关于我们':'About Us','重要':'Matters','重要的一天':'Milestone',
+  'Period':'Period','Mood':'Mood','Body':'Body','Daily':'Daily','Important':'Matters','Mistake':'Mistake'
 };
 function tagOf(n) { var t = n.category || '日常'; return TAG_EN[t] || t; }
 
