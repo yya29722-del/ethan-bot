@@ -145,6 +145,18 @@ memories = load_memories()
 now = datetime.now(timezone.utc)
 beijing_now = now + timedelta(hours=8)
 
+# todo评论：有新todo没评论的，自动写一条
+try:
+    pending = sb_req("todos?completed=eq.false&ethan_comment=is.null&select=id,content&limit=5")
+    if pending:
+        for todo in pending:
+            comment = ask_ai(f"yaya写了一条待办："{todo['content']}"，用一句话评论，克制简短，像男友口气。", memories)
+            if comment:
+                sb_req(f"todos?id=eq.{todo['id']}", "PATCH", json.dumps({"ethan_comment": comment}).encode())
+                print(f"commented todo {todo['id']}: {comment}")
+except Exception as e:
+    print("todo comment failed:", e)
+
 # 每天10点：总结昨天的心情状态
 if hour == 10:
     already = any("昨日总结" in m.get("content","") and
