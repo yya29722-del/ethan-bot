@@ -217,11 +217,18 @@
   .cat-card-name { font-size: 17px; font-weight: 500; color: #2c2c2c; margin-bottom: 3px; }
   .cat-card-count { font-size: 12px; color: #bbb; }
   .cat-card-arrow { color: #ddd; font-size: 20px; }
-  .cat-Period    { border-left: 3px solid #e8b4b8; }
-  .cat-Mood      { border-left: 3px solid #c8b4e8; }
-  .cat-Body      { border-left: 3px solid #b4e8c8; }
-  .cat-Daily     { border-left: 3px solid #e8d4b4; }
-  .cat-Important { border-left: 3px solid #c9a96e; }
+  .cat-她        { border-left: 3px solid #e8b4b8; }
+  .cat-我们      { border-left: 3px solid #b4c8e8; }
+  .cat-重要      { border-left: 3px solid #c9a96e; }
+  .note-tag { display:inline-block; font-size:10px; letter-spacing:0.06em; padding:2px 8px; border-radius:20px; margin-bottom:6px; font-weight:500; }
+  .tag-月经      { background:#fdeef0; color:#c97b8a; }
+  .tag-心情      { background:#ede8f5; color:#7b6aad; }
+  .tag-身体      { background:#e8f5ee; color:#4a9970; }
+  .tag-日常      { background:#f5f0e8; color:#9a7a4a; }
+  .tag-她说的话  { background:#f0ede8; color:#7a6a5a; }
+  .tag-昨日心情  { background:#ede8f5; color:#7b6aad; }
+  .tag-重要      { background:#fdf5e8; color:#b8862a; }
+  .tag-关于我们  { background:#e8f0f5; color:#4a7a9a; }
 
   .del-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #e0dbd5; font-size: 18px; cursor: pointer; line-height: 1; }
 
@@ -1091,9 +1098,23 @@ async function addDiary() {
 async function delDiary(id) { await api('diary?id=eq.' + id, 'DELETE'); loadDiary(); }
 
 // NOTES
-var NOTE_CATS = ['Period', 'Mood', 'Body', 'Daily', 'Important'];
+var NOTE_CATS = ['她', '我们', '重要'];
 var _notesData = [];
 var _notesInDetail = false;
+
+// 原始 category → 顶层分类
+var CAT_BUCKET = {
+  '月经':'她','心情':'她','情绪':'她','身体':'她','日常':'她','昨日心情':'她',
+  '她说的话':'她','我观察到':'她',
+  '关于我们':'我们',
+  '重要':'重要','重要的一天':'重要',
+  'Period':'她','Mood':'她','Body':'她','Daily':'她','Important':'重要'
+};
+function bucketOf(n) {
+  if (!n.category) return '她';
+  return CAT_BUCKET[n.category] || '她';
+}
+function tagOf(n) { return n.category || '日常'; }
 
 async function loadNotes() {
   _notesData = await (_prefetch.notes || api('yaya_notes?select=*&order=created_at.desc'));
@@ -1102,17 +1123,10 @@ async function loadNotes() {
   renderNotesCats();
 }
 
-var CAT_MAP = {'月经':'Period','心情':'Mood','情绪':'Mood','身体':'Body','日常':'Daily','重要':'Important','重要的一天':'Important'};
-function catOf(n) {
-  if (!n.category) return 'Daily';
-  if (NOTE_CATS.indexOf(n.category) >= 0) return n.category;
-  return CAT_MAP[n.category] || 'Daily';
-}
-
 function renderNotesCats() {
   var counts = {};
   NOTE_CATS.forEach(function(c) { counts[c] = 0; });
-  _notesData.forEach(function(n) { counts[catOf(n)]++; });
+  _notesData.forEach(function(n) { counts[bucketOf(n)]++; });
 
   document.getElementById('notes-cats').innerHTML = NOTE_CATS.map(function(cat) {
     return '<div class="cat-card cat-' + cat + '" onclick="openNotesCat(\'' + cat + '\')">' +
@@ -1129,11 +1143,14 @@ function renderNotesCats() {
 }
 
 function openNotesCat(cat) {
-  var items = _notesData.filter(function(n) { return catOf(n) === cat; });
+  var items = _notesData.filter(function(n) { return bucketOf(n) === cat; });
   var el = document.getElementById('notes-detail-list');
   el.innerHTML = items.length
     ? items.map(function(n) {
+        var tag = tagOf(n);
+        var tagClass = 'tag-' + tag.replace(/\s/g,'');
         return '<div class="card">' +
+          '<span class="note-tag ' + tagClass + '">' + tag + '</span>' +
           '<div class="meta">' + (n.date_ref || fmt(n.created_at)) + '</div>' +
           '<div class="body">' + n.content + '</div>' +
           '</div>';
