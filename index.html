@@ -32,7 +32,7 @@
     position: fixed;
     bottom: calc(14px + env(safe-area-inset-bottom));
     left: 18px; right: 18px;
-    height: 68px;
+    height: 80px;
     background: rgba(255,252,248,.93);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -46,17 +46,17 @@
   .nav-tab {
     flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 4px; border: none; background: none; cursor: pointer;
-    color: #ccc; font-size: 11px; letter-spacing: .4px; font-family: inherit;
+    color: #ccc; font-size: 12px; letter-spacing: .4px; font-family: inherit;
     transition: color .15s; padding: 8px 0;
     border-radius: 22px;
   }
   .nav-tab.active { color: #c9a96e; }
-  .nav-tab svg { width: 22px; height: 22px; }
+  .nav-tab svg { width: 26px; height: 26px; }
 
   /* TAB PAGES */
   .tab-page {
     position: absolute; top: 0; left: 0; right: 0;
-    bottom: calc(96px + env(safe-area-inset-bottom));
+    bottom: calc(110px + env(safe-area-inset-bottom));
     overflow-y: auto; -webkit-overflow-scrolling: touch;
     display: none;
   }
