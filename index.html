@@ -211,33 +211,44 @@
   .note-cat { font-size: 11px; color: #c9a96e; font-weight: 600; letter-spacing: .5px; margin-bottom: 4px; }
   .private-badge { font-size: 10px; color: #e8a0a0; background: #fce8e8; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
 
-  #tab-notes .section-body { padding: 12px; display: flex; flex-direction: column; height: calc(100% - 56px); box-sizing: border-box; overflow: hidden; }
-  .cat-grid { display: flex; flex-direction: column; gap: 10px; flex: 1; overflow: hidden; }
+  #tab-notes { display:flex !important; flex-direction:column; }
+  #tab-notes .tab-section-header { flex-shrink:0; }
+  #tab-notes .section-body { padding:10px; display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden; box-sizing:border-box; }
+  .cat-grid { display:flex; flex-direction:column; gap:8px; flex:1; min-height:0; overflow:hidden; }
   .cat-card {
-    flex: 1; border-radius: 20px; padding: 24px 28px; cursor: pointer;
-    display: flex; flex-direction: column; justify-content: flex-end;
-    position: relative; overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0,0,0,.06); transition: transform .18s, box-shadow .18s;
+    flex:1; min-height:0; border-radius:18px; padding:20px 24px; cursor:pointer;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    position:relative; overflow:hidden;
+    box-shadow:0 2px 16px rgba(0,0,0,.08); transition:transform .18s, box-shadow .18s;
   }
-  .cat-card:active { transform: scale(.97); box-shadow: 0 1px 6px rgba(0,0,0,.05); }
+  .cat-card:active { transform:scale(.97); }
   .cat-anim { position:absolute; inset:0; pointer-events:none; }
-  .cat-card-count { font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.2em; margin-bottom:10px; opacity:0.45; position:relative; }
-  .cat-card-name { font-family:'Cormorant Garamond',serif; font-size:44px; font-weight:300; line-height:1; letter-spacing:0.04em; position:relative; }
+  .cat-card-count { font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.24em; margin-bottom:8px; opacity:0.4; position:relative; text-transform:uppercase; }
+  .cat-card-name { font-family:'Great Vibes',cursive; font-size:48px; font-weight:400; line-height:1; letter-spacing:0.02em; position:relative; }
   .cat-card-arrow { display:none; }
-  .cat-Her     { background:linear-gradient(145deg,#fdeef0,#f0dde2); color:#8a4a56; }
-  .cat-Us      { background:linear-gradient(145deg,#eaeff8,#d8e5f5); color:#4a5e8a; }
-  .cat-Matters { background:linear-gradient(145deg,#fdf5e6,#f0e4c8); color:#8a6a2a; }
-  @keyframes herBloom { 0%,100%{transform:scale(0.72) rotate(0deg)} 50%{transform:scale(1) rotate(22.5deg)} }
-  .her-rose { transform-origin:50px 50px; animation:herBloom 5s ease-in-out infinite; }
-  @keyframes usMirrorL { 0%,100%{transform:rotate(-4deg) scaleY(0.94)} 50%{transform:rotate(0deg) scaleY(1)} }
-  @keyframes usMirrorR { 0%,100%{transform:rotate(4deg) scaleY(0.94)} 50%{transform:rotate(0deg) scaleY(1)} }
-  @keyframes usShine   { 0%,100%{opacity:0.12} 50%{opacity:0.38} }
-  .us-mirror-l { transform-origin:31px 50px; animation:usMirrorL 4s ease-in-out infinite; }
-  .us-mirror-r { transform-origin:69px 50px; animation:usMirrorR 4s ease-in-out infinite; }
-  .us-shine { animation:usShine 3s ease-in-out infinite; }
-  .us-shine-r { animation:usShine 3s ease-in-out infinite 1.5s; }
-  @keyframes flameFlicker { 0%,100%{transform:scaleX(1) scaleY(1) translateY(0)} 30%{transform:scaleX(0.93) scaleY(1.04) translateY(-2px)} 60%{transform:scaleX(1.05) scaleY(0.96) translateY(1px)} }
-  .matters-flame { transform-origin:50px 65px; animation:flameFlicker 2.2s ease-in-out infinite; }
+  .cat-Her     { background:linear-gradient(145deg,#fdeef0,#f2e0e4); color:#8a4a56; }
+  .cat-Us      { background:linear-gradient(145deg,#edf0f8,#dce6f4); color:#4a5e8a; }
+  .cat-Matters { background:linear-gradient(145deg,#fdf5e6,#f2e6ca); color:#8a6a2a; }
+  /* Rose bloom — layered petals staggered */
+  @keyframes roseL1  { 0%,8%{transform:scale(0.15);opacity:0} 40%,80%{transform:scale(1);opacity:0.72} 96%,100%{transform:scale(0.15);opacity:0} }
+  @keyframes roseL2  { 0%,28%{transform:scale(0.1);opacity:0} 55%,85%{transform:scale(1);opacity:0.82} 97%,100%{transform:scale(0.1);opacity:0} }
+  @keyframes roseC   { 0%,45%{transform:scale(0.2);opacity:0} 65%,90%{transform:scale(1);opacity:1} 98%,100%{transform:scale(0.2);opacity:0} }
+  .rose-l1 { transform-origin:50px 50px; animation:roseL1 7s ease-in-out infinite; }
+  .rose-l2 { transform-origin:50px 50px; animation:roseL2 7s ease-in-out infinite; }
+  .rose-c  { transform-origin:50px 50px; animation:roseC  7s ease-in-out infinite; }
+  /* Baroque mirrors */
+  @keyframes mirrorL { 0%,100%{transform:perspective(120px) rotateY(-18deg)} 50%{transform:perspective(120px) rotateY(0deg)} }
+  @keyframes mirrorR { 0%,100%{transform:perspective(120px) rotateY(18deg)}  50%{transform:perspective(120px) rotateY(0deg)} }
+  @keyframes mirrorShine { 0%,100%{opacity:0.08} 40%,60%{opacity:0.28} }
+  .us-left  { transform-origin:48px 50px; animation:mirrorL 5s ease-in-out infinite; }
+  .us-right { transform-origin:52px 50px; animation:mirrorR 5s ease-in-out infinite; }
+  .us-shine { animation:mirrorShine 5s ease-in-out infinite; }
+  .us-shine2 { animation:mirrorShine 5s ease-in-out infinite 2.5s; }
+  /* Tooth + hand */
+  @keyframes toothBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+  @keyframes handWave    { 0%,100%{transform:rotate(0deg)} 40%{transform:rotate(10deg)} }
+  .matters-tooth { transform-origin:50px 55px; animation:toothBounce 3s ease-in-out infinite; }
+  .matters-hand  { transform-origin:50px 75px; animation:handWave 3s ease-in-out infinite; }
   .note-tag { display:inline-block; font-size:10px; letter-spacing:0.08em; padding:2px 9px; border-radius:20px; margin-bottom:6px; font-weight:500; }
   .tag-Period    { background:#fdeef0; color:#c97b8a; }
   .tag-Mood      { background:#ede8f5; color:#7b6aad; }
@@ -249,7 +260,7 @@
   .tag-AboutUs   { background:#e8f0f5; color:#4a7a9a; }
   .tag-Matters   { background:#fdf5e8; color:#b8862a; }
   .tag-Milestone { background:#fdf5e8; color:#b8862a; }
-  #notes-detail  { overflow-y:auto; flex:1; }
+  #notes-detail  { overflow-y:auto; flex:1; min-height:0; }
 
   .del-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #e0dbd5; font-size: 18px; cursor: pointer; line-height: 1; }
 
@@ -1141,9 +1152,9 @@ var TAG_EN = {
 function tagOf(n) { var t = n.category || '日常'; return TAG_EN[t] || t; }
 
 var _CAT_SVG = {
-  'Her': '<svg class="cat-anim" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="her-rose"><ellipse cx="50" cy="24" rx="13" ry="24" fill="#e8a0a8" opacity="0.7"/><ellipse cx="50" cy="24" rx="13" ry="24" fill="#e8a0a8" opacity="0.7" transform="rotate(45,50,50)"/><ellipse cx="50" cy="24" rx="13" ry="24" fill="#e8a0a8" opacity="0.7" transform="rotate(90,50,50)"/><ellipse cx="50" cy="24" rx="13" ry="24" fill="#e8a0a8" opacity="0.7" transform="rotate(135,50,50)"/><ellipse cx="50" cy="24" rx="10" ry="20" fill="#d08890" opacity="0.55" transform="rotate(22.5,50,50)"/><ellipse cx="50" cy="24" rx="10" ry="20" fill="#d08890" opacity="0.55" transform="rotate(67.5,50,50)"/><ellipse cx="50" cy="24" rx="10" ry="20" fill="#d08890" opacity="0.55" transform="rotate(112.5,50,50)"/><ellipse cx="50" cy="24" rx="10" ry="20" fill="#d08890" opacity="0.55" transform="rotate(157.5,50,50)"/><circle cx="50" cy="50" r="11" fill="#c0707a" opacity="0.9"/><circle cx="50" cy="50" r="5" fill="#e0a8b0" opacity="0.8"/></g></svg>',
-  'Us': '<svg class="cat-anim" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="us-mirror-l"><rect x="16" y="12" width="26" height="76" rx="6" fill="#8aa8c8" opacity="0.45"/><rect x="20" y="16" width="8" height="68" rx="3" fill="white" opacity="0.12"/><rect x="22" y="16" width="3" height="68" rx="1.5" fill="white" class="us-shine"/></g><g class="us-mirror-r"><rect x="58" y="12" width="26" height="76" rx="6" fill="#7898b8" opacity="0.4"/><rect x="62" y="16" width="8" height="68" rx="3" fill="white" opacity="0.1"/><rect x="75" y="16" width="3" height="68" rx="1.5" fill="white" class="us-shine us-shine-r"/></g></svg>',
-  'Matters': '<svg class="cat-anim" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="matters-flame"><path d="M50,85 C28,75 20,55 32,35 C38,24 44,30 40,42 C46,24 56,18 52,6 C64,22 74,38 68,54 C74,42 77,50 73,60 C77,52 78,68 66,76 C72,68 74,84 50,85Z" fill="#c9a060" opacity="0.35"/><path d="M50,82 C34,74 28,58 36,44 C40,36 44,40 42,50 C46,36 54,30 52,20 C62,34 66,46 62,56 C66,48 68,54 64,62 C66,56 66,70 50,82Z" fill="#b8882a" opacity="0.5"/><ellipse cx="50" cy="72" rx="9" ry="11" fill="#c9a060" opacity="0.65"/><ellipse cx="50" cy="72" rx="4" ry="6" fill="#e8c870" opacity="0.55"/></g></svg>'
+  'Her': '<svg class="cat-anim" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="rose-l1"><ellipse cx="50" cy="22" rx="11" ry="26" fill="#f0b0bc"/><ellipse cx="50" cy="22" rx="11" ry="26" fill="#eca0ac" transform="rotate(72,50,50)"/><ellipse cx="50" cy="22" rx="11" ry="26" fill="#f0b0bc" transform="rotate(144,50,50)"/><ellipse cx="50" cy="22" rx="11" ry="26" fill="#eca0ac" transform="rotate(216,50,50)"/><ellipse cx="50" cy="22" rx="11" ry="26" fill="#f0b0bc" transform="rotate(288,50,50)"/></g><g class="rose-l2"><ellipse cx="50" cy="30" rx="8" ry="18" fill="#d8788a" transform="rotate(36,50,50)"/><ellipse cx="50" cy="30" rx="8" ry="18" fill="#d88090" transform="rotate(108,50,50)"/><ellipse cx="50" cy="30" rx="8" ry="18" fill="#d8788a" transform="rotate(180,50,50)"/><ellipse cx="50" cy="30" rx="8" ry="18" fill="#d88090" transform="rotate(252,50,50)"/><ellipse cx="50" cy="30" rx="8" ry="18" fill="#d8788a" transform="rotate(324,50,50)"/></g><g class="rose-c"><circle cx="50" cy="50" r="12" fill="#c06070"/><circle cx="50" cy="50" r="6" fill="#e0909a"/><circle cx="50" cy="50" r="3" fill="#f0b8b8"/></g></svg>',
+  'Us': '<svg class="cat-anim" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="us-left"><path d="M6,24 Q6,12 18,8 Q26,5 30,8 Q34,5 42,8 Q50,12 50,24 L50,84 Q50,90 44,90 L12,90 Q6,90 6,84 Z" fill="#ece8e0" stroke="#c8bca8" stroke-width="1"/><path d="M10,24 Q10,15 18,12 Q26,9 30,12 Q34,9 42,12 Q46,15 46,24 L46,82 Q46,86 44,86 L16,86 Q10,86 10,82 Z" fill="#f8f4ee"/><path d="M14,82 Q22,94 30,90 Q38,86 46,82" fill="#e8e0d0" stroke="#c8bca8" stroke-width="0.8"/><path d="M12,16 Q26,4 42,16" fill="none" stroke="#b8a890" stroke-width="1.2"/><circle cx="28" cy="7" r="3" fill="#c8bca8"/><path d="M23,9 Q20,13 20,18" fill="none" stroke="#c8bca8" stroke-width="0.7"/><path d="M33,9 Q36,13 36,18" fill="none" stroke="#c8bca8" stroke-width="0.7"/><ellipse cx="28" cy="46" rx="10" ry="8" fill="none" stroke="#b0a898" stroke-width="0.6" opacity="0.5"/><path d="M22,54 Q28,60 34,54" fill="none" stroke="#b0a898" stroke-width="0.7" opacity="0.5"/><rect x="22" y="30" width="4" height="12" rx="2" fill="white" opacity="0.4" class="us-shine"/></g><g class="us-right"><path d="M50,24 Q50,12 58,8 Q62,5 70,8 Q74,5 82,8 Q94,12 94,24 L94,84 Q94,90 88,90 L56,90 Q50,90 50,84 Z" fill="#ece8e0" stroke="#c8bca8" stroke-width="1"/><path d="M54,24 Q54,15 62,12 Q66,9 70,12 Q74,9 82,12 Q90,15 90,24 L90,82 Q90,86 88,86 L56,86 Q54,86 54,82 Z" fill="#f8f4ee"/><path d="M54,82 Q62,94 70,90 Q78,86 90,82" fill="#e8e0d0" stroke="#c8bca8" stroke-width="0.8"/><path d="M58,16 Q70,4 88,16" fill="none" stroke="#b8a890" stroke-width="1.2"/><circle cx="72" cy="7" r="3" fill="#c8bca8"/><path d="M67,9 Q64,13 64,18" fill="none" stroke="#c8bca8" stroke-width="0.7"/><path d="M77,9 Q80,13 80,18" fill="none" stroke="#c8bca8" stroke-width="0.7"/><ellipse cx="72" cy="46" rx="10" ry="8" fill="none" stroke="#b0a898" stroke-width="0.6" opacity="0.5"/><path d="M66,54 Q72,60 78,54" fill="none" stroke="#b0a898" stroke-width="0.7" opacity="0.5"/><rect x="74" y="30" width="4" height="12" rx="2" fill="white" opacity="0.4" class="us-shine2"/></g></svg>',
+  'Matters': '<svg class="cat-anim" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="matters-hand"><path d="M32,88 Q30,72 32,64 L36,52 Q38,46 41,52 L42,56 L43,42 Q44,36 47,42 L48,56 L49,40 Q50,34 53,40 L54,56 L55,44 Q56,38 59,44 L60,56 L62,50 Q64,44 67,50 L68,72 Q70,80 68,88 Z" fill="#f0ddd0" opacity="0.65" stroke="#dcc8b8" stroke-width="0.8"/></g><g class="matters-tooth"><path d="M36,24 Q36,14 50,14 Q64,14 64,24 L64,56 Q60,64 56,60 L53,78 Q52,82 50,82 Q48,82 47,78 L44,60 Q40,64 36,56 Z" fill="white" stroke="#e0d0c0" stroke-width="1.5"/><rect x="42" y="20" width="4" height="14" rx="2" fill="white" opacity="0.7"/></g></svg>'
 };
 
 async function loadNotes() {
