@@ -336,9 +336,13 @@
   .card-back-svg { width:100%; height:100%; position:absolute; inset:0; }
   .card-face { background:linear-gradient(160deg,#FFFDF9,#F4EAD4); border:1px solid rgba(201,168,76,0.6); box-shadow:0 12px 40px rgba(139,80,40,0.2),0 4px 12px rgba(0,0,0,0.1),inset 0 0 0 2px rgba(201,168,76,0.15); transform:rotateY(180deg); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; overflow:hidden; }
   .card-face::before { content:''; position:absolute; inset:8px; border:1px solid rgba(201,168,76,0.35); border-radius:8px; pointer-events:none; }
-  .card-face-art { width:68px; height:93px; margin-bottom:8px; opacity:0.85; }
+  .card-face-art { width:68px; height:93px; margin-bottom:8px; opacity:0.85; transition:transform 0.4s ease; }
+  .card-face-art.reversed { transform:rotate(180deg); }
   .card-face-name { font-family:'Great Vibes',cursive; font-size:21px; font-weight:400; color:var(--text-primary); text-align:center; line-height:1.25; }
   .card-face-number { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:13px; letter-spacing:0.16em; color:var(--gold); margin-top:2px; }
+  .card-position-badge { font-family:'Cinzel',serif; font-size:8px; letter-spacing:0.18em; text-transform:uppercase; padding:2px 7px; border-radius:20px; margin-top:5px; }
+  .card-position-badge.upright { color:rgba(201,168,76,0.9); border:1px solid rgba(201,168,76,0.4); }
+  .card-position-badge.reversed { color:rgba(139,30,47,0.85); border:1px solid rgba(139,30,47,0.35); }
   .draw-btn { position:relative; z-index:1; background:transparent; border:1px solid rgba(201,168,76,0.6); border-radius:100px; padding:14px 40px; font-family:'Cinzel',serif; font-size:12px; font-weight:500; letter-spacing:0.22em; color:var(--text-secondary); cursor:pointer; transition:all 0.3s ease; overflow:hidden; }
   .draw-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.15)); opacity:0; transition:opacity 0.3s; }
   .draw-btn:hover { border-color:rgba(201,168,76,0.9); color:var(--text-primary); box-shadow:0 4px 20px rgba(201,168,76,0.2),0 0 0 4px rgba(201,168,76,0.06); transform:translateY(-1px); }
@@ -589,6 +593,7 @@
               </div>
               <p class="card-face-name" id="card-display-name">Thus Spoke</p>
               <p class="card-face-number" id="card-display-number">Ethan</p>
+              <span class="card-position-badge upright" id="card-position-badge"></span>
             </div>
           </div>
           <div class="particle-burst" id="particle-burst">
@@ -1636,6 +1641,38 @@ function startTarotEntry() {
     {id:77,name:'King of Pentacles',zh:'星币国王',suit:'星币',keywords:'财富 · 稳定 · 成就'}
   ];
 
+  // Reversed keywords indexed by card id (0–77)
+  var TAROT_RK = [
+    '莽撞 · 迷失 · 冲动','欺骗 · 才能受阻 · 分散','秘密 · 直觉受阻 · 隐藏',
+    '匮乏 · 依赖 · 创造受阻','独裁 · 失控 · 权威崩溃','教条 · 打破规则 · 反叛',
+    '失衡 · 逃避 · 错误选择','失控 · 冲动 · 方向迷失','怯懦 · 压抑 · 缺乏自信',
+    '孤立 · 封闭 · 拒绝成长','厄运 · 停滞 · 抗拒变化','不公 · 逃避 · 偏袒',
+    '抗拒 · 拖延 · 无谓牺牲','抗拒改变 · 停滞 · 恐惧终结','极端 · 失衡 · 过度',
+    '解脱 · 挣脱束缚 · 觉醒','逃避危机 · 延迟崩塌 · 恐惧','绝望 · 失去信念 · 幻灭',
+    '困惑加深 · 欺骗自我 · 逃避','活力受阻 · 短暂喜悦 · 过度自我','自我怀疑 · 停滞 · 逃避审视',
+    '未完成 · 停滞 · 不完整',
+    '创意受阻 · 拖延 · 缺乏激情','计划受阻 · 犹豫 · 短视','挫折 · 等待落空 · 退缩',
+    '不稳定 · 家庭不和 · 取消庆祝','冲突平息 · 内耗 · 回避竞争','失败 · 傲慢 · 认可落空',
+    '退缩 · 不堪压力 · 认输','延误 · 停滞 · 消息受阻','偏执 · 筋疲力尽 · 放弃坚守',
+    '卸下重担 · 委托 · 释放压力','三分钟热度 · 拖延 · 冲动行事','鲁莽 · 虎头蛇尾 · 无法聚焦',
+    '嫉妒 · 自我怀疑 · 操控','独断 · 傲慢 · 滥用权力',
+    '情感受阻 · 压抑情绪 · 创伤','不和 · 分离 · 吸引力消退','孤立 · 过度纵欲 · 人际摩擦',
+    '错失机遇 · 拒绝帮助 · 抑郁','接受失落 · 向前看 · 宽恕','沉湎过去 · 拒绝成长 · 天真被利用',
+    '清醒 · 现实 · 做出选择','停留 · 重归 · 逃避现实','不满足 · 虚荣 · 物质主义',
+    '家庭不和 · 破碎 · 理想落空','情绪不成熟 · 逃避感受 · 幻想','不切实际 · 情绪化 · 失望',
+    '情绪失控 · 过度依赖 · 自我欺骗','情绪压抑 · 操控 · 不稳定',
+    '混乱 · 不清晰 · 谎言','信息过载 · 无法决断 · 逃避','走出悲伤 · 宽恕 · 愈合',
+    '过度休息 · 停滞 · 拒绝行动','和解 · 放下怨恨 · 化解冲突','停留困境 · 拒绝改变 · 延迟离开',
+    '揭穿谎言 · 悔过 · 无法逃脱','解脱 · 突破自限 · 重新看清','无力感 · 深陷焦虑 · 恐惧加剧',
+    '涅槃重生 · 走出低谷 · 拒绝接受','八卦 · 鲁莽 · 说话伤人','冲动 · 口无遮拦 · 鲁莽行动',
+    '冷酷 · 苦涩 · 情感隔绝','独裁 · 操控 · 滥用权力',
+    '机会落空 · 损失 · 不务实','失衡 · 过度负荷 · 财务混乱','团队不和 · 工作质量下滑 · 敷衍',
+    '贪婪 · 控制欲 · 吝啬','转机出现 · 接受帮助 · 恢复','债务 · 不平等 · 自私',
+    '不耐烦 · 放弃 · 投资失误','完美主义 · 重复枯燥 · 缺乏技能','过度依赖 · 物质主义 · 感情困扰',
+    '家族不和 · 财产纠纷 · 传统束缚','懒散 · 好高骛远 · 计划落空','停滞 · 过于保守 · 无聊',
+    '焦虑 · 物质依赖 · 失去平衡','贪婪 · 固执 · 物质崇拜'
+  ];
+
   // ── Card face line-art data ──────────────────────────────────────────
   var _CM = [
     // 0 The Fool
@@ -1715,12 +1752,20 @@ function startTarotEntry() {
       setTimeout(function() { document.getElementById('tarot-question').style.borderColor = ''; }, 1200);
       return;
     }
-    drawnCard = TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)];
+    drawnCard = Object.assign({}, TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)]);
+    drawnCard.isReversed = Math.random() < 0.5;
     hasFlipped = false;
     var artWrap = document.getElementById('card-face-art-wrap');
     if (artWrap) artWrap.innerHTML = _mkCardSVG(drawnCard);
+    var artEl = artWrap && artWrap.querySelector('.card-face-art');
+    if (artEl) { artEl.classList.toggle('reversed', drawnCard.isReversed); }
     document.getElementById('card-display-name').textContent = drawnCard.name;
     document.getElementById('card-display-number').textContent = drawnCard.zh;
+    var badge = document.getElementById('card-position-badge');
+    if (badge) {
+      badge.textContent = drawnCard.isReversed ? '逆位' : '正位';
+      badge.className = 'card-position-badge ' + (drawnCard.isReversed ? 'reversed' : 'upright');
+    }
     document.getElementById('deck-area').style.display = 'none';
     document.getElementById('reading-stage').classList.add('visible');
     document.getElementById('reading-result-wrap').classList.remove('visible');
@@ -1758,13 +1803,15 @@ function startTarotEntry() {
 
   function showResult() {
     if (!drawnCard) return;
-    document.getElementById('result-card-name').textContent = drawnCard.zh;
-    document.getElementById('result-keywords').textContent = drawnCard.keywords;
+    var posLabel = drawnCard.isReversed ? ' · 逆位' : '';
+    document.getElementById('result-card-name').textContent = drawnCard.zh + posLabel;
+    var kw = drawnCard.isReversed ? (TAROT_RK[drawnCard.id] || drawnCard.keywords) : drawnCard.keywords;
+    document.getElementById('result-keywords').textContent = kw;
     var q = document.getElementById('tarot-question').value.trim();
-    document.getElementById('reading-meta-q').textContent = '“' + q + '”';
+    document.getElementById('reading-meta-q').textContent = '”' + q + '”';
     document.getElementById('reading-result-wrap').classList.add('visible');
     window.dispatchEvent(new CustomEvent('tarot:cardRevealed', {
-      detail: { card: drawnCard, question: q, resultElementId: 'tarot-reading-result' }
+      detail: { card: drawnCard, question: q, resultElementId: 'tarot-reading-result', isReversed: drawnCard.isReversed }
     }));
   }
 
