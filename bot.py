@@ -258,7 +258,6 @@ def check_uncommented_todos():
                     "Prefer": "return=minimal"
                 }, method="PATCH")
                 urllib.request.urlopen(patch_req)
-                queue_bark(f"待办「{todo['content'][:10]}」我写了评论。")
                 save_memory(f"待办评论「{todo['content']}」：{comment}")
         if todos:
             exit()
