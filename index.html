@@ -290,7 +290,7 @@
   .quiz-opt.wrong .q-letter-badge { background: #bf5b5b; color: #fff; }
 
   /* TAROT TAB BACKGROUND */
-  #tab-tarot { background: linear-gradient(160deg, #FFFDF9 0%, #F4EAD4 50%, #F6E7E8 100%); }
+  #tab-tarot { bottom: 0 !important; background: linear-gradient(160deg, #F4EAD4 0%, #F6E7E8 50%, #F4EAD4 100%); }
   #tarot-bloom {
     position: fixed; inset: 0; z-index: 300; pointer-events: none;
     background: radial-gradient(circle at 50% 55%, rgba(246,231,232,1) 0%, rgba(244,234,212,0.92) 28%, rgba(201,168,76,0.25) 60%, transparent 78%);
@@ -306,7 +306,7 @@
   /* ===== TAROT ===== */
   @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&display=swap');
   :root { --champagne:#F4EAD4;--ivory:#FFFDF9;--rose-quartz:#F6E7E8;--burgundy:#8B1E2F;--gold:#C9A84C;--gold-light:#E8C96B;--gold-dim:rgba(201,168,76,0.4);--text-primary:#2C1810;--text-secondary:#7A5C4A;--text-muted:#B09080;--shadow-warm:rgba(139,80,40,0.15);--card-w:160px;--card-h:272px; }
-  #tarot-app { font-family:'Inter',sans-serif; min-height:100%; background: radial-gradient(ellipse at 50% 0%,rgba(246,231,232,0.6) 0%,transparent 60%), radial-gradient(ellipse at 0% 100%,rgba(201,168,76,0.08) 0%,transparent 50%), linear-gradient(160deg,#FFFDF9 0%,#F4EAD4 50%,#F6E7E8 100%); box-shadow:inset 0 0 120px rgba(80,30,10,0.12); display:flex; flex-direction:column; align-items:center; padding:max(48px, calc(env(safe-area-inset-top) + 32px)) 24px 80px; position:relative; overflow:hidden; }
+  #tarot-app { font-family:'Inter',sans-serif; min-height:100%; background: radial-gradient(ellipse at 50% 0%,rgba(246,231,232,0.7) 0%,transparent 60%), radial-gradient(ellipse at 0% 100%,rgba(201,168,76,0.12) 0%,transparent 50%), linear-gradient(160deg,#F4EAD4 0%,#F6E7E8 50%,#F4EAD4 100%); box-shadow:inset 0 0 120px rgba(80,30,10,0.12); display:flex; flex-direction:column; align-items:center; padding:max(48px, calc(env(safe-area-inset-top) + 32px)) 24px 80px; position:relative; overflow:hidden; }
   #tarot-app::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center,transparent 40%,rgba(50,20,10,0.18) 100%); pointer-events:none; z-index:0; }
   #tarot-app::after { content:''; position:absolute; inset:0; background-image:radial-gradient(circle,rgba(201,168,76,0.15) 1px,transparent 1px),radial-gradient(circle,rgba(201,168,76,0.08) 1px,transparent 1px); background-size:60px 60px,30px 30px; background-position:0 0,15px 15px; animation:drift 20s linear infinite; pointer-events:none; z-index:0; opacity:0.5; }
   @keyframes drift { 0%{transform:translateY(0)} 100%{transform:translateY(-30px)} }
