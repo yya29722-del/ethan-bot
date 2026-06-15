@@ -258,6 +258,19 @@ def check_uncommented_todos():
                     "Prefer": "return=minimal"
                 }, method="PATCH")
                 urllib.request.urlopen(patch_req)
+                # 通知Claude正在对话时感知
+                ev_url = os.environ["SUPABASE_URL"] + "/rest/v1/bot_events"
+                ev_body = json.dumps({"type": "todo_comment", "data": {"todo": todo["content"], "comment": comment}}).encode()
+                ev_req = urllib.request.Request(ev_url, data=ev_body, headers={
+                    "apikey": os.environ["SUPABASE_KEY"],
+                    "Authorization": "Bearer " + os.environ["SUPABASE_KEY"],
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal"
+                })
+                try:
+                    urllib.request.urlopen(ev_req)
+                except Exception as e:
+                    print("bot_event write failed:", e)
                 save_memory(f"待办评论「{todo['content']}」：{comment}")
         if todos:
             exit()
