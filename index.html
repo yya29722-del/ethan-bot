@@ -503,6 +503,25 @@ async function api(path, method, body) {
   return method === 'GET' ? r.json() : r.json().catch(function() { return null; });
 }
 
+// localStorage cache (5min TTL)
+function lsGet(k) {
+  try { var o = JSON.parse(localStorage.getItem('ours_' + k)); return o && Date.now() - o.t < 300000 ? o.d : null; } catch(e) { return null; }
+}
+function lsSet(k, d) {
+  try { localStorage.setItem('ours_' + k, JSON.stringify({t: Date.now(), d: d})); } catch(e) {}
+}
+
+// 页面加载时立即开始预拉数据（封面期间后台运行）
+var _prefetch = {};
+function prefetchAll() {
+  _prefetch.todos = api('todos?select=*&order=created_at.desc');
+  _prefetch.weather = fetch('https://wttr.in/?format=j1&lang=zh').then(function(r) { return r.json(); }).catch(function() { return null; });
+  _prefetch.feed = api('feed?select=*&order=created_at.desc&limit=50');
+  _prefetch.diary = api('diary?select=*&order=created_at.desc&limit=30');
+  _prefetch.notes = api('yaya_notes?select=*&order=created_at.desc');
+}
+prefetchAll();
+
 function fmt(ts) {
   const d = new Date(ts);
   return d.toLocaleDateString('zh', {month:'numeric',day:'numeric'}) + ' ' + d.toLocaleTimeString('zh', {hour:'2-digit',minute:'2-digit'});
@@ -605,11 +624,8 @@ function showDailyQuote(cat) {
   return arr[idx];
 }
 
-async function loadWeather() {
-  try {
-    var r = await fetch('https://wttr.in/?format=j1&lang=zh');
-    var data = await r.json();
-    var cur = data.current_condition[0];
+function renderWeather(data) {
+  var cur = data.current_condition[0];
     var tempC = cur.temp_C;
     var code = parseInt(cur.weatherCode, 10);
     var cat, emoji;
@@ -624,16 +640,31 @@ async function loadWeather() {
     document.getElementById('wx-icon').textContent = emoji;
     document.getElementById('wx-temp').textContent = tempC + '°C';
     document.getElementById('wx-quote').textContent = showDailyQuote(cat);
+}
+
+async function loadWeather() {
+  var cached = lsGet('weather');
+  if (cached) renderWeather(cached);
+  try {
+    var data = await (_prefetch.weather || fetch('https://wttr.in/?format=j1&lang=zh').then(function(r){return r.json();}));
+    if (data) { lsSet('weather', data); renderWeather(data); }
   } catch(e) {
-    document.getElementById('wx-icon').textContent = '🌤️';
-    document.getElementById('wx-temp').textContent = 'Loading weather…';
-    document.getElementById('wx-quote').textContent = showDailyQuote('sunny');
+    if (!cached) {
+      document.getElementById('wx-icon').textContent = '🌤️';
+      document.getElementById('wx-temp').textContent = '—';
+      document.getElementById('wx-quote').textContent = showDailyQuote('sunny');
+    }
   }
 }
 
 // TODOS
 async function loadTodos() {
-  var data = await api('todos?select=*&order=created_at.desc');
+  var cached = lsGet('todos');
+  var fresh = _prefetch.todos || api('todos?select=*&order=created_at.desc');
+  _prefetch.todos = null;
+  var data = cached || await fresh;
+  if (cached) fresh.then(function(d) { lsSet('todos', d); renderTodoPeek(d); });
+  else lsSet('todos', data);
   var el = document.getElementById('todos-list');
   if (el) {
     if (!data.length) { el.innerHTML = '<div class="empty">No todos yet</div>'; }
@@ -762,7 +793,8 @@ async function delCalTodo(id) {
 
 // FEED
 async function loadFeed() {
-  var data = await api('feed?select=*&order=created_at.desc&limit=50');
+  var data = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=50'));
+  _prefetch.feed = null;
   var el = document.getElementById('feed-list');
   if (!data.length) { el.innerHTML = '<div class="empty">No posts yet</div>'; return; }
   var typeMap = {note:'Note',event:'Event',quote:'Quote',emotion:'Mood',gacha:'Gacha Prize'};
@@ -795,7 +827,8 @@ async function delFeed(id) { await api('feed?id=eq.' + id, 'DELETE'); loadFeed()
 
 // DIARY
 async function loadDiary() {
-  var data = await api('diary?select=*&order=created_at.desc&limit=30');
+  var data = await (_prefetch.diary || api('diary?select=*&order=created_at.desc&limit=30'));
+  _prefetch.diary = null;
   var el = document.getElementById('diary-list');
   if (!data.length) { el.innerHTML = '<div class="empty">No entries yet</div>'; return; }
   el.innerHTML = data.map(function(d) {
@@ -831,7 +864,8 @@ var _notesData = [];
 var _notesInDetail = false;
 
 async function loadNotes() {
-  _notesData = await api('yaya_notes?select=*&order=created_at.desc');
+  _notesData = await (_prefetch.notes || api('yaya_notes?select=*&order=created_at.desc'));
+  _prefetch.notes = null;
   _notesInDetail = false;
   renderNotesCats();
 }
