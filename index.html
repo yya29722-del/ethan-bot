@@ -26,7 +26,7 @@
 
   /* APP SHELL */
   #app { display: none; position: fixed; inset: 0; background: #f5f3f0; }
-  #app.tarot-active { background: #F4EAD4; }
+  #app.tarot-active { background: #C8985A; }
 
   /* BOTTOM NAV — 悬浮胶囊 */
   .bottom-nav {
@@ -291,13 +291,13 @@
   .quiz-opt.wrong .q-letter-badge { background: #bf5b5b; color: #fff; }
 
   /* TAROT TAB BACKGROUND */
-  #tab-tarot { bottom: 0 !important; background: linear-gradient(160deg, #F4EAD4 0%, #F6E7E8 50%, #F4EAD4 100%); }
+  #tab-tarot { bottom: 0 !important; background: #C8985A; }
   #tarot-ink-canvas { position:fixed; inset:0; z-index:300; pointer-events:none; display:none; }
 
   /* ===== TAROT ===== */
   @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&display=swap');
   :root { --champagne:#F4EAD4;--ivory:#FFFDF9;--rose-quartz:#F6E7E8;--burgundy:#8B1E2F;--gold:#C9A84C;--gold-light:#E8C96B;--gold-dim:rgba(201,168,76,0.4);--text-primary:#2C1810;--text-secondary:#7A5C4A;--text-muted:#B09080;--shadow-warm:rgba(139,80,40,0.15);--card-w:160px;--card-h:272px; }
-  #tarot-app { font-family:'Inter',sans-serif; min-height:100%; background: radial-gradient(ellipse at 80% 90%,rgba(246,231,232,0.6) 0%,transparent 50%), radial-gradient(ellipse at 20% 70%,rgba(201,168,76,0.15) 0%,transparent 40%), #F4EAD4; box-shadow:inset 0 0 120px rgba(80,30,10,0.12); display:flex; flex-direction:column; align-items:center; padding:max(48px, calc(env(safe-area-inset-top) + 32px)) 24px 80px; position:relative; overflow:hidden; }
+  #tarot-app { font-family:'Inter',sans-serif; min-height:100%; background: radial-gradient(ellipse at 50% 0%,rgba(140,70,5,0.72) 0%,rgba(180,100,20,0.3) 25%,transparent 55%), radial-gradient(ellipse at 80% 90%,rgba(246,231,232,0.6) 0%,transparent 50%), radial-gradient(ellipse at 20% 70%,rgba(201,168,76,0.15) 0%,transparent 40%), #F4EAD4; box-shadow:inset 0 0 120px rgba(80,30,10,0.12); display:flex; flex-direction:column; align-items:center; padding:max(48px, calc(env(safe-area-inset-top) + 32px)) 24px 80px; position:relative; overflow:hidden; }
   #tarot-app::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center,transparent 40%,rgba(50,20,10,0.18) 100%); pointer-events:none; z-index:0; }
   #tarot-app::after { content:''; position:absolute; inset:0; background-image:radial-gradient(circle,rgba(201,168,76,0.15) 1px,transparent 1px),radial-gradient(circle,rgba(201,168,76,0.08) 1px,transparent 1px); background-size:60px 60px,30px 30px; background-position:0 0,15px 15px; animation:drift 20s linear infinite; pointer-events:none; z-index:0; opacity:0.5; }
   @keyframes drift { 0%{transform:translateY(0)} 100%{transform:translateY(-30px)} }
@@ -761,8 +761,8 @@ function switchTab(name) {
     else if (name === 'tarot') { startTarotEntry(); }
     var isTarot = name === 'tarot';
     document.getElementById('app').classList.toggle('tarot-active', isTarot);
-    document.body.style.background = isTarot ? '#F4EAD4' : '';
-    document.documentElement.style.background = isTarot ? '#F4EAD4' : '';
+    document.body.style.background = isTarot ? '#C8985A' : '';
+    document.documentElement.style.background = isTarot ? '#C8985A' : '';
   }
 }
 
@@ -1383,7 +1383,7 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/ethan-bot/sw.js');
 }
 
-// TAROT ENTRANCE — baroque watercolor ink reveal
+// TAROT ENTRANCE — organic ink-drop reveal (harmonic blob, destination-out)
 var _tarotAF = null;
 function startTarotEntry() {
   if (_tarotAF) { cancelAnimationFrame(_tarotAF); _tarotAF = null; }
@@ -1394,53 +1394,108 @@ function startTarotEntry() {
   canvas.style.opacity = '1';
   canvas.style.display = 'block';
 
-  ctx.fillStyle = '#f5f3f0';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   var W = canvas.width, H = canvas.height;
   var cx = W * 0.5, cy = H * 0.5;
-  var maxR = Math.hypot(W, H);
+  // maxR reaches the farthest corner
+  var maxR = Math.hypot(cx, cy) * 1.18;
 
-  // Particles: mix of lead tendrils (fast+narrow), blob fills (slow+large), normal
-  var particles = [];
-  var N = 220;
-  for (var i = 0; i < N; i++) {
-    var baseAng = (i / N) * Math.PI * 2;
-    var jitter = (Math.random() - 0.5) * 0.6;
-    var ang = baseAng + jitter;
-    var type = Math.random();
-    var isLead = type < 0.12;    // fast narrow tendrils
-    var isBlob = type < 0.35;    // large slow blobs
-    var spd = isLead ? (7 + Math.random()*5) : (isBlob ? (1.5 + Math.random()*2) : (2.5 + Math.random()*3.5));
-    var r0  = isLead ? (8 + Math.random()*8) : (isBlob ? (35 + Math.random()*30) : (16 + Math.random()*20));
-    var grow= isLead ? (0.4 + Math.random()*0.6) : (isBlob ? (3 + Math.random()*3) : (1.8 + Math.random()*2));
-    particles.push({
-      x: cx, y: cy,
-      vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd,
-      r: r0, growth: grow,
-      friction: isLead ? 0.982 : 0.972,
-      wobbleX: (Math.random()-0.5)*0.18,
-      wobbleY: (Math.random()-0.5)*0.18,
-      isLead: isLead
+  // Fill canvas with warm amber so no white shows at any point
+  var fillGrad = ctx.createRadialGradient(cx, 0, 0, cx, H * 0.5, H);
+  fillGrad.addColorStop(0,   '#C8985A');
+  fillGrad.addColorStop(0.4, '#DDB87A');
+  fillGrad.addColorStop(1,   '#F0E0C8');
+  ctx.fillStyle = fillGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Pre-compute harmonic parameters for the organic blob shape
+  // k=1 gives overall ellipse wobble, higher k add smaller bumps
+  var harmonics = [];
+  var ampScale = [0.12, 0.09, 0.07, 0.05, 0.04, 0.03, 0.025, 0.02];
+  for (var k = 0; k < 8; k++) {
+    harmonics.push({
+      freq:  k + 1,
+      amp:   ampScale[k] * (0.6 + Math.random() * 0.8),
+      phase: Math.random() * Math.PI * 2,
+      drift: (Math.random() - 0.5) * 0.006
     });
   }
 
-  // 4-pointed twinkling stars at the irregular boundary
   var stars = [];
   var t = 0;
-  var TOTAL = 110; // frames (~1.8s)
+  var GROW  = 88;   // frames to reach full coverage
+  var TOTAL = 105;  // then fade
 
-  function drawStar(ctx, x, y, r, op) {
+  // Organic blob radius at angle theta, frame t
+  function blobR(theta) {
+    var progress = Math.min(t / GROW, 1);
+    // easeOutQuart — fast start, gentle finish
+    var eased = 1 - Math.pow(1 - progress, 3.2);
+    var base = eased * maxR;
+    // Harmonics ramp in gradually so blob starts round, grows irregular
+    var organic = Math.min(Math.max((t - 6) / 28, 0), 1);
+    var mod = 0;
+    for (var k = 0; k < harmonics.length; k++) {
+      var h = harmonics[k];
+      mod += h.amp * Math.sin(h.freq * theta + h.phase + t * h.drift);
+    }
+    return Math.max(0, base * (1 + organic * mod));
+  }
+
+  // Erase the overlay with the blob polygon (destination-out = reveal beneath)
+  function eraseBlobPass() {
+    var STEPS = 240;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    for (var i = 0; i <= STEPS; i++) {
+      var theta = (i / STEPS) * Math.PI * 2;
+      var r = blobR(theta);
+      var x = cx + Math.cos(theta) * r;
+      var y = cy + Math.sin(theta) * r;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Spawn stars along the blob boundary
+  function spawnBoundaryStars() {
+    if (t % 4 !== 0 || t > GROW * 0.92) return;
+    var STEPS = 240;
+    var skip = Math.max(1, Math.floor(STEPS / 14));
+    for (var i = 0; i < STEPS; i += skip) {
+      if (Math.random() > 0.45) continue;
+      var theta = (i / STEPS) * Math.PI * 2;
+      var r = blobR(theta);
+      var bx = cx + Math.cos(theta) * r;
+      var by = cy + Math.sin(theta) * r;
+      if (bx < -20 || bx > W + 20 || by < -20 || by > H + 20) continue;
+      // Slightly offset outward (still on opaque side) so star is visible
+      var jitterOut = 4 + Math.random() * 6;
+      stars.push({
+        x: bx + Math.cos(theta) * jitterOut + (Math.random()-0.5)*6,
+        y: by + Math.sin(theta) * jitterOut + (Math.random()-0.5)*6,
+        r: 1.8 + Math.random() * 2.8,
+        op: 0, maxOp: 0.55 + Math.random() * 0.45,
+        phase: 0, spd: 0.08 + Math.random() * 0.07
+      });
+    }
+  }
+
+  function drawStar(x, y, r, op) {
     ctx.save();
     ctx.globalAlpha = op;
-    ctx.shadowBlur = 14; ctx.shadowColor = 'rgba(232,201,107,0.95)';
-    ctx.fillStyle = 'rgba(255,245,190,1)';
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(232,201,107,0.9)';
+    ctx.fillStyle = 'rgba(255,248,200,1)';
     ctx.beginPath();
     for (var k = 0; k < 8; k++) {
-      var a = (k/8)*Math.PI*2 - Math.PI/2;
-      var rr = k%2===0 ? r : r*0.38;
-      k===0 ? ctx.moveTo(x+Math.cos(a)*rr, y+Math.sin(a)*rr)
-             : ctx.lineTo(x+Math.cos(a)*rr, y+Math.sin(a)*rr);
+      var a = (k / 8) * Math.PI * 2 - Math.PI / 2;
+      var rr = k % 2 === 0 ? r : r * 0.36;
+      k === 0 ? ctx.moveTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr)
+              : ctx.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr);
     }
     ctx.closePath(); ctx.fill();
     ctx.restore();
@@ -1448,75 +1503,22 @@ function startTarotEntry() {
 
   function tick() {
     t++;
+    eraseBlobPass();
+    spawnBoundaryStars();
 
-    // ── Erase pass: destination-out, purely particle-driven (no central circle) ──
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-out';
-    particles.forEach(function(p) {
-      // Organic wobble — bends trajectory each frame
-      p.vx += p.wobbleX + (Math.random()-0.5)*0.12;
-      p.vy += p.wobbleY + (Math.random()-0.5)*0.12;
-      p.vx *= p.friction; p.vy *= p.friction;
-      p.x += p.vx; p.y += p.vy;
-      p.r += p.growth;
-      var pg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-      pg.addColorStop(0,   'rgba(0,0,0,1)');
-      pg.addColorStop(0.45,'rgba(0,0,0,0.85)');
-      pg.addColorStop(0.8, 'rgba(0,0,0,0.3)');
-      pg.addColorStop(1,   'rgba(0,0,0,0)');
-      ctx.beginPath(); ctx.fillStyle = pg;
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
-    });
-    ctx.restore();
-
-    // ── Gold shimmer at active particle edges ──
-    ctx.save();
-    ctx.globalCompositeOperation = 'source-over';
-    particles.forEach(function(p) {
-      var spd = Math.hypot(p.vx, p.vy);
-      if (spd < 0.5) return;
-      var shimmer = ctx.createRadialGradient(p.x, p.y, p.r*0.65, p.x, p.y, p.r*1.35);
-      shimmer.addColorStop(0, 'rgba(201,168,76,0)');
-      shimmer.addColorStop(0.5,'rgba(201,168,76,'+(0.08*(spd/5)).toFixed(2)+')');
-      shimmer.addColorStop(1, 'rgba(246,231,232,0)');
-      ctx.beginPath(); ctx.fillStyle = shimmer;
-      ctx.arc(p.x, p.y, p.r*1.35, 0, Math.PI*2); ctx.fill();
-    });
-
-    // ── Spawn 4-pointed stars at irregular boundary positions ──
-    if (t % 5 === 0) {
-      particles.forEach(function(p) {
-        var spd = Math.hypot(p.vx, p.vy);
-        if (spd < 0.4 || Math.random() > 0.07) return;
-        // Place at leading edge, offset irregularly
-        var edgeD = p.r * (0.8 + Math.random()*0.5);
-        var edgeAng = Math.atan2(p.vy, p.vx) + (Math.random()-0.5)*1.2;
-        stars.push({
-          x: p.x + Math.cos(edgeAng)*edgeD,
-          y: p.y + Math.sin(edgeAng)*edgeD,
-          r: 2 + Math.random()*3.5,
-          op: 0, maxOp: 0.6+Math.random()*0.4,
-          phase: 0, spd: 0.07+Math.random()*0.07
-        });
-      });
-    }
-
-    // ── Draw twinkling stars (phase: in→out→in→out) ──
-    stars = stars.filter(function(s){ return s.phase < 4; });
+    // Animate and draw twinkling stars (source-over, sits on opaque canvas edge)
+    stars = stars.filter(function(s) { return s.phase < 4; });
     stars.forEach(function(s) {
       if      (s.phase===0){s.op+=s.spd; if(s.op>=s.maxOp){s.op=s.maxOp;s.phase++;}}
       else if (s.phase===1){s.op-=s.spd; if(s.op<=0){s.op=0;s.phase++;}}
-      else if (s.phase===2){s.op+=s.spd*0.6; if(s.op>=s.maxOp*0.45){s.op=s.maxOp*0.45;s.phase++;}}
-      else if (s.phase===3){s.op-=s.spd*0.4; if(s.op<=0){s.op=0;s.phase++;}}
-      if (s.op > 0.01) drawStar(ctx, s.x, s.y, s.r, s.op);
+      else if (s.phase===2){s.op+=s.spd*0.55; if(s.op>=s.maxOp*0.4){s.op=s.maxOp*0.4;s.phase++;}}
+      else if (s.phase===3){s.op-=s.spd*0.35; if(s.op<=0){s.op=0;s.phase++;}}
+      if (s.op > 0.01) drawStar(s.x, s.y, s.r, s.op);
     });
-
-    ctx.restore();
 
     if (t < TOTAL) {
       _tarotAF = requestAnimationFrame(tick);
     } else {
-      // Fade out canvas
       var op = 1;
       (function fade() {
         op -= 0.1;
