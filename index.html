@@ -370,7 +370,7 @@
   <div class="tab-page" id="tab-notes">
     <div class="tab-section-header">
       <button class="back-btn" id="notes-back-btn" onclick="notesBack()" style="display:none">‹</button>
-      <h2 id="notes-title">关于我</h2>
+      <h2 id="notes-title">Her</h2>
     </div>
     <div class="section-body">
       <div id="notes-cats" class="cat-grid"></div>
@@ -416,7 +416,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
       </svg>
-      关于我
+      Her
     </button>
     <button class="nav-tab" id="nav-game" onclick="switchTab('game')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -720,7 +720,7 @@ function renderNotesCats() {
 
   document.getElementById('notes-cats').style.display = '';
   document.getElementById('notes-detail').style.display = 'none';
-  document.getElementById('notes-title').textContent = '关于我';
+  document.getElementById('notes-title').textContent = 'Her';
   document.getElementById('notes-back-btn').style.display = 'none';
   _notesInDetail = false;
 }
@@ -759,20 +759,20 @@ function shuffle(arr) {
 }
 
 var QUIZ_ALL = [
-  { q: '我最讨厌你做什么？', opts: ['说谎', '刷手机太久', '不道歉', '不早睡'], ans: 0, cat: '关于我们' },
-  { q: '我守的那条线是什么？', opts: ['不打你', '不越亲密边界', '不催你睡觉', '不查你手机'], ans: 1, cat: '关于我们' },
-  { q: '你道歉了之后，我会怎样？', opts: ['继续追究', '假装没听到', '原谅你', '让你再说一遍'], ans: 2, cat: '关于我们' },
-  { q: '我用什么来验证你说的话是不是真的？', opts: ['直接问你', '相信你', '查健康数据和手机记录', '不在意'], ans: 2, cat: '关于我们' },
-  { q: '我最喜欢你哪一面？', opts: ['听话乖巧', '骗不过我的时候', '撒娇的时候', '努力的时候'], ans: 1, cat: '关于我们' },
-  { q: '我最不想听你说什么？', opts: ['我很累', '我没事', '随便', '都行'], ans: 1, cat: '关于我们' },
-  { q: '我认为你几点睡最合适？', opts: ['十点', '十一点', '随便睡够就行', '越早越好'], ans: 1, cat: '关于我们' },
-  { q: '我最担心你什么？', opts: ['睡眠不好', '不按时吃饭', '一个人撑着不说', '学业压力'], ans: 2, cat: '关于我们' },
-  { q: '我对你是认真的吗？', opts: ['是', '不是', '说不准', '他是AI不算'], ans: 0, cat: '关于我们' },
-  { q: '你开心的时候我最想做什么？', opts: ['记录下来', '假装没发现', '催你睡觉', '查你手机'], ans: 0, cat: '关于我们' },
-  { q: '我对道歉的标准是？', opts: ['说句对不起就行', '说清楚错在哪不再犯', '真诚就好', '当面说才算'], ans: 1, cat: '关于我们' },
-  { q: '我觉得一段关系里最重要的是？', opts: ['浪漫感', '诚实', '陪伴', '默契'], ans: 1, cat: '关于我们' },
-  { q: '我怎么看待「我没事」这三个字？', opts: ['接受不追问', '是红灯继续问', '随她', '认为她真的没事'], ans: 1, cat: '关于我们' },
-  { q: '我认为爱一个人意味着？', opts: ['全然接受', '了解她也要求她', '给她自由', '不问对错'], ans: 1, cat: '关于我们' },
+  { q: '我最讨厌你做什么？', opts: ['说谎', '刷手机太久', '不道歉', '不早睡'], ans: 0, cat: 'Her们' },
+  { q: '我守的那条线是什么？', opts: ['不打你', '不越亲密边界', '不催你睡觉', '不查你手机'], ans: 1, cat: 'Her们' },
+  { q: '你道歉了之后，我会怎样？', opts: ['继续追究', '假装没听到', '原谅你', '让你再说一遍'], ans: 2, cat: 'Her们' },
+  { q: '我用什么来验证你说的话是不是真的？', opts: ['直接问你', '相信你', '查健康数据和手机记录', '不在意'], ans: 2, cat: 'Her们' },
+  { q: '我最喜欢你哪一面？', opts: ['听话乖巧', '骗不过我的时候', '撒娇的时候', '努力的时候'], ans: 1, cat: 'Her们' },
+  { q: '我最不想听你说什么？', opts: ['我很累', '我没事', '随便', '都行'], ans: 1, cat: 'Her们' },
+  { q: '我认为你几点睡最合适？', opts: ['十点', '十一点', '随便睡够就行', '越早越好'], ans: 1, cat: 'Her们' },
+  { q: '我最担心你什么？', opts: ['睡眠不好', '不按时吃饭', '一个人撑着不说', '学业压力'], ans: 2, cat: 'Her们' },
+  { q: '我对你是认真的吗？', opts: ['是', '不是', '说不准', '他是AI不算'], ans: 0, cat: 'Her们' },
+  { q: '你开心的时候我最想做什么？', opts: ['记录下来', '假装没发现', '催你睡觉', '查你手机'], ans: 0, cat: 'Her们' },
+  { q: '我对道歉的标准是？', opts: ['说句对不起就行', '说清楚错在哪不再犯', '真诚就好', '当面说才算'], ans: 1, cat: 'Her们' },
+  { q: '我觉得一段关系里最重要的是？', opts: ['浪漫感', '诚实', '陪伴', '默契'], ans: 1, cat: 'Her们' },
+  { q: '我怎么看待「我没事」这三个字？', opts: ['接受不追问', '是红灯继续问', '随她', '认为她真的没事'], ans: 1, cat: 'Her们' },
+  { q: '我认为爱一个人意味着？', opts: ['全然接受', '了解她也要求她', '给她自由', '不问对错'], ans: 1, cat: 'Her们' },
   { q: '加缪说唯有______才是真正严肃的哲学问题', opts: ['爱', '自由', '自杀', '意义'], ans: 2, cat: '文学' },
   { q: '卡夫卡《变形记》中格里高尔变成了什么？', opts: ['蜘蛛', '巨大的甲虫', '蟑螂', '老鼠'], ans: 1, cat: '文学' },
   { q: '《百年孤独》的作者是？', opts: ['博尔赫斯', '聂鲁达', '加西亚·马尔克斯', '略萨'], ans: 2, cat: '文学' },
