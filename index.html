@@ -116,6 +116,8 @@
   .todo-peek { margin: 0 16px 16px; }
   .todo-peek-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .todo-peek-label { font-size: 10px; letter-spacing: 2px; color: #bbb; font-weight: 600; }
+  .todo-peek-date { font-size: 12px; color: #c9a96e; font-weight: 500; }
+  .todo-today-btn { font-size: 11px; color: #bbb; cursor: pointer; border: none; background: none; padding: 0; text-decoration: underline; }
   .todo-peek-item {
     display: flex; align-items: center; gap: 12px;
     padding: 14px 16px; background: #fff; border-radius: 14px;
@@ -528,8 +530,9 @@
     </div>
     <!-- Todo Peek -->
     <div class="todo-peek">
-      <div class="todo-peek-header">
+      <div class="todo-peek-header" id="todo-peek-header">
         <div class="todo-peek-label">T O D O</div>
+        <span class="todo-peek-date">Today</span>
       </div>
       <div id="todo-peek-list"></div>
     </div>
@@ -954,6 +957,17 @@ async function loadWeather() {
 // TODOS — in-memory state for instant optimistic updates
 var _todosData = [];
 
+function _todayStr() {
+  var d = new Date(new Date().getTime() + 8 * 3600000);
+  return d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0') + '-' + String(d.getUTCDate()).padStart(2,'0');
+}
+var _peekDate = _todayStr();
+
+function goToToday() {
+  _peekDate = _todayStr();
+  renderTodoPeek(_todosData);
+}
+
 function _saveTodos() { lsSet('todos', _todosData); }
 
 function _refreshTodosFromServer() {
@@ -979,8 +993,26 @@ async function loadTodos() {
 
 function renderTodoPeek(data) {
   var peekEl = document.getElementById('todo-peek-list');
+  var headerEl = document.getElementById('todo-peek-header');
   if (!peekEl) return;
-  var pending = data.filter(function(t) { return !t.completed; });
+
+  var today = _todayStr();
+  var isToday = _peekDate === today;
+
+  // Update header
+  if (headerEl) {
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dp = new Date(_peekDate + 'T00:00:00');
+    var dateLabel = isToday ? 'Today' : (months[dp.getMonth()] + ' ' + dp.getDate());
+    headerEl.innerHTML = '<div class="todo-peek-label">T O D O</div>' +
+      '<span class="todo-peek-date">' + dateLabel + '</span>' +
+      (!isToday ? '<button class="todo-today-btn" onclick="goToToday()">← Today</button>' : '');
+  }
+
+  var pending = data.filter(function(t) {
+    if (t.completed) return false;
+    return t.date ? t.date === _peekDate : isToday;
+  });
   if (!pending.length) {
     peekEl.innerHTML = '<div class="todo-peek-item"><span class="todo-peek-text" style="color:#ccc">All clear ✓</span></div>';
     return;
@@ -1018,8 +1050,7 @@ function delTodoPeek(id) {
 async function addTodo() {
   var v = document.getElementById('todo-input').value.trim();
   if (!v) return;
-  var nowBJ = new Date(new Date().getTime() + 8 * 3600000);
-  var dateStr = nowBJ.getUTCFullYear() + '-' + String(nowBJ.getUTCMonth()+1).padStart(2,'0') + '-' + String(nowBJ.getUTCDate()).padStart(2,'0');
+  var dateStr = _peekDate;
   var tempItem = { id: Date.now(), content: v, completed: false, created_at: new Date().toISOString(), date: dateStr };
   _todosData.unshift(tempItem);
   document.getElementById('todo-input').value = '';
@@ -1047,11 +1078,13 @@ var _calModalData = [];
 
 async function openCalModal(dateStr) {
   _calModalDate = dateStr;
+  _peekDate = dateStr;
   var d = new Date(dateStr + 'T00:00:00');
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   document.getElementById('cal-modal-title').textContent = months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
   document.getElementById('cal-modal-input').value = '';
   document.getElementById('cal-modal').classList.add('open');
+  renderTodoPeek(_todosData);
   await refreshCalModal();
 }
 
