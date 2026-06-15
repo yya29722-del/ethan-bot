@@ -12,7 +12,8 @@
 <meta name="theme-color" content="#1a1814">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, sans-serif; background: #f5f3f0; color: #2c2c2c; min-height: 100vh; overflow-x: hidden; }
+  html, body { background: #1a1814; }
+  body { font-family: -apple-system, sans-serif; color: #2c2c2c; min-height: 100vh; overflow-x: hidden; }
 
   /* COVER */
   #cover { position: fixed; inset: 0; background: #1a1814; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity .6s ease; }
@@ -25,7 +26,7 @@
   .cover-btn:active { background: rgba(255,255,255,.1); }
 
   /* HOME */
-  #home { padding: 0 0 40px; }
+  #home { padding: 0 0 40px; background: #f5f3f0; }
   .home-header { padding: max(56px, env(safe-area-inset-top) + 16px) 24px 24px; }
   .home-header h1 { font-size: 13px; font-weight: 400; letter-spacing: 3px; color: #bbb; }
   .home-header p { font-size: 24px; font-weight: 300; color: #2c2c2c; margin-top: 6px; }
