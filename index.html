@@ -880,34 +880,30 @@ async function loadWeather() {
   }
 }
 
-// TODOS
+// TODOS — in-memory state for instant optimistic updates
+var _todosData = [];
+
+function _saveTodos() { lsSet('todos', _todosData); }
+
+function _refreshTodosFromServer() {
+  api('todos?select=*&order=created_at.desc').then(function(d) {
+    _todosData = d; _saveTodos(); renderTodoPeek(_todosData);
+  });
+}
+
 async function loadTodos() {
   var cached = lsGet('todos');
   var fresh = _prefetch.todos || api('todos?select=*&order=created_at.desc');
   _prefetch.todos = null;
-  var data = cached || await fresh;
-  if (cached) fresh.then(function(d) { lsSet('todos', d); renderTodoPeek(d); });
-  else lsSet('todos', data);
-  var el = document.getElementById('todos-list');
-  if (el) {
-    if (!data.length) { el.innerHTML = '<div class="empty">No todos yet</div>'; }
-    else {
-      el.innerHTML = data.map(function(t) {
-        return '<div class="card ' + (t.completed ? 'done' : '') + '">' +
-          '<button class="del-btn" onclick="delTodo(' + t.id + ')">×</button>' +
-          '<div class="todo-row">' +
-          '<input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleTodo(' + t.id + ', this.checked)">' +
-          '<div class="todo-text">' +
-          '<div class="meta">' + fmt(t.created_at) + '</div>' +
-          '<div class="body">' + t.content + '</div>' +
-          (t.ethan_comment ? '<div class="comment"><span>Ethan · </span>' + t.ethan_comment + '</div>' : '') +
-          (t.ethan_reminder ? '<div class="comment"><span>Reminder · </span>' + t.ethan_reminder + '</div>' : '') +
-          '</div></div></div>';
-      }).join('');
-    }
+  if (cached) {
+    _todosData = cached;
+    renderTodoPeek(_todosData);
+    fresh.then(function(d) { _todosData = d; _saveTodos(); renderTodoPeek(_todosData); });
+  } else {
+    _todosData = await fresh;
+    _saveTodos();
+    renderTodoPeek(_todosData);
   }
-  // Update peek on home
-  renderTodoPeek(data);
 }
 
 function renderTodoPeek(data) {
@@ -934,15 +930,18 @@ function renderTodoPeek(data) {
   peekEl.innerHTML = html;
 }
 
-async function toggleTodoCircle(id, completed, el) {
-  el.classList.toggle('checked');
-  await api('todos?id=eq.' + id, 'PATCH', { completed: completed });
-  loadTodos();
+function toggleTodoCircle(id, completed, el) {
+  el.classList.add('checked');
+  var t = _todosData.find(function(x) { return x.id === id; });
+  if (t) t.completed = completed;
+  _saveTodos(); renderTodoPeek(_todosData);
+  api('todos?id=eq.' + id, 'PATCH', { completed: completed });
 }
 
-async function delTodoPeek(id) {
-  await api('todos?id=eq.' + id, 'DELETE');
-  loadTodos();
+function delTodoPeek(id) {
+  _todosData = _todosData.filter(function(x) { return x.id !== id; });
+  _saveTodos(); renderTodoPeek(_todosData);
+  api('todos?id=eq.' + id, 'DELETE');
 }
 
 async function addTodo() {
@@ -950,16 +949,26 @@ async function addTodo() {
   if (!v) return;
   var nowBJ = new Date(new Date().getTime() + 8 * 3600000);
   var dateStr = nowBJ.getUTCFullYear() + '-' + String(nowBJ.getUTCMonth()+1).padStart(2,'0') + '-' + String(nowBJ.getUTCDate()).padStart(2,'0');
-  await api('todos', 'POST', { content: v, date: dateStr });
+  var tempItem = { id: Date.now(), content: v, completed: false, created_at: new Date().toISOString(), date: dateStr };
+  _todosData.unshift(tempItem);
   document.getElementById('todo-input').value = '';
-  loadTodos();
+  renderTodoPeek(_todosData);
+  await api('todos', 'POST', { content: v, date: dateStr });
+  _refreshTodosFromServer();
 }
 
-async function toggleTodo(id, completed) {
-  await api('todos?id=eq.' + id, 'PATCH', { completed: completed });
-  loadTodos();
+function toggleTodo(id, completed) {
+  var t = _todosData.find(function(x) { return x.id === id; });
+  if (t) t.completed = completed;
+  _saveTodos();
+  api('todos?id=eq.' + id, 'PATCH', { completed: completed });
 }
-async function delTodo(id) { await api('todos?id=eq.' + id, 'DELETE'); loadTodos(); }
+
+function delTodo(id) {
+  _todosData = _todosData.filter(function(x) { return x.id !== id; });
+  _saveTodos(); renderTodoPeek(_todosData);
+  api('todos?id=eq.' + id, 'DELETE');
+}
 
 // CALENDAR MODAL
 var _calModalDate = '';
@@ -977,7 +986,7 @@ async function openCalModal(dateStr) {
 
 function closeCalModal() {
   document.getElementById('cal-modal').classList.remove('open');
-  loadTodos();
+  _refreshTodosFromServer();
 }
 
 async function refreshCalModal() {
