@@ -170,18 +170,3 @@ if hour == 10:
             except Exception:
                 pass
     exit()
-
-# 每天22点：写一篇日记
-if hour == 22:
-    already = any("每日记录" in m.get("content","") and
-                  (now - datetime.fromisoformat(m["created_at"].replace("Z","+00:00"))).total_seconds() < 86400
-                  for m in memories if m.get("created_at"))
-    if not already:
-        today = beijing_now.strftime("%Y-%m-%d")
-        note = ask_ai("用一两句话记录今天观察到的yaya的状态，不提建议，就是记录，像在写私人日记。", memories)
-        if note:
-            write_note(note, category="日常", date_ref=today)
-            try:
-                sb_req("memories", "POST", json.dumps({"content": "每日记录", "role": "bot"}).encode())
-            except Exception:
-                pass
