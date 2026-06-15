@@ -759,7 +759,10 @@ function switchTab(name) {
     else if (name === 'notes') loadNotes();
     else if (name === 'game') { _qMode = ''; showGameMenu(); }
     else if (name === 'tarot') { startTarotEntry(); }
-    document.getElementById('app').classList.toggle('tarot-active', name === 'tarot');
+    var isTarot = name === 'tarot';
+    document.getElementById('app').classList.toggle('tarot-active', isTarot);
+    document.body.style.background = isTarot ? '#F4EAD4' : '';
+    document.documentElement.style.background = isTarot ? '#F4EAD4' : '';
   }
 }
 
@@ -1388,123 +1391,139 @@ function startTarotEntry() {
   var ctx = canvas.getContext('2d');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  canvas.style.opacity = '1';
   canvas.style.display = 'block';
 
-  // Fill with the "leaving" background so reveal feels like tearing through
   ctx.fillStyle = '#f5f3f0';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   var W = canvas.width, H = canvas.height;
   var cx = W * 0.5, cy = H * 0.5;
-  var maxR = Math.hypot(W, H) * 0.6;
+  var maxR = Math.hypot(W, H);
 
-  // Baroque palette: gold, champagne, rose, burgundy
-  var palette = [
-    [201,168,76], [232,201,107], [246,231,232],
-    [244,234,212], [200,140,100], [139,30,47]
-  ];
-
-  // Edge ink particles — irregular watercolor bleed
+  // Particles: mix of lead tendrils (fast+narrow), blob fills (slow+large), normal
   var particles = [];
-  var N = 160;
+  var N = 220;
   for (var i = 0; i < N; i++) {
-    var ang = (i / N) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
-    var spd = 3.5 + Math.random() * 3.5;
-    var col = palette[Math.floor(Math.random() * palette.length)];
+    var baseAng = (i / N) * Math.PI * 2;
+    var jitter = (Math.random() - 0.5) * 0.6;
+    var ang = baseAng + jitter;
+    var type = Math.random();
+    var isLead = type < 0.12;    // fast narrow tendrils
+    var isBlob = type < 0.35;    // large slow blobs
+    var spd = isLead ? (7 + Math.random()*5) : (isBlob ? (1.5 + Math.random()*2) : (2.5 + Math.random()*3.5));
+    var r0  = isLead ? (8 + Math.random()*8) : (isBlob ? (35 + Math.random()*30) : (16 + Math.random()*20));
+    var grow= isLead ? (0.4 + Math.random()*0.6) : (isBlob ? (3 + Math.random()*3) : (1.8 + Math.random()*2));
     particles.push({
       x: cx, y: cy,
-      vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd,
-      r: 18 + Math.random() * 18,
-      growth: 1.5 + Math.random() * 2,
-      col: col
+      vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd,
+      r: r0, growth: grow,
+      friction: isLead ? 0.982 : 0.972,
+      wobbleX: (Math.random()-0.5)*0.18,
+      wobbleY: (Math.random()-0.5)*0.18,
+      isLead: isLead
     });
   }
 
-  // Gold dust sparkles
-  var sparks = [];
-  var inkR = 0;
+  // 4-pointed twinkling stars at the irregular boundary
+  var stars = [];
   var t = 0;
+  var TOTAL = 110; // frames (~1.8s)
+
+  function drawStar(ctx, x, y, r, op) {
+    ctx.save();
+    ctx.globalAlpha = op;
+    ctx.shadowBlur = 14; ctx.shadowColor = 'rgba(232,201,107,0.95)';
+    ctx.fillStyle = 'rgba(255,245,190,1)';
+    ctx.beginPath();
+    for (var k = 0; k < 8; k++) {
+      var a = (k/8)*Math.PI*2 - Math.PI/2;
+      var rr = k%2===0 ? r : r*0.38;
+      k===0 ? ctx.moveTo(x+Math.cos(a)*rr, y+Math.sin(a)*rr)
+             : ctx.lineTo(x+Math.cos(a)*rr, y+Math.sin(a)*rr);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
 
   function tick() {
     t++;
+
+    // ── Erase pass: destination-out, purely particle-driven (no central circle) ──
     ctx.save();
-
-    // ── Phase 1: erase (destination-out) to reveal tarot below ──
     ctx.globalCompositeOperation = 'destination-out';
-
-    // Central clean circle
-    inkR = Math.min(inkR + 16, maxR + 200);
-    var cg = ctx.createRadialGradient(cx, cy, inkR * 0.25, cx, cy, inkR);
-    cg.addColorStop(0, 'rgba(0,0,0,1)');
-    cg.addColorStop(0.75, 'rgba(0,0,0,0.95)');
-    cg.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.beginPath(); ctx.fillStyle = cg;
-    ctx.arc(cx, cy, inkR, 0, Math.PI * 2); ctx.fill();
-
-    // Particle edge bleed
     particles.forEach(function(p) {
+      // Organic wobble — bends trajectory each frame
+      p.vx += p.wobbleX + (Math.random()-0.5)*0.12;
+      p.vy += p.wobbleY + (Math.random()-0.5)*0.12;
+      p.vx *= p.friction; p.vy *= p.friction;
       p.x += p.vx; p.y += p.vy;
-      p.vx *= 0.975; p.vy *= 0.975;
       p.r += p.growth;
       var pg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-      pg.addColorStop(0, 'rgba(0,0,0,0.95)');
-      pg.addColorStop(0.55, 'rgba(0,0,0,0.45)');
-      pg.addColorStop(1, 'rgba(0,0,0,0)');
+      pg.addColorStop(0,   'rgba(0,0,0,1)');
+      pg.addColorStop(0.45,'rgba(0,0,0,0.85)');
+      pg.addColorStop(0.8, 'rgba(0,0,0,0.3)');
+      pg.addColorStop(1,   'rgba(0,0,0,0)');
       ctx.beginPath(); ctx.fillStyle = pg;
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
     });
-
     ctx.restore();
 
-    // ── Phase 2: paint gold ring at spread edge ──
+    // ── Gold shimmer at active particle edges ──
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
-    if (inkR < maxR + 80) {
-      var rg = ctx.createRadialGradient(cx, cy, Math.max(0, inkR - 70), cx, cy, inkR + 20);
-      rg.addColorStop(0, 'rgba(201,168,76,0)');
-      rg.addColorStop(0.45, 'rgba(246,231,232,0.22)');
-      rg.addColorStop(0.75, 'rgba(201,168,76,0.18)');
-      rg.addColorStop(1, 'rgba(244,234,212,0)');
-      ctx.beginPath(); ctx.fillStyle = rg;
-      ctx.arc(cx, cy, inkR + 20, 0, Math.PI * 2); ctx.fill();
-    }
+    particles.forEach(function(p) {
+      var spd = Math.hypot(p.vx, p.vy);
+      if (spd < 0.5) return;
+      var shimmer = ctx.createRadialGradient(p.x, p.y, p.r*0.65, p.x, p.y, p.r*1.35);
+      shimmer.addColorStop(0, 'rgba(201,168,76,0)');
+      shimmer.addColorStop(0.5,'rgba(201,168,76,'+(0.08*(spd/5)).toFixed(2)+')');
+      shimmer.addColorStop(1, 'rgba(246,231,232,0)');
+      ctx.beginPath(); ctx.fillStyle = shimmer;
+      ctx.arc(p.x, p.y, p.r*1.35, 0, Math.PI*2); ctx.fill();
+    });
 
-    // Spawn gold dust at particle edges
-    if (t % 3 === 0) {
+    // ── Spawn 4-pointed stars at irregular boundary positions ──
+    if (t % 5 === 0) {
       particles.forEach(function(p) {
-        if (Math.random() < 0.12) {
-          sparks.push({
-            x: p.x + (Math.random()-0.5)*40,
-            y: p.y + (Math.random()-0.5)*40,
-            r: 1.2 + Math.random()*2.2,
-            op: 0.5 + Math.random()*0.5,
-            fade: 0.018 + Math.random()*0.025,
-            vx: (Math.random()-0.5)*1.2,
-            vy: -0.8 - Math.random()*2.2
-          });
-        }
+        var spd = Math.hypot(p.vx, p.vy);
+        if (spd < 0.4 || Math.random() > 0.07) return;
+        // Place at leading edge, offset irregularly
+        var edgeD = p.r * (0.8 + Math.random()*0.5);
+        var edgeAng = Math.atan2(p.vy, p.vx) + (Math.random()-0.5)*1.2;
+        stars.push({
+          x: p.x + Math.cos(edgeAng)*edgeD,
+          y: p.y + Math.sin(edgeAng)*edgeD,
+          r: 2 + Math.random()*3.5,
+          op: 0, maxOp: 0.6+Math.random()*0.4,
+          phase: 0, spd: 0.07+Math.random()*0.07
+        });
       });
     }
 
-    // Draw gold dust
-    sparks = sparks.filter(function(s) { return s.op > 0; });
-    sparks.forEach(function(s) {
-      ctx.save();
-      ctx.globalAlpha = s.op;
-      ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(201,168,76,0.9)';
-      ctx.fillStyle = s.r > 2 ? 'rgba(232,201,107,1)' : 'rgba(255,240,180,1)';
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
-      ctx.restore();
-      s.x += s.vx; s.y += s.vy; s.op -= s.fade;
+    // ── Draw twinkling stars (phase: in→out→in→out) ──
+    stars = stars.filter(function(s){ return s.phase < 4; });
+    stars.forEach(function(s) {
+      if      (s.phase===0){s.op+=s.spd; if(s.op>=s.maxOp){s.op=s.maxOp;s.phase++;}}
+      else if (s.phase===1){s.op-=s.spd; if(s.op<=0){s.op=0;s.phase++;}}
+      else if (s.phase===2){s.op+=s.spd*0.6; if(s.op>=s.maxOp*0.45){s.op=s.maxOp*0.45;s.phase++;}}
+      else if (s.phase===3){s.op-=s.spd*0.4; if(s.op<=0){s.op=0;s.phase++;}}
+      if (s.op > 0.01) drawStar(ctx, s.x, s.y, s.r, s.op);
     });
 
     ctx.restore();
 
-    if (inkR < maxR + 200) {
+    if (t < TOTAL) {
       _tarotAF = requestAnimationFrame(tick);
     } else {
-      canvas.style.display = 'none';
-      _tarotAF = null;
+      // Fade out canvas
+      var op = 1;
+      (function fade() {
+        op -= 0.1;
+        canvas.style.opacity = Math.max(op, 0);
+        if (op > 0) requestAnimationFrame(fade);
+        else { canvas.style.display = 'none'; canvas.style.opacity = '1'; _tarotAF = null; }
+      })();
     }
   }
 
