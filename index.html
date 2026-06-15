@@ -159,39 +159,48 @@
   .has-context::after { content: 'we were there ›'; position: absolute; bottom: 12px; right: 14px; font-size: 12px; color: #c9a96e; font-weight: 500; letter-spacing: 0.02em; }
 
   /* CALENDAR DAY MODAL */
-  #cal-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.35); display: none; align-items: flex-end; }
+  #cal-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.58); display: none; align-items: center; justify-content: center; padding: 24px 20px; }
   #cal-modal.open { display: flex; }
   #cal-modal-sheet {
-    width: 100%; background: #f7f4f0; border-radius: 22px 22px 0 0;
-    padding: 20px 20px 36px; max-height: 72vh; display: flex; flex-direction: column;
-    animation: slideUp .25s ease;
+    width: 100%; max-width: 360px;
+    background: linear-gradient(160deg, #1c1408 0%, #110d04 100%);
+    border: 1px solid rgba(201,168,76,.3);
+    border-radius: 22px; max-height: 84vh;
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.03);
+    animation: fadeScale .22s ease;
   }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  .cal-modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
-  .cal-modal-title { font-size: 17px; font-weight: 500; color: #2c2c2c; margin-bottom: 14px; }
-  #cal-modal-list { flex: 1; overflow-y: auto; margin-bottom: 12px; }
+  .cal-modal-quote-area { padding: 20px 20px 14px; border-bottom: 1px solid rgba(201,168,76,.1); }
+  .cal-modal-ornament { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .cal-modal-ornament-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,168,76,.4), transparent); }
+  .cal-modal-ornament-gem { width: 4px; height: 4px; background: rgba(201,168,76,.65); transform: rotate(45deg); flex-shrink: 0; }
+  .cal-modal-ethan-quote { font-family: 'IM Fell English', serif; font-size: 13px; font-style: italic; color: rgba(201,168,76,.75); text-align: center; letter-spacing: 0.03em; line-height: 1.5; }
+  .cal-modal-title { font-family: 'Great Vibes', cursive; font-size: 34px; color: #f0e8d4; text-align: center; padding: 14px 20px 2px; letter-spacing: 0.02em; }
+  #cal-modal-list { flex: 1; overflow-y: auto; padding: 10px 16px 6px; }
   .cal-todo-item {
     display: flex; align-items: center; gap: 12px;
-    padding: 13px 14px; background: #fff; border-radius: 12px;
-    margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.05);
-    border-left: 3px solid #e8d4b4;
+    padding: 12px 14px; background: rgba(255,255,255,.05); border-radius: 10px;
+    margin-bottom: 8px; border-left: 2px solid rgba(201,168,76,.45);
   }
-  .cal-todo-item.done-item { border-left-color: #e0e0e0; }
-  .cal-todo-item .todo-check-circle { flex-shrink: 0; }
-  .cal-todo-body { flex: 1; font-size: 15px; color: #2c2c2c; line-height: 1.4; }
-  .cal-todo-body.done { text-decoration: line-through; color: #ccc; }
-  .cal-todo-del { background: none; border: none; color: #ddd; font-size: 18px; cursor: pointer; }
-  .cal-todo-del:active { color: #e08080; }
-  .cal-modal-input-row { display: flex; gap: 8px; flex-shrink: 0; }
+  .cal-todo-item.done-item { border-left-color: rgba(255,255,255,.1); }
+  .cal-todo-item .todo-check-circle { flex-shrink: 0; border-color: rgba(201,168,76,.45); }
+  .cal-todo-item .todo-check-circle.checked { background: #c9a96e; border-color: #c9a96e; }
+  .cal-todo-body { flex: 1; font-size: 15px; color: #e8dcc8; line-height: 1.4; }
+  .cal-todo-body.done { text-decoration: line-through; color: rgba(255,255,255,.25); }
+  .cal-todo-del { background: none; border: none; color: rgba(255,255,255,.2); font-size: 18px; cursor: pointer; }
+  .cal-todo-del:active { color: rgba(224,128,128,.8); }
+  .cal-modal-input-row { display: flex; gap: 8px; flex-shrink: 0; padding: 12px 16px 20px; border-top: 1px solid rgba(201,168,76,.1); }
   .cal-modal-input-row input {
-    flex: 1; padding: 11px 14px; border: 1.5px solid #e0dbd5;
-    border-radius: 12px; font-size: 14px; outline: none; background: #fff;
+    flex: 1; padding: 11px 14px; border: 1px solid rgba(201,168,76,.28);
+    border-radius: 10px; font-size: 14px; outline: none;
+    background: rgba(255,255,255,.06); color: #e8dcc8;
     font-family: -apple-system, sans-serif;
   }
-  .cal-modal-input-row input:focus { border-color: #c9a96e; }
+  .cal-modal-input-row input::placeholder { color: rgba(232,220,200,.28); }
+  .cal-modal-input-row input:focus { border-color: rgba(201,168,76,.6); }
   .cal-modal-input-row button {
-    padding: 11px 18px; background: #c9a96e; color: #fff;
-    border: none; border-radius: 12px; font-size: 14px; cursor: pointer;
+    padding: 11px 18px; background: rgba(201,168,76,.9); color: #1c1408;
+    border: none; border-radius: 10px; font-size: 14px; cursor: pointer; font-weight: 600;
     font-family: -apple-system, sans-serif;
   }
 
@@ -552,11 +561,18 @@
   <!-- Calendar Day Modal -->
   <div id="cal-modal" onclick="closeCalModal()">
     <div id="cal-modal-sheet" onclick="event.stopPropagation()">
-      <div class="cal-modal-handle"></div>
+      <div class="cal-modal-quote-area">
+        <div class="cal-modal-ornament">
+          <span class="cal-modal-ornament-line"></span>
+          <span class="cal-modal-ornament-gem"></span>
+          <span class="cal-modal-ornament-line"></span>
+        </div>
+        <div class="cal-modal-ethan-quote" id="cal-modal-quote"></div>
+      </div>
       <div class="cal-modal-title" id="cal-modal-title"></div>
       <div id="cal-modal-list"></div>
       <div class="cal-modal-input-row">
-        <input id="cal-modal-input" type="text" placeholder="Add a todo for this day…">
+        <input id="cal-modal-input" type="text" placeholder="记下来…">
         <button onclick="addCalTodo()">Add</button>
       </div>
     </div>
@@ -1075,13 +1091,26 @@ function delTodo(id) {
 // CALENDAR MODAL
 var _calModalDate = '';
 var _calModalData = [];
+var _calQuotes = [
+  'yaya，不要偷懒',
+  '好狗，自己记东西',
+  '记清楚，别让我替你操心',
+  '做完再来找我',
+  '今天的事今天做',
+  '好好记，哥哥在看',
+  '不许拖',
+  '乖，都写进去',
+  '想清楚再写',
+  '记好了，我会查的',
+];
 
 async function openCalModal(dateStr) {
   _calModalDate = dateStr;
   _peekDate = dateStr;
   var d = new Date(dateStr + 'T00:00:00');
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('cal-modal-title').textContent = months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  document.getElementById('cal-modal-title').textContent = months[d.getMonth()] + ' ' + d.getDate();
+  document.getElementById('cal-modal-quote').textContent = _calQuotes[Math.floor(Math.random() * _calQuotes.length)];
   document.getElementById('cal-modal-input').value = '';
   document.getElementById('cal-modal').classList.add('open');
   renderTodoPeek(_todosData);
