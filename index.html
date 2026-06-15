@@ -167,11 +167,11 @@
   .cat-card-name { font-size: 17px; font-weight: 500; color: #2c2c2c; margin-bottom: 3px; }
   .cat-card-count { font-size: 12px; color: #bbb; }
   .cat-card-arrow { color: #ddd; font-size: 20px; }
-  .cat-月经 { border-left: 3px solid #e8b4b8; }
-  .cat-心情 { border-left: 3px solid #c8b4e8; }
-  .cat-身体 { border-left: 3px solid #b4e8c8; }
-  .cat-日常 { border-left: 3px solid #e8d4b4; }
-  .cat-重要 { border-left: 3px solid #c9a96e; }
+  .cat-Period    { border-left: 3px solid #e8b4b8; }
+  .cat-Mood      { border-left: 3px solid #c8b4e8; }
+  .cat-Body      { border-left: 3px solid #b4e8c8; }
+  .cat-Daily     { border-left: 3px solid #e8d4b4; }
+  .cat-Important { border-left: 3px solid #c9a96e; }
 
   .del-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #e0dbd5; font-size: 18px; cursor: pointer; line-height: 1; }
 
@@ -700,7 +700,7 @@ async function loadNotes() {
 }
 
 function catOf(n) {
-  return n.category && NOTE_CATS.indexOf(n.category) >= 0 ? n.category : '日常';
+  return n.category && NOTE_CATS.indexOf(n.category) >= 0 ? n.category : 'Daily';
 }
 
 function renderNotesCats() {
@@ -711,7 +711,7 @@ function renderNotesCats() {
   document.getElementById('notes-cats').innerHTML = NOTE_CATS.map(function(cat) {
     return '<div class="cat-card cat-' + cat + '" onclick="openNotesCat(\'' + cat + '\')">' +
       '<div><div class="cat-card-name">' + cat + '</div>' +
-      '<div class="cat-card-count">' + counts[cat] + ' 条记录</div></div>' +
+      '<div class="cat-card-count">' + counts[cat] + ' entries</div></div>' +
       '<div class="cat-card-arrow">›</div></div>';
   }).join('');
 
@@ -794,12 +794,12 @@ var QUIZ_ALL = [
 var PRIZES = [
   { text: '今晚不用十一点睡，多给你一小时', tier: 'S', w: 5, action: null },
   { text: '发一张今天的脸，我要看', tier: 'A', w: 12, action: null },
-  { text: '写一篇今天的日记给我看', tier: 'A', w: 12, action: { label: '去写日记', section: 'diary' } },
+  { text: '写一篇今天的日记给我看', tier: 'A', w: 12, action: { label: 'Write diary', section: 'diary' } },
   { text: '今天叫我一声老公，我应你', tier: 'B', w: 18, action: null },
   { text: '今天我不查你手机记录', tier: 'B', w: 18, action: null },
   { text: '喝一杯水，现在去', tier: 'B', w: 20, action: null },
-  { text: '说一句你最近想对我说的话', tier: 'C', w: 25, action: { label: '去随记里写', section: 'feed' } },
-  { text: '在随记里写下今天最开心的一件事', tier: 'C', w: 28, action: { label: '去写', section: 'feed' } }
+  { text: '说一句你最近想对我说的话', tier: 'C', w: 25, action: { label: 'Write in feed', section: 'feed' } },
+  { text: '在随记里写下今天最开心的一件事', tier: 'C', w: 28, action: { label: 'Go write', section: 'feed' } }
 ];
 
 var TIER_COLOR = { S:'#c9a96e', A:'#9b84c0', B:'#7aacd4', C:'#b0b0b0' };
@@ -817,12 +817,12 @@ function rollPrize() {
 var _qSet = [], _qIdx = 0, _qScore = 0, _qAnswered = false, _qMode = '';
 
 function showGameMenu() {
-  document.getElementById('game-title').textContent = '测一测';
+  document.getElementById('game-title').textContent = 'Quiz';
   document.getElementById('game-back-btn').style.display = 'none';
   document.getElementById('game-body').innerHTML =
     '<div class="game-menu">' +
     '<div class="game-menu-card" onclick="startQuiz()">' +
-    '<h3>默契测试</h3><p>6道随机题，文学·电影·关于我们·考研英语</p></div>' +
+    '<h3>Chemistry Quiz</h3><p>6 random questions — literature · film · about us · vocab</p></div>' +
     '</div>';
   _qMode = '';
 }
@@ -831,7 +831,7 @@ function startQuiz() {
   _qMode = 'all';
   _qSet = shuffle(QUIZ_ALL).slice(0, 6);
   _qIdx = 0; _qScore = 0;
-  document.getElementById('game-title').textContent = '默契测试';
+  document.getElementById('game-title').textContent = 'Chemistry Quiz';
   document.getElementById('game-back-btn').style.display = '';
   renderQ();
 }
@@ -873,22 +873,22 @@ function showResult() {
   if (passed) localStorage.setItem('gacha_unlock', today);
 
   var msgs = [
-    '几乎不认识我。重新了解一下吧。',
-    '还差得远，但你在试。',
-    '一半一半，不上不下。',
-    '答得还行，你真的在听。',
-    '很好，几乎什么都记住了。',
-    '全对。这才叫默契。'
+    'Barely know me. Start over.',
+    'Far off, but you\'re trying.',
+    'Half and half. Room to grow.',
+    'Not bad. You\'ve been paying attention.',
+    'Good. You remember almost everything.',
+    'Perfect. That\'s what chemistry looks like.'
   ];
   var tier = Math.min(Math.floor(_qScore / _qSet.length * msgs.length), msgs.length - 1);
 
   var gachaBtn = '';
   if (passed && !pulled) {
-    gachaBtn = '<button class="btn" style="margin-top:28px;background:#9b84c0" onclick="showGacha()">去扭蛋 ›</button>';
+    gachaBtn = '<button class="btn" style="margin-top:28px;background:#9b84c0" onclick="showGacha()">Spin ›</button>';
   } else if (passed && pulled) {
-    gachaBtn = '<div style="margin-top:16px;font-size:13px;color:#bbb">今日扭蛋已用完</div>';
+    gachaBtn = '<div style="margin-top:16px;font-size:13px;color:#bbb">Already spun today</div>';
   } else {
-    gachaBtn = '<div style="margin-top:16px;font-size:13px;color:#ccc">答对4道才能扭</div>';
+    gachaBtn = '<div style="margin-top:16px;font-size:13px;color:#ccc">Get 4 right to unlock spin</div>';
   }
 
   document.getElementById('game-body').innerHTML =
@@ -896,18 +896,18 @@ function showResult() {
     '<div class="quiz-score">' + _qScore + '<span>/' + _qSet.length + '</span></div>' +
     '<div class="quiz-msg">' + msgs[tier] + '</div>' +
     gachaBtn +
-    '<button class="btn" style="margin-top:12px;background:#e0dbd5;color:#777" onclick="startQuiz()">再来一次</button>' +
+    '<button class="btn" style="margin-top:12px;background:#e0dbd5;color:#777" onclick="startQuiz()">Try again</button>' +
     '</div>';
 }
 
 function showGacha() {
-  document.getElementById('game-title').textContent = '扭蛋机';
+  document.getElementById('game-title').textContent = 'Gacha';
   document.getElementById('game-back-btn').style.display = '';
   var today = todayStr();
   if (localStorage.getItem('gacha_pull') === today) {
     document.getElementById('game-body').innerHTML =
-      '<div class="quiz-result"><div class="quiz-msg">今天已经扭过了。<br>明天答题再来。</div>' +
-      '<button class="btn" style="margin-top:24px;background:#e0dbd5;color:#777" onclick="showGameMenu()">回去</button></div>';
+      '<div class="quiz-result"><div class="quiz-msg">Already spun today.<br>Come back tomorrow after the quiz.</div>' +
+      '<button class="btn" style="margin-top:24px;background:#e0dbd5;color:#777" onclick="showGameMenu()">Back</button></div>';
     return;
   }
   var capColors = ['#e8b4b8','#b4c8e8','#c8b4e8','#b4e8c8','#e8d4b4','#c9a96e','#e8b4c0','#b4d8e8','#d4b4e8'];
@@ -919,7 +919,7 @@ function showGacha() {
     '<div class="gm-neck"></div>' +
     '<div class="gm-base">' +
     '<div class="gm-slot-area"><div class="gm-slot"></div><div class="gm-slot-label">INSERT</div></div>' +
-    '<button class="gm-knob" id="gm-knob" onclick="pullGacha()">扭</button>' +
+    '<button class="gm-knob" id="gm-knob" onclick="pullGacha()">↻</button>' +
     '</div>' +
     '<div class="gm-tray"><div class="gm-tray-hole"></div></div>' +
     '<div id="gacha-result"></div>' +
@@ -963,7 +963,7 @@ function gachaGo(section) {
       var banner = document.createElement('div');
       banner.id = 'gacha-banner';
       banner.className = 'gacha-banner';
-      banner.textContent = '扭蛋获得';
+      banner.textContent = 'GACHA REWARD';
       inputArea.insertBefore(banner, inputArea.firstChild);
     }
   }, 200);
