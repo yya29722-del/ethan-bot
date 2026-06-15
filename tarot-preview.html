@@ -4,660 +4,784 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tarot</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
   --gold: #c9a96e;
-  --gold2: #f0d898;
-  --gold-dim: rgba(201,169,110,0.3);
-  --text: #3a2e22;
+  --gold-light: #e8c98a;
+  --gold-dim: rgba(201,169,110,0.35);
+  --cream: #FFFDF9;
+  --champagne: #F4EAD4;
+  --rose: #F6E7E8;
+  --text-dark: #3a2e22;
   --text-mid: #7a6a55;
   --text-light: #b0a090;
 }
 
 body {
-  min-height:100vh;
-  background:
-    radial-gradient(ellipse at 20% 0%,   #ffe8ef 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 10%,  #fff3e0 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 100%, #fce8f0 0%, transparent 60%),
-    linear-gradient(160deg, #FFFDF9 0%, #F4EAD4 40%, #F6E7E8 70%, #EDE5FA 100%);
-  font-family:'Cormorant Garamond', Georgia, serif;
-  overflow-x:hidden;
+  min-height: 100vh;
+  background: linear-gradient(145deg, #FFFDF9 0%, #F4EAD4 40%, #F6E7E8 70%, #EDE5FA 100%);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  overflow-x: hidden;
 }
 
-/* ── ambient stars ── */
-.deco-field { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
-.deco-star  { position:absolute; opacity:0; animation:twinkle ease-in-out infinite; }
-@keyframes twinkle {
-  0%,100% { opacity:0;   transform:scale(0.5) rotate(0deg);  }
-  50%     { opacity:0.5; transform:scale(1.1) rotate(18deg); }
+/* ── Floating particles ── */
+.particle-field {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
 }
 
-/* ── wrap ── */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,169,110,0.6) 0%, transparent 70%);
+  animation: floatParticle linear infinite;
+  opacity: 0;
+}
+
+@keyframes floatParticle {
+  0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+}
+
+/* ── Wrap ── */
 .tarot-wrap {
-  position:relative; z-index:1;
-  min-height:100vh;
-  display:flex; flex-direction:column; align-items:center;
-  padding:52px 20px 70px;
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 60px;
 }
 
-/* ── header ── */
+/* ── Header ── */
+.tarot-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
 .tarot-eyebrow {
-  font-family:'Cinzel Decorative',serif;
-  font-size:0.82rem; letter-spacing:0.38em; color:#d4a0b0;
-  text-align:center; margin-bottom:14px;
+  font-size: 0.75rem;
+  letter-spacing: 0.35em;
+  color: var(--gold);
+  margin-bottom: 10px;
+  text-transform: uppercase;
 }
+
 .tarot-title {
-  font-family:'Cinzel Decorative',serif;
-  font-size:3.2rem; font-weight:700; letter-spacing:0.14em;
-  background:linear-gradient(135deg,#8a6a35 0%,#c9a96e 40%,#8a6a35 70%,#e2b86a 100%);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-  text-align:center; line-height:1; margin-bottom:12px;
-  filter:drop-shadow(0 2px 8px rgba(201,169,110,0.3));
+  font-size: 2.6rem;
+  font-weight: normal;
+  letter-spacing: 0.18em;
+  color: var(--text-dark);
+  line-height: 1;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #8a6a35, #c9a96e, #8a6a35);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
+
 .tarot-subtitle {
-  font-size:1.15rem; color:var(--text-mid); letter-spacing:0.1em;
-  font-style:italic; text-align:center;
+  font-size: 0.9rem;
+  color: var(--text-mid);
+  letter-spacing: 0.12em;
+  font-style: italic;
 }
 
-/* ── ornament ── */
-.orn { display:flex; align-items:center; gap:12px; margin:20px auto 30px; }
-.orn-l { width:50px; height:1px; background:linear-gradient(to right,transparent,rgba(201,169,110,0.5)); }
-.orn-r { width:50px; height:1px; background:linear-gradient(to left, transparent,rgba(201,169,110,0.5)); }
-.orn-c { font-size:0.85rem; color:var(--gold); letter-spacing:0.15em; }
-
-/* ── question ── */
-.q-wrap { width:100%; max-width:430px; margin-bottom:30px; }
-.q-label {
-  font-family:'Cinzel Decorative',serif;
-  font-size:0.72rem; letter-spacing:0.28em; color:var(--gold);
-  margin-bottom:11px; text-transform:uppercase;
+/* ── Ornament divider ── */
+.ornament {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px auto;
+  width: fit-content;
 }
-.q-wrap textarea {
-  width:100%;
-  background:rgba(255,253,249,0.75); backdrop-filter:blur(8px);
-  border:1.5px solid rgba(201,169,110,0.4); border-radius:16px;
-  color:var(--text); font-family:'Cormorant Garamond',serif;
-  font-size:1.15rem; padding:16px 18px; resize:none; outline:none; line-height:1.8;
-  box-shadow:0 4px 24px rgba(201,169,110,0.1), inset 0 1px 0 rgba(255,255,255,0.8);
-  transition:border-color 0.3s, box-shadow 0.3s;
+.ornament-line {
+  width: 50px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim));
 }
-.q-wrap textarea::placeholder { color:#c0b0a0; font-style:italic; }
-.q-wrap textarea:focus {
-  border-color:rgba(201,169,110,0.7);
-  box-shadow:0 4px 32px rgba(201,169,110,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+.ornament-line.r { background: linear-gradient(to left, transparent, var(--gold-dim)); }
+.ornament-diamond {
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  opacity: 0.7;
 }
 
-/* ── button ── */
+/* ── Question input ── */
+.question-wrap {
+  width: 100%;
+  max-width: 440px;
+  margin-bottom: 32px;
+}
+
+.question-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.question-wrap textarea {
+  width: 100%;
+  background: rgba(255,253,249,0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(201,169,110,0.4);
+  border-radius: 16px;
+  color: var(--text-dark);
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 16px 18px;
+  resize: none;
+  outline: none;
+  line-height: 1.8;
+  box-shadow: 0 4px 24px rgba(201,169,110,0.1), inset 0 1px 0 rgba(255,255,255,0.8);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.question-wrap textarea::placeholder { color: #c0b0a0; font-style: italic; }
+.question-wrap textarea:focus {
+  border-color: rgba(201,169,110,0.7);
+  box-shadow: 0 4px 32px rgba(201,169,110,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+/* ── Draw button ── */
 .draw-btn {
-  background:linear-gradient(135deg,#c9a96e 0%,#e8c98a 50%,#c9a96e 100%);
-  background-size:200% 100%;
-  border:none; color:#2a1810;
-  font-family:'Cinzel Decorative',serif; font-size:0.95rem; font-weight:700;
-  letter-spacing:0.22em; padding:16px 48px; border-radius:50px; cursor:pointer;
-  box-shadow:0 6px 24px rgba(201,169,110,0.45), 0 2px 8px rgba(201,169,110,0.2);
-  transition:background-position 0.4s, transform 0.15s, box-shadow 0.3s;
-  margin-bottom:52px; position:relative; overflow:hidden;
+  background: linear-gradient(135deg, #c9a96e, #e8c98a, #c9a96e);
+  background-size: 200% 100%;
+  border: none;
+  color: #3a2e22;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  padding: 15px 44px;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(201,169,110,0.45), 0 2px 8px rgba(201,169,110,0.2);
+  transition: background-position 0.4s, box-shadow 0.3s, transform 0.15s;
+  margin-bottom: 52px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
 }
-.draw-btn::before {
-  content:''; position:absolute; inset:0;
-  background:linear-gradient(135deg,rgba(255,255,255,0.28),transparent 55%);
-  border-radius:inherit;
-}
-.draw-btn:hover { background-position:100% 0; transform:translateY(-2px); box-shadow:0 10px 36px rgba(201,169,110,0.55); }
-.draw-btn:active { transform:translateY(0); }
-.draw-btn:disabled { opacity:0.38; cursor:default; transform:none; box-shadow:none; }
 
-/* ── card scene ── */
-.deck-area { display:flex; justify-content:center; margin-bottom:48px; }
-.card-scene { width:200px; height:340px; perspective:1100px; }
+.draw-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.25), transparent 60%);
+  border-radius: inherit;
+}
+
+.draw-btn:hover {
+  background-position: 100% 0;
+  box-shadow: 0 10px 36px rgba(201,169,110,0.55), 0 4px 12px rgba(201,169,110,0.3);
+  transform: translateY(-2px);
+}
+
+.draw-btn:active { transform: translateY(0); }
+
+.draw-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Card deck container ── */
+.deck-area {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 52px;
+}
+
+/* ── Card scene ── */
+.card-scene {
+  width: 175px;
+  height: 300px;
+  perspective: 1000px;
+}
 
 .tarot-card {
-  width:100%; height:100%;
-  position:relative; transform-style:preserve-3d;
-}
-.card-face {
-  position:absolute; inset:0; border-radius:20px;
-  backface-visibility:hidden; -webkit-backface-visibility:hidden;
-  overflow:hidden;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  cursor: default;
+  transition: none; /* managed by JS / keyframes */
 }
 
-/* ── hover ── */
-.card-scene.hoverable .tarot-card {
-  transition:transform 0.5s cubic-bezier(0.23,1,0.32,1);
+.card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
 }
-.card-scene.hoverable:hover .tarot-card { transform:translateY(-14px) rotateX(4deg); }
-.card-scene.hoverable:hover .card-back  {
+
+/* Back face */
+.card-back {
+  background: linear-gradient(150deg, #6b1e2e 0%, #9b2335 40%, #c0384a 70%, #8a1c2a 100%);
+  border: 2px solid rgba(201,169,110,0.7);
   box-shadow:
-    0 28px 70px rgba(107,30,46,0.5),
-    0 12px 32px rgba(0,0,0,0.22),
-    0 0 40px rgba(201,169,110,0.4),
+    0 20px 60px rgba(107,30,46,0.35),
+    0 8px 24px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 0 0 1px rgba(201,169,110,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-back-inner {
+  width: 85%;
+  height: 90%;
+  border: 1px solid rgba(201,169,110,0.5);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.card-back-inner::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(201,169,110,0.25);
+  border-radius: 8px;
+}
+
+.card-back-svg {
+  width: 75%;
+  height: 75%;
+  opacity: 0.85;
+}
+
+/* Front face */
+.card-front {
+  transform: rotateY(180deg);
+  background: linear-gradient(160deg, #FFFDF9 0%, #F9F3E8 60%, #F4EAD4 100%);
+  border: 2px solid rgba(201,169,110,0.8);
+  box-shadow:
+    0 24px 64px rgba(0,0,0,0.15),
+    0 8px 24px rgba(0,0,0,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    0 0 0 1px rgba(201,169,110,0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 14px;
+  gap: 10px;
+}
+
+.card-front-frame {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(201,169,110,0.4);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.card-front-frame::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(201,169,110,0.2);
+  border-radius: 8px;
+}
+
+.cf-number {
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  opacity: 0.8;
+  z-index: 1;
+}
+
+.cf-symbol {
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--gold);
+  filter: drop-shadow(0 2px 8px rgba(201,169,110,0.5));
+  z-index: 1;
+}
+
+.cf-name {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  text-align: center;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  z-index: 1;
+}
+
+.cf-divider {
+  width: 44px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  z-index: 1;
+}
+
+.cf-keywords {
+  font-size: 0.7rem;
+  color: var(--text-mid);
+  text-align: center;
+  letter-spacing: 0.1em;
+  line-height: 1.7;
+  font-style: italic;
+  z-index: 1;
+}
+
+/* ── Hover glow (added via JS) ── */
+.card-scene.hoverable .tarot-card {
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s;
+}
+.card-scene.hoverable:hover .tarot-card {
+  transform: translateY(-14px) rotateX(4deg);
+}
+.card-scene.hoverable:hover .card-back {
+  box-shadow:
+    0 28px 70px rgba(107,30,46,0.45),
+    0 12px 32px rgba(0,0,0,0.2),
+    0 0 40px rgba(201,169,110,0.35),
     inset 0 1px 0 rgba(255,255,255,0.15);
 }
 
-/* ── flip animations ── */
+/* ── Card flip animation ── */
 @keyframes cardLift {
-  0%   { transform:translateY(0)    rotateY(0deg)   rotateX(0deg);  }
-  22%  { transform:translateY(-32px) rotateY(0deg)  rotateX(-10deg);}
-  100% { transform:translateY(-32px) rotateY(90deg)  rotateX(0deg); }
+  0%   { transform: translateY(0) rotateY(0deg) rotateX(0deg); }
+  20%  { transform: translateY(-30px) rotateY(0deg) rotateX(-8deg); }
+  100% { transform: translateY(-30px) rotateY(90deg) rotateX(0deg); }
 }
+
 @keyframes cardReveal {
-  0%   { transform:translateY(-32px) rotateY(90deg);  }
-  55%  { transform:translateY(-8px)  rotateY(198deg); }
-  72%  { transform:translateY(-1px)  rotateY(184deg); }
-  86%  { transform:translateY(0)     rotateY(176deg); }
-  100% { transform:translateY(0)     rotateY(180deg); }
-}
-.tarot-card.flipping-out { animation:cardLift   0.5s cubic-bezier(0.55,0,1,0.45)  forwards; }
-.tarot-card.flipping-in  { animation:cardReveal 0.9s cubic-bezier(0.25,1,0.5,1)   forwards; }
-
-/* ── burst particles ── */
-.burst-p {
-  position:absolute; width:5px; height:5px; border-radius:50%;
-  pointer-events:none; z-index:100;
-  animation:burstOut 0.75s ease-out forwards;
-}
-@keyframes burstOut {
-  0%   { transform:translate(0,0) scale(1); opacity:1; }
-  100% { transform:translate(var(--bx),var(--by)) scale(0); opacity:0; }
+  0%   { transform: translateY(-30px) rotateY(90deg) rotateX(0deg); }
+  60%  { transform: translateY(-8px) rotateY(195deg) rotateX(0deg); }
+  75%  { transform: translateY(-2px) rotateY(183deg) rotateX(2deg); }
+  88%  { transform: translateY(0px) rotateY(177deg) rotateX(-1deg); }
+  100% { transform: translateY(0px) rotateY(180deg) rotateX(0deg); }
 }
 
-/* ── result ── */
+.tarot-card.flipping-out {
+  animation: cardLift 0.5s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+
+.tarot-card.flipping-in {
+  animation: cardReveal 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* ── Particle burst ── */
+.burst-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold-light);
+  pointer-events: none;
+  z-index: 100;
+  animation: burst 0.7s ease-out forwards;
+}
+
+@keyframes burst {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--bx), var(--by)) scale(0); opacity: 0; }
+}
+
+/* ── Result area ── */
 .tarot-result {
-  width:100%; max-width:440px;
-  opacity:0; transform:translateY(14px);
-  transition:opacity 0.6s 0.8s, transform 0.6s 0.8s;
-  pointer-events:none;
+  width: 100%;
+  max-width: 440px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s 0.8s ease, transform 0.6s 0.8s ease;
+  pointer-events: none;
 }
-.tarot-result.visible { opacity:1; transform:translateY(0); pointer-events:auto; }
 
-.result-name {
-  font-family:'Cinzel Decorative',serif;
-  font-size:1.65rem; text-align:center; letter-spacing:0.12em;
-  background:linear-gradient(135deg,#8a6a35,#c9a96e,#8a6a35);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-  margin-bottom:5px;
+.tarot-result.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
-.result-suit {
-  font-size:0.95rem; color:var(--text-mid);
-  text-align:center; letter-spacing:0.16em; margin-bottom:24px; font-style:italic;
+
+.result-card-name {
+  font-size: 1.55rem;
+  color: var(--text-dark);
+  text-align: center;
+  letter-spacing: 0.16em;
+  margin-bottom: 4px;
+  background: linear-gradient(135deg, #8a6a35, #c9a96e, #8a6a35);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.result-card-suit {
+  font-size: 0.82rem;
+  color: var(--text-mid);
+  text-align: center;
+  letter-spacing: 0.16em;
+  margin-bottom: 26px;
+  font-style: italic;
 }
 
 .reading-box {
-  background:rgba(255,253,249,0.78); backdrop-filter:blur(12px);
-  border:1.5px solid rgba(201,169,110,0.35); border-radius:22px;
-  padding:28px 26px;
-  box-shadow:0 8px 40px rgba(201,169,110,0.12), inset 0 1px 0 rgba(255,255,255,0.95);
-  position:relative; overflow:hidden;
+  background: rgba(255,253,249,0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(201,169,110,0.35);
+  border-radius: 20px;
+  padding: 26px 24px;
+  box-shadow:
+    0 8px 40px rgba(201,169,110,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.9);
 }
-.reading-box::before { content:'✦'; position:absolute; top:15px; left:20px; color:var(--gold); font-size:0.6rem; opacity:0.4; }
-.reading-box::after  { content:'✦'; position:absolute; bottom:15px; right:20px; color:var(--gold); font-size:0.6rem; opacity:0.4; }
 
 .reading-label {
-  font-family:'Cinzel Decorative',serif;
-  font-size:0.72rem; letter-spacing:0.3em; color:var(--gold);
-  text-align:center; margin-bottom:13px;
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 14px;
 }
-.reading-sep {
-  height:1px;
-  background:linear-gradient(to right,transparent,rgba(201,169,110,0.4),transparent);
-  margin-bottom:18px;
+
+.reading-gold-line {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+  margin-bottom: 18px;
 }
+
 .reading-content {
-  font-size:1.12rem; color:var(--text); line-height:2.1;
-  text-align:center; min-height:68px;
+  font-size: 1.0rem;
+  color: var(--text-dark);
+  line-height: 2;
+  min-height: 70px;
 }
-.reading-placeholder { color:var(--text-light); font-style:italic; }
+
+.reading-placeholder {
+  color: var(--text-light);
+  font-style: italic;
+  font-size: 0.92rem;
+}
+
+/* ── Scene hidden ── */
+.deck-area[hidden] { display: none; }
 </style>
 </head>
 <body>
 
-<div class="deco-field" id="decoField"></div>
+<!-- Floating particles -->
+<div class="particle-field" id="particleField"></div>
 
 <div class="tarot-wrap">
+  <header class="tarot-header">
+    <div class="tarot-eyebrow">★ 塔 罗 占 卜 ★</div>
+    <div class="tarot-title">TAROT</div>
+    <div class="tarot-subtitle">问出你心中的困惑，让牌给你答案</div>
+  </header>
 
-  <div class="tarot-eyebrow">✦ 塔 罗 占 卜 ✦</div>
-  <div class="tarot-title">TAROT</div>
-  <div class="tarot-subtitle">问出你心中的困惑，让牌给你答案</div>
-
-  <div class="orn">
-    <div class="orn-l"></div>
-    <div class="orn-c">☽ &nbsp;✦&nbsp; ☾</div>
-    <div class="orn-r"></div>
+  <div class="ornament">
+    <div class="ornament-line"></div>
+    <div class="ornament-diamond"></div>
+    <div class="ornament-line r"></div>
   </div>
 
-  <div class="q-wrap">
-    <div class="q-label">你 的 问 题</div>
+  <div class="question-wrap">
+    <div class="question-label">你的问题</div>
     <textarea id="tarotQuestion" rows="3" placeholder="此刻，你想问什么…"></textarea>
   </div>
 
-  <button class="draw-btn" id="tarotDrawBtn" onclick="drawTarot()">✦ 抽 一 张 牌 ✦</button>
+  <button class="draw-btn" id="tarotDrawBtn" onclick="drawTarot()">
+    抽 一 张 牌
+  </button>
 
-  <div class="deck-area" id="deckArea" style="display:none">
+  <div class="deck-area" id="deckArea" hidden>
     <div class="card-scene" id="cardScene">
       <div class="tarot-card" id="tarotCard">
-
-        <!-- ══════════ CARD BACK — deep crimson + gold ══════════ -->
-        <div class="card-face card-back" style="
-          background:linear-gradient(150deg,#6b1e2e 0%,#9b2335 40%,#c0384a 70%,#8a1c2a 100%);
-          border:2px solid #c9a96e;
-          box-shadow:
-            0 20px 60px rgba(107,30,46,0.38),
-            0 8px 24px rgba(0,0,0,0.22),
-            inset 0 1px 0 rgba(255,255,255,0.15),
-            0 0 0 1px rgba(201,169,110,0.2);
-        ">
-          <svg width="200" height="340" viewBox="0 0 200 340" fill="none" xmlns="http://www.w3.org/2000/svg">
-
-            <!-- triple border -->
-            <rect x="7"  y="7"  width="186" height="326" rx="15" stroke="#c9a96e" stroke-width="1.6" opacity="0.95"/>
-            <rect x="12" y="12" width="176" height="316" rx="12" stroke="#c9a96e" stroke-width="0.7" opacity="0.5"/>
-            <rect x="17" y="17" width="166" height="306" rx="9"  stroke="#c9a96e" stroke-width="0.5" stroke-dasharray="3 2.5" opacity="0.3"/>
-
-            <!-- top ribbon banner -->
-            <path d="M38 17 Q100 9 162 17 L165 35 Q100 27 35 35 Z" fill="#c9a96e" opacity="0.18"/>
-            <path d="M38 17 Q100 9 162 17 L165 35 Q100 27 35 35 Z" stroke="#c9a96e" stroke-width="0.9" opacity="0.8"/>
-            <polygon points="100,13 103.5,22 100,19.5 96.5,22" fill="#c9a96e" opacity="0.9"/>
-            <!-- bottom ribbon -->
-            <path d="M38 323 Q100 331 162 323 L165 305 Q100 313 35 305 Z" fill="#c9a96e" opacity="0.18"/>
-            <path d="M38 323 Q100 331 162 323 L165 305 Q100 313 35 305 Z" stroke="#c9a96e" stroke-width="0.9" opacity="0.8"/>
-            <polygon points="100,327 103.5,318 100,320.5 96.5,318" fill="#c9a96e" opacity="0.9"/>
-
-            <!-- 4 large corner stars -->
-            <g transform="translate(32,44)">
-              <polygon points="0,-15 3.2,-5.5 14,-5.5 5.8,2.2 9,13 0,7 -9,13 -5.8,2.2 -14,-5.5 -3.2,-5.5" fill="#c9a96e" opacity="0.88"/>
-              <circle cx="0" cy="0" r="3.5" fill="rgba(255,255,255,0.3)"/>
-            </g>
-            <g transform="translate(168,44)">
-              <polygon points="0,-15 3.2,-5.5 14,-5.5 5.8,2.2 9,13 0,7 -9,13 -5.8,2.2 -14,-5.5 -3.2,-5.5" fill="#c9a96e" opacity="0.88"/>
-              <circle cx="0" cy="0" r="3.5" fill="rgba(255,255,255,0.3)"/>
-            </g>
-            <g transform="translate(32,296)">
-              <polygon points="0,-15 3.2,-5.5 14,-5.5 5.8,2.2 9,13 0,7 -9,13 -5.8,2.2 -14,-5.5 -3.2,-5.5" fill="#c9a96e" opacity="0.88"/>
-              <circle cx="0" cy="0" r="3.5" fill="rgba(255,255,255,0.3)"/>
-            </g>
-            <g transform="translate(168,296)">
-              <polygon points="0,-15 3.2,-5.5 14,-5.5 5.8,2.2 9,13 0,7 -9,13 -5.8,2.2 -14,-5.5 -3.2,-5.5" fill="#c9a96e" opacity="0.88"/>
-              <circle cx="0" cy="0" r="3.5" fill="rgba(255,255,255,0.3)"/>
-            </g>
-
-            <!-- side moon crescents -->
-            <path d="M22 152 Q13 170 22 188 Q7 178 7 170 Q7 162 22 152Z" fill="#c9a96e" opacity="0.6"/>
-            <path d="M178 152 Q187 170 178 188 Q193 178 193 170 Q193 162 178 152Z" fill="#c9a96e" opacity="0.6"/>
-
-            <!-- side vertical ornament -->
-            <line x1="27" y1="66" x2="27" y2="274" stroke="#c9a96e" stroke-width="0.5" opacity="0.3" stroke-dasharray="1 6"/>
-            <line x1="173" y1="66" x2="173" y2="274" stroke="#c9a96e" stroke-width="0.5" opacity="0.3" stroke-dasharray="1 6"/>
-            <circle cx="27" cy="128" r="2.5" fill="#c9a96e" opacity="0.55"/>
-            <circle cx="27" cy="170" r="2.5" fill="#c9a96e" opacity="0.55"/>
-            <circle cx="27" cy="212" r="2.5" fill="#c9a96e" opacity="0.55"/>
-            <circle cx="173" cy="128" r="2.5" fill="#c9a96e" opacity="0.55"/>
-            <circle cx="173" cy="170" r="2.5" fill="#c9a96e" opacity="0.55"/>
-            <circle cx="173" cy="212" r="2.5" fill="#c9a96e" opacity="0.55"/>
-
-            <!-- center concentric circles -->
-            <circle cx="100" cy="170" r="78" stroke="#c9a96e" stroke-width="0.4" opacity="0.14"/>
-            <circle cx="100" cy="170" r="66" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.38"/>
-            <circle cx="100" cy="170" r="52" stroke="#c9a96e" stroke-width="0.6" opacity="0.5"/>
-            <circle cx="100" cy="170" r="38" stroke="#c9a96e" stroke-width="1.2" opacity="0.7"/>
-            <circle cx="100" cy="170" r="24" stroke="#c9a96e" stroke-width="0.7" opacity="0.6"/>
-
-            <!-- 8-pointed star (large transparent fill) -->
-            <polygon points="
-              100,92 106.5,156 100,140 93.5,156
-              178,170 114,176.5 130,170 114,163.5
-              100,248 93.5,184 100,200 106.5,184
-              22,170 86,163.5 70,170 86,176.5
-            " fill="#c9a96e" opacity="0.14"/>
-            <polygon points="
-              100,92 106.5,156 100,140 93.5,156
-              178,170 114,176.5 130,170 114,163.5
-              100,248 93.5,184 100,200 106.5,184
-              22,170 86,163.5 70,170 86,176.5
-            " stroke="#c9a96e" stroke-width="0.6" opacity="0.65" fill="none"/>
-
-            <!-- diagonal cross -->
-            <line x1="44" y1="114" x2="156" y2="226" stroke="#c9a96e" stroke-width="0.4" opacity="0.2"/>
-            <line x1="156" y1="114" x2="44" y2="226" stroke="#c9a96e" stroke-width="0.4" opacity="0.2"/>
-
-            <!-- 8 cardinal stars on middle ring -->
-            <g transform="translate(100,104)"><polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6.5 0,3.2 -4,6.5 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.9"/></g>
-            <g transform="translate(100,236)"><polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6.5 0,3.2 -4,6.5 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.9"/></g>
-            <g transform="translate(34,170)"><polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6.5 0,3.2 -4,6.5 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.9"/></g>
-            <g transform="translate(166,170)"><polygon points="0,-7 1.5,-2.5 6.5,-2.5 2.5,1 4,6.5 0,3.2 -4,6.5 -2.5,1 -6.5,-2.5 -1.5,-2.5" fill="#c9a96e" opacity="0.9"/></g>
-            <g transform="translate(54,124)"><polygon points="0,-5.5 1.2,-2 5,-2 2,0.8 3.2,5 0,2.5 -3.2,5 -2,0.8 -5,-2 -1.2,-2" fill="#c9a96e" opacity="0.65"/></g>
-            <g transform="translate(146,124)"><polygon points="0,-5.5 1.2,-2 5,-2 2,0.8 3.2,5 0,2.5 -3.2,5 -2,0.8 -5,-2 -1.2,-2" fill="#c9a96e" opacity="0.65"/></g>
-            <g transform="translate(54,216)"><polygon points="0,-5.5 1.2,-2 5,-2 2,0.8 3.2,5 0,2.5 -3.2,5 -2,0.8 -5,-2 -1.2,-2" fill="#c9a96e" opacity="0.65"/></g>
-            <g transform="translate(146,216)"><polygon points="0,-5.5 1.2,-2 5,-2 2,0.8 3.2,5 0,2.5 -3.2,5 -2,0.8 -5,-2 -1.2,-2" fill="#c9a96e" opacity="0.65"/></g>
-
-            <!-- sun rays -->
-            <g transform="translate(100,170)">
-              <line x1="0" y1="-22" x2="0" y2="-28" stroke="#c9a96e" stroke-width="1.8" opacity="0.85" stroke-linecap="round"/>
-              <line x1="0"  y1="22"  x2="0"  y2="28"  stroke="#c9a96e" stroke-width="1.8" opacity="0.85" stroke-linecap="round"/>
-              <line x1="-22" y1="0"  x2="-28" y2="0"  stroke="#c9a96e" stroke-width="1.8" opacity="0.85" stroke-linecap="round"/>
-              <line x1="22"  y1="0"  x2="28"  y2="0"  stroke="#c9a96e" stroke-width="1.8" opacity="0.85" stroke-linecap="round"/>
-              <line x1="-15.5" y1="-15.5" x2="-20" y2="-20" stroke="#c9a96e" stroke-width="1.1" opacity="0.65" stroke-linecap="round"/>
-              <line x1="15.5"  y1="-15.5" x2="20"  y2="-20" stroke="#c9a96e" stroke-width="1.1" opacity="0.65" stroke-linecap="round"/>
-              <line x1="-15.5" y1="15.5"  x2="-20" y2="20"  stroke="#c9a96e" stroke-width="1.1" opacity="0.65" stroke-linecap="round"/>
-              <line x1="15.5"  y1="15.5"  x2="20"  y2="20"  stroke="#c9a96e" stroke-width="1.1" opacity="0.65" stroke-linecap="round"/>
-            </g>
-            <!-- sun disc -->
-            <circle cx="100" cy="170" r="19" fill="url(#sunG)" stroke="#c9a96e" stroke-width="1.3"/>
-            <circle cx="100" cy="170" r="10" fill="#c9a96e" opacity="0.5"/>
-            <circle cx="100" cy="170" r="5"  fill="#f0d898" opacity="0.95"/>
-            <circle cx="100" cy="170" r="2"  fill="#fff" opacity="0.85"/>
-
-            <!-- tiny ✦ scatter -->
-            <text x="70"  y="150" font-size="9" fill="#c9a96e" opacity="0.45" text-anchor="middle">✦</text>
-            <text x="130" y="150" font-size="7" fill="#c9a96e" opacity="0.35" text-anchor="middle">✦</text>
-            <text x="70"  y="196" font-size="7" fill="#c9a96e" opacity="0.35" text-anchor="middle">✦</text>
-            <text x="130" y="196" font-size="9" fill="#c9a96e" opacity="0.45" text-anchor="middle">✦</text>
-
-            <defs>
-              <radialGradient id="sunG" cx="50%" cy="50%" r="50%">
-                <stop offset="0%"   stop-color="#f0d898"/>
-                <stop offset="60%"  stop-color="#c9a96e"/>
-                <stop offset="100%" stop-color="#8a6a30"/>
-              </radialGradient>
-            </defs>
-          </svg>
-        </div>
-
-        <!-- ══════════ CARD FRONT — parchment ══════════ -->
-        <div class="card-face" style="
-          transform:rotateY(180deg);
-          background:linear-gradient(155deg,#FFFDF9 0%,#FFF8F5 50%,#FFF5F0 100%);
-          border:2px solid #c9a96e;
-          box-shadow:
-            0 24px 64px rgba(0,0,0,0.13),
-            0 8px 24px rgba(0,0,0,0.08),
-            inset 0 1px 0 rgba(255,255,255,1),
-            0 0 0 1px rgba(201,169,110,0.28);
-          position:relative;
-        ">
-
-          <!-- ornate frame SVG -->
-          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" viewBox="0 0 200 340" fill="none">
-            <!-- double border -->
-            <rect x="7"  y="7"  width="186" height="326" rx="15" stroke="#c9a96e" stroke-width="1.5" opacity="0.75"/>
-            <rect x="13" y="13" width="174" height="314" rx="11" stroke="#c9a96e" stroke-width="0.6" opacity="0.4"/>
-            <rect x="18" y="18" width="164" height="304" rx="8"  stroke="#c9a96e" stroke-width="0.45" stroke-dasharray="2.5 2.5" opacity="0.22"/>
-
-            <!-- top / bottom arch lines -->
-            <path d="M28 60 Q100 44 172 60" stroke="#c9a96e" stroke-width="0.85" opacity="0.5" fill="none"/>
-            <path d="M28 64 Q100 48 172 64" stroke="#c9a96e" stroke-width="0.4"  opacity="0.28" fill="none"/>
-            <path d="M28 280 Q100 296 172 280" stroke="#c9a96e" stroke-width="0.85" opacity="0.5" fill="none"/>
-            <path d="M28 276 Q100 292 172 276" stroke="#c9a96e" stroke-width="0.4"  opacity="0.28" fill="none"/>
-
-            <!-- corner 5-point stars -->
-            <g transform="translate(24,30)"><polygon points="0,-13 2.8,-4.8 12,-4.8 4.8,1.9 7.5,11 0,5.8 -7.5,11 -4.8,1.9 -12,-4.8 -2.8,-4.8" fill="#c9a96e" opacity="0.72"/></g>
-            <g transform="translate(176,30)"><polygon points="0,-13 2.8,-4.8 12,-4.8 4.8,1.9 7.5,11 0,5.8 -7.5,11 -4.8,1.9 -12,-4.8 -2.8,-4.8" fill="#c9a96e" opacity="0.72"/></g>
-            <g transform="translate(24,310)"><polygon points="0,-13 2.8,-4.8 12,-4.8 4.8,1.9 7.5,11 0,5.8 -7.5,11 -4.8,1.9 -12,-4.8 -2.8,-4.8" fill="#c9a96e" opacity="0.72"/></g>
-            <g transform="translate(176,310)"><polygon points="0,-13 2.8,-4.8 12,-4.8 4.8,1.9 7.5,11 0,5.8 -7.5,11 -4.8,1.9 -12,-4.8 -2.8,-4.8" fill="#c9a96e" opacity="0.72"/></g>
-
-            <!-- side moons -->
-            <path d="M22,142 Q14,158 22,174 Q8,163 8,158 Q8,149 22,142Z" fill="#c9a96e" opacity="0.32"/>
-            <path d="M178,142 Q186,158 178,174 Q192,163 192,158 Q192,149 178,142Z" fill="#c9a96e" opacity="0.32"/>
-
-            <!-- side dashes -->
-            <line x1="23" y1="75" x2="23" y2="265" stroke="#c9a96e" stroke-width="0.45" opacity="0.18" stroke-dasharray="1 6"/>
-            <line x1="177" y1="75" x2="177" y2="265" stroke="#c9a96e" stroke-width="0.45" opacity="0.18" stroke-dasharray="1 6"/>
-
-            <!-- center symbol ring -->
-            <circle cx="100" cy="170" r="55" stroke="#c9a96e" stroke-width="0.6"  opacity="0.28"/>
-            <circle cx="100" cy="170" r="47" stroke="#c9a96e" stroke-width="0.95" opacity="0.42" stroke-dasharray="3 2"/>
-
-            <!-- 4 stars on ring -->
-            <g transform="translate(100,115)"><polygon points="0,-5.5 1.2,-2 5,-2 2,0.8 3.2,5 0,2.5 -3.2,5 -2,0.8 -5,-2 -1.2,-2" fill="#c9a96e" opacity="0.62"/></g>
-            <g transform="translate(100,225)"><polygon points="0,-5.5 1.2,-2 5,-2 2,0.8 3.2,5 0,2.5 -3.2,5 -2,0.8 -5,-2 -1.2,-2" fill="#c9a96e" opacity="0.62"/></g>
-            <g transform="translate(45,170)"><polygon points="0,-5.5 1.2,-2 5,-2 2,0.8 3.2,5 0,2.5 -3.2,5 -2,0.8 -5,-2 -1.2,-2" fill="#c9a96e" opacity="0.62"/></g>
-            <g transform="translate(155,170)"><polygon points="0,-5.5 1.2,-2 5,-2 2,0.8 3.2,5 0,2.5 -3.2,5 -2,0.8 -5,-2 -1.2,-2" fill="#c9a96e" opacity="0.62"/></g>
-
-            <!-- separator lines -->
-            <line x1="28" y1="76"  x2="172" y2="76"  stroke="#c9a96e" stroke-width="0.6" opacity="0.32"/>
-            <line x1="28" y1="264" x2="172" y2="264" stroke="#c9a96e" stroke-width="0.6" opacity="0.32"/>
-
-            <!-- tiny ✦ accents -->
-            <text x="40" y="94"  font-size="7" fill="#c9a96e" opacity="0.38" text-anchor="middle">✦</text>
-            <text x="160" y="94" font-size="7" fill="#c9a96e" opacity="0.38" text-anchor="middle">✦</text>
-            <text x="40" y="258" font-size="7" fill="#c9a96e" opacity="0.38" text-anchor="middle">✦</text>
-            <text x="160" y="258" font-size="7" fill="#c9a96e" opacity="0.38" text-anchor="middle">✦</text>
-          </svg>
-
-          <!-- card content -->
-          <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:24px 18px;">
-            <div id="cfSuit"     style="font-family:'Cinzel Decorative',serif;font-size:0.65rem;letter-spacing:0.28em;color:#c9a96e;opacity:0.75;"></div>
-            <div id="cfNumber"   style="font-family:'Cinzel Decorative',serif;font-size:0.75rem;letter-spacing:0.22em;color:#c9a96e;"></div>
-
-            <!-- symbol in ring -->
-            <div style="position:relative;display:flex;align-items:center;justify-content:center;width:94px;height:94px;">
-              <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(201,169,110,0.1) 0%,transparent 70%);"></div>
-              <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 94 94">
-                <circle cx="47" cy="47" r="43" stroke="#c9a96e" stroke-width="1"   opacity="0.55"/>
-                <circle cx="47" cy="47" r="36" stroke="#c9a96e" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.28"/>
-                <g transform="translate(47,4)"><polygon points="0,-4.5 0.9,-1.6 4,-1.6 1.6,0.6 2.5,3.6 0,2 -2.5,3.6 -1.6,0.6 -4,-1.6 -0.9,-1.6" fill="#c9a96e" opacity="0.75"/></g>
-                <g transform="translate(47,90)"><polygon points="0,-4.5 0.9,-1.6 4,-1.6 1.6,0.6 2.5,3.6 0,2 -2.5,3.6 -1.6,0.6 -4,-1.6 -0.9,-1.6" fill="#c9a96e" opacity="0.75"/></g>
-                <g transform="translate(4,47)"><polygon points="0,-4.5 0.9,-1.6 4,-1.6 1.6,0.6 2.5,3.6 0,2 -2.5,3.6 -1.6,0.6 -4,-1.6 -0.9,-1.6" fill="#c9a96e" opacity="0.75"/></g>
-                <g transform="translate(90,47)"><polygon points="0,-4.5 0.9,-1.6 4,-1.6 1.6,0.6 2.5,3.6 0,2 -2.5,3.6 -1.6,0.6 -4,-1.6 -0.9,-1.6" fill="#c9a96e" opacity="0.75"/></g>
-              </svg>
-              <div id="cfSymbol" style="font-size:3.6rem;line-height:1;color:#c9a96e;filter:drop-shadow(0 2px 10px rgba(201,169,110,0.6));position:relative;z-index:1;"></div>
-            </div>
-
-            <div style="width:52px;height:1px;background:linear-gradient(to right,transparent,#c9a96e,transparent);"></div>
-            <div id="cfName"     style="font-family:'Cinzel Decorative',serif;font-size:1.05rem;color:#3a2e22;text-align:center;letter-spacing:0.08em;line-height:1.5;"></div>
-            <div style="width:38px;height:1px;background:linear-gradient(to right,transparent,rgba(201,169,110,0.5),transparent);"></div>
-            <div id="cfKeywords" style="font-size:0.75rem;color:#7a6a55;text-align:center;letter-spacing:0.1em;line-height:1.9;font-style:italic;"></div>
+        <!-- Back -->
+        <div class="card-face card-back">
+          <div class="card-back-inner">
+            <svg class="card-back-svg" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Outer ring -->
+              <circle cx="60" cy="60" r="52" stroke="#c9a96e" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.6"/>
+              <!-- Middle ring -->
+              <circle cx="60" cy="60" r="38" stroke="#c9a96e" stroke-width="0.6" opacity="0.5"/>
+              <!-- Inner circle -->
+              <circle cx="60" cy="60" r="18" stroke="#c9a96e" stroke-width="1" opacity="0.8"/>
+              <circle cx="60" cy="60" r="4" fill="#c9a96e" opacity="0.9"/>
+              <!-- Cross lines -->
+              <line x1="60" y1="8" x2="60" y2="112" stroke="#c9a96e" stroke-width="0.5" opacity="0.4"/>
+              <line x1="8" y1="60" x2="112" y2="60" stroke="#c9a96e" stroke-width="0.5" opacity="0.4"/>
+              <!-- Diagonal lines -->
+              <line x1="22" y1="22" x2="98" y2="98" stroke="#c9a96e" stroke-width="0.4" opacity="0.25"/>
+              <line x1="98" y1="22" x2="22" y2="98" stroke="#c9a96e" stroke-width="0.4" opacity="0.25"/>
+              <!-- Star points -->
+              <polygon points="60,12 63,22 60,20 57,22" fill="#c9a96e" opacity="0.7"/>
+              <polygon points="60,108 63,98 60,100 57,98" fill="#c9a96e" opacity="0.7"/>
+              <polygon points="12,60 22,63 20,60 22,57" fill="#c9a96e" opacity="0.7"/>
+              <polygon points="108,60 98,63 100,60 98,57" fill="#c9a96e" opacity="0.7"/>
+              <!-- Corner ornaments -->
+              <circle cx="22" cy="22" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
+              <circle cx="98" cy="22" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
+              <circle cx="22" cy="98" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
+              <circle cx="98" cy="98" r="3" stroke="#c9a96e" stroke-width="0.8" opacity="0.6"/>
+            </svg>
           </div>
         </div>
-
+        <!-- Front -->
+        <div class="card-face card-front">
+          <div class="card-front-frame"></div>
+          <div class="cf-number" id="cfNumber"></div>
+          <div class="cf-symbol" id="cfSymbol"></div>
+          <div class="cf-name" id="cfName"></div>
+          <div class="cf-divider"></div>
+          <div class="cf-keywords" id="cfKeywords"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ── RESULT ── -->
   <div class="tarot-result" id="tarotResult">
-    <div class="result-name" id="resultName"></div>
-    <div class="result-suit" id="resultSuit"></div>
-    <div class="orn" style="margin-bottom:20px">
-      <div class="orn-l"></div><div class="orn-c">✦</div><div class="orn-r"></div>
-    </div>
+    <div class="result-card-name" id="resultName"></div>
+    <div class="result-card-suit" id="resultSuit"></div>
     <div class="reading-box">
-      <div class="reading-label">✦ 解 读 ✦</div>
-      <div class="reading-sep"></div>
+      <div class="reading-label">解 读</div>
+      <div class="reading-gold-line"></div>
       <div class="reading-content" id="readingContent">
         <span class="reading-placeholder">等待解读…</span>
       </div>
     </div>
   </div>
-
 </div>
 
 <script>
-// ambient
-(function(){
-  const f=document.getElementById('decoField');
-  const s=['✦','✧','☽','★','☾','◇','✦'];
-  for(let i=0;i<22;i++){
-    const e=document.createElement('div');
-    e.className='deco-star';
-    e.textContent=s[i%s.length];
-    e.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;font-size:${0.5+Math.random()*0.75}rem;animation-duration:${4+Math.random()*6}s;animation-delay:${Math.random()*6}s;color:${Math.random()>.5?'#c9a96e':'#e8a0b0'};`;
-    f.appendChild(e);
+// ── Ambient floating particles ──
+(function() {
+  const field = document.getElementById('particleField');
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 3 + Math.random() * 8;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      animation-duration:${10 + Math.random()*16}s;
+      animation-delay:${Math.random()*12}s;
+    `;
+    field.appendChild(p);
   }
 })();
 
-const DECK=[
-  {id:0,  name:"愚者",     suit:"大阿卡纳",symbol:"☀",number:"0",    keywords:"自由 · 新起点 · 冒险",  meaning:"新的旅程开始，带着无限可能踏入未知。"},
-  {id:1,  name:"魔法师",   suit:"大阿卡纳",symbol:"∞",number:"I",    keywords:"意志 · 技巧 · 创造",    meaning:"你拥有实现目标的一切工具，专注并行动。"},
-  {id:2,  name:"女祭司",   suit:"大阿卡纳",symbol:"☽",number:"II",   keywords:"直觉 · 神秘 · 内在智慧",meaning:"倾听内心深处的声音，答案已在其中。"},
-  {id:3,  name:"女皇",     suit:"大阿卡纳",symbol:"♀",number:"III",  keywords:"丰盛 · 滋养 · 创造力",  meaning:"充裕与美丽围绕你，拥抱生命的丰饶。"},
-  {id:4,  name:"皇帝",     suit:"大阿卡纳",symbol:"♂",number:"IV",   keywords:"权威 · 稳定 · 秩序",    meaning:"建立稳固的基础，以纪律掌控局面。"},
-  {id:5,  name:"教皇",     suit:"大阿卡纳",symbol:"☩",number:"V",    keywords:"传统 · 信仰 · 指引",    meaning:"寻求智者的引导，尊重已被验证的智慧。"},
-  {id:6,  name:"恋人",     suit:"大阿卡纳",symbol:"♡",number:"VI",   keywords:"选择 · 结合 · 和谐",    meaning:"面临重要的选择，遵从真心的呼唤。"},
-  {id:7,  name:"战车",     suit:"大阿卡纳",symbol:"⚔",number:"VII",  keywords:"意志 · 胜利 · 控制",    meaning:"以坚定的意志驾驭一切，前进不停歇。"},
-  {id:8,  name:"力量",     suit:"大阿卡纳",symbol:"♾",number:"VIII", keywords:"勇气 · 耐心 · 内在力量",meaning:"温柔而坚定地面对恐惧，力量来自内心。"},
-  {id:9,  name:"隐士",     suit:"大阿卡纳",symbol:"🕯",number:"IX",   keywords:"独处 · 内省 · 寻求",    meaning:"从喧嚣中退后，在安静中寻找答案。"},
-  {id:10, name:"命运之轮", suit:"大阿卡纳",symbol:"⊕",number:"X",    keywords:"命运 · 转机 · 循环",    meaning:"一切都在流转，改变即将到来。"},
-  {id:11, name:"正义",     suit:"大阿卡纳",symbol:"⚖",number:"XI",   keywords:"公正 · 平衡 · 真实",    meaning:"面对因果，诚实与公正将带来平衡。"},
-  {id:12, name:"倒吊人",   suit:"大阿卡纳",symbol:"⊥",number:"XII",  keywords:"等待 · 牺牲 · 新视角",  meaning:"换一个视角看待事物，暂时的停顿有其意义。"},
-  {id:13, name:"死神",     suit:"大阿卡纳",symbol:"⌛",number:"XIII", keywords:"终结 · 转化 · 重生",    meaning:"旧的必须结束，为新的到来腾出空间。"},
-  {id:14, name:"节制",     suit:"大阿卡纳",symbol:"△",number:"XIV",  keywords:"平衡 · 调和 · 耐心",    meaning:"找到中间的道路，耐心调和各种力量。"},
-  {id:15, name:"恶魔",     suit:"大阿卡纳",symbol:"♟",number:"XV",   keywords:"束缚 · 物质 · 阴影",    meaning:"审视让你受困的执念，你有能力挣脱。"},
-  {id:16, name:"塔",       suit:"大阿卡纳",symbol:"⚡",number:"XVI",  keywords:"突变 · 动荡 · 启示",    meaning:"动摇的根基需要崩塌，真相在混乱后显现。"},
-  {id:17, name:"星星",     suit:"大阿卡纳",symbol:"★",number:"XVII", keywords:"希望 · 治愈 · 灵感",    meaning:"在黑暗后你仍有光，怀抱希望继续前行。"},
-  {id:18, name:"月亮",     suit:"大阿卡纳",symbol:"☾",number:"XVIII",keywords:"幻觉 · 潜意识 · 恐惧",  meaning:"事情并非表面那样，留意内心深处的信号。"},
-  {id:19, name:"太阳",     suit:"大阿卡纳",symbol:"☀",number:"XIX",  keywords:"喜悦 · 成功 · 活力",    meaning:"光明与欢乐，成功与清晰属于你。"},
-  {id:20, name:"审判",     suit:"大阿卡纳",symbol:"🔔",number:"XX",   keywords:"觉醒 · 更新 · 呼唤",    meaning:"听见内心的召唤，是时候做出重大决定。"},
-  {id:21, name:"世界",     suit:"大阿卡纳",symbol:"◎",number:"XXI",  keywords:"完成 · 整合 · 圆满",    meaning:"一个完整的循环结束，成就感与圆满感降临。"},
-  {id:22, name:"权杖王牌", suit:"权杖",    symbol:"🜂",number:"Ace",  keywords:"灵感 · 潜力 · 开始",    meaning:"新的热情与创意能量正在萌发。"},
-  {id:23, name:"权杖二",   suit:"权杖",    symbol:"🜂",number:"II",   keywords:"计划 · 远见 · 等待",    meaning:"你已踏出第一步，现在需要更宏观的规划。"},
-  {id:24, name:"权杖三",   suit:"权杖",    symbol:"🜂",number:"III",  keywords:"扩张 · 探索 · 预见",    meaning:"机会已在路上，放眼更广阔的可能性。"},
-  {id:25, name:"权杖四",   suit:"权杖",    symbol:"🜂",number:"IV",   keywords:"庆祝 · 稳定 · 归属",    meaning:"值得庆祝的成就，享受当下的安稳与喜悦。"},
-  {id:26, name:"权杖五",   suit:"权杖",    symbol:"🜂",number:"V",    keywords:"竞争 · 冲突 · 挑战",    meaning:"面对纷乱，在竞争中磨砺自己。"},
-  {id:27, name:"权杖六",   suit:"权杖",    symbol:"🜂",number:"VI",   keywords:"胜利 · 认可 · 自信",    meaning:"你的努力得到认可，自信迎接成功。"},
-  {id:28, name:"权杖七",   suit:"权杖",    symbol:"🜂",number:"VII",  keywords:"坚守 · 挑战 · 优势",    meaning:"坚持立场，你有能力守住自己的位置。"},
-  {id:29, name:"权杖八",   suit:"权杖",    symbol:"🜂",number:"VIII", keywords:"速度 · 行动 · 信息",    meaning:"事情迅速推进，快速行动抓住时机。"},
-  {id:30, name:"权杖九",   suit:"权杖",    symbol:"🜂",number:"IX",   keywords:"韧性 · 防御 · 坚持",    meaning:"虽然疲惫，继续坚守，胜利近在眼前。"},
-  {id:31, name:"权杖十",   suit:"权杖",    symbol:"🜂",number:"X",    keywords:"重担 · 压力 · 责任",    meaning:"承担了太多，考虑放下不属于你的重量。"},
-  {id:32, name:"权杖侍从", suit:"权杖",    symbol:"🜂",number:"Page", keywords:"热情 · 探索 · 消息",    meaning:"新的热情与好奇心引领你探索未知领域。"},
-  {id:33, name:"权杖骑士", suit:"权杖",    symbol:"🜂",number:"Knight",keywords:"冒险 · 冲劲 · 行动",   meaning:"充满活力地冲向目标，但注意不要莽撞。"},
-  {id:34, name:"权杖王后", suit:"权杖",    symbol:"🜂",number:"Queen",keywords:"自信 · 魅力 · 热情",    meaning:"以自信和热情散发你的个人魅力与影响力。"},
-  {id:35, name:"权杖国王", suit:"权杖",    symbol:"🜂",number:"King", keywords:"领导 · 远见 · 创业",    meaning:"以魄力和远见引领他人，掌舵自己的事业。"},
-  {id:36, name:"圣杯王牌", suit:"圣杯",    symbol:"🜄",number:"Ace",  keywords:"情感 · 直觉 · 新爱",    meaning:"情感上的新开始，爱与直觉正在涌现。"},
-  {id:37, name:"圣杯二",   suit:"圣杯",    symbol:"🜄",number:"II",   keywords:"联结 · 伙伴 · 和谐",    meaning:"两心相遇，真诚的连接与相互理解。"},
-  {id:38, name:"圣杯三",   suit:"圣杯",    symbol:"🜄",number:"III",  keywords:"庆祝 · 友谊 · 喜悦",    meaning:"与重要的人共享欢乐时光，值得庆贺。"},
-  {id:39, name:"圣杯四",   suit:"圣杯",    symbol:"🜄",number:"IV",   keywords:"沉思 · 冷漠 · 内省",    meaning:"退出行动，向内审视，留意被忽视的机会。"},
-  {id:40, name:"圣杯五",   suit:"圣杯",    symbol:"🜄",number:"V",    keywords:"失落 · 悔恨 · 悲伤",    meaning:"面对失去，但别忘了还剩下的美好。"},
-  {id:41, name:"圣杯六",   suit:"圣杯",    symbol:"🜄",number:"VI",   keywords:"怀旧 · 童年 · 给予",    meaning:"回望过去带来温暖，珍惜那些纯粹的美好。"},
-  {id:42, name:"圣杯七",   suit:"圣杯",    symbol:"🜄",number:"VII",  keywords:"幻想 · 选择 · 迷惑",    meaning:"面对太多诱人的选项，辨别幻想与现实。"},
-  {id:43, name:"圣杯八",   suit:"圣杯",    symbol:"🜄",number:"VIII", keywords:"离开 · 追寻 · 放弃",    meaning:"放下已有的去追寻更深的意义，需要勇气。"},
-  {id:44, name:"圣杯九",   suit:"圣杯",    symbol:"🜄",number:"IX",   keywords:"满足 · 愿望 · 幸福",    meaning:"愿望成真，享受当下内心的丰盛与满足。"},
-  {id:45, name:"圣杯十",   suit:"圣杯",    symbol:"🜄",number:"X",    keywords:"圆满 · 家庭 · 幸福",    meaning:"情感圆满，家庭与爱的理想状态正在实现。"},
-  {id:46, name:"圣杯侍从", suit:"圣杯",    symbol:"🜄",number:"Page", keywords:"创意 · 消息 · 直觉",    meaning:"保持开放与好奇，留意来自内心的创意灵感。"},
-  {id:47, name:"圣杯骑士", suit:"圣杯",    symbol:"🜄",number:"Knight",keywords:"浪漫 · 追求 · 理想",   meaning:"带着热情与情感追逐心中的理想与爱。"},
-  {id:48, name:"圣杯王后", suit:"圣杯",    symbol:"🜄",number:"Queen",keywords:"同理 · 关怀 · 直觉",    meaning:"以深厚的同情心和直觉滋养身边的人。"},
-  {id:49, name:"圣杯国王", suit:"圣杯",    symbol:"🜄",number:"King", keywords:"成熟 · 情感 · 外交",    meaning:"以成熟的情感智慧处理关系，保持平衡。"},
-  {id:50, name:"宝剑王牌", suit:"宝剑",    symbol:"🜁",number:"Ace",  keywords:"真相 · 清晰 · 突破",    meaning:"以理性与清醒切开迷雾，真相浮出水面。"},
-  {id:51, name:"宝剑二",   suit:"宝剑",    symbol:"🜁",number:"II",   keywords:"僵局 · 决策 · 回避",    meaning:"面临两难，无法回避，需要做出抉择。"},
-  {id:52, name:"宝剑三",   suit:"宝剑",    symbol:"🜁",number:"III",  keywords:"悲伤 · 心痛 · 分离",    meaning:"承认痛苦，允许自己哀伤，才能真正愈合。"},
-  {id:53, name:"宝剑四",   suit:"宝剑",    symbol:"🜁",number:"IV",   keywords:"休息 · 恢复 · 沉淀",    meaning:"在战斗之间暂停休息，积蓄力量再出发。"},
-  {id:54, name:"宝剑五",   suit:"宝剑",    symbol:"🜁",number:"V",    keywords:"冲突 · 失败 · 自私",    meaning:"赢得代价太高的胜利，重新审视争斗的意义。"},
-  {id:55, name:"宝剑六",   suit:"宝剑",    symbol:"🜁",number:"VI",   keywords:"过渡 · 离开 · 平静",    meaning:"离开动荡，驶向更平静的水域，改变正在发生。"},
-  {id:56, name:"宝剑七",   suit:"宝剑",    symbol:"🜁",number:"VII",  keywords:"欺骗 · 策略 · 逃避",    meaning:"留意身边的不诚实，或审视自己是否在逃避。"},
-  {id:57, name:"宝剑八",   suit:"宝剑",    symbol:"🜁",number:"VIII", keywords:"束缚 · 限制 · 恐惧",    meaning:"你比自己以为的更自由，恐惧让你看不见出路。"},
-  {id:58, name:"宝剑九",   suit:"宝剑",    symbol:"🜁",number:"IX",   keywords:"焦虑 · 噩梦 · 担忧",    meaning:"深夜的恐惧往往被放大，白天来临一切会不同。"},
-  {id:59, name:"宝剑十",   suit:"宝剑",    symbol:"🜁",number:"X",    keywords:"终结 · 崩溃 · 重生",    meaning:"最黑暗的时刻已经过去，从此只会更好。"},
-  {id:60, name:"宝剑侍从", suit:"宝剑",    symbol:"🜁",number:"Page", keywords:"好奇 · 警觉 · 沟通",    meaning:"敏锐地观察与学习，用思考与言语表达自己。"},
-  {id:61, name:"宝剑骑士", suit:"宝剑",    symbol:"🜁",number:"Knight",keywords:"行动 · 锋利 · 冲动",   meaning:"迅速果断地行动，但确保有所考量再出击。"},
-  {id:62, name:"宝剑王后", suit:"宝剑",    symbol:"🜁",number:"Queen",keywords:"独立 · 清醒 · 直接",    meaning:"以清晰的头脑和直接的方式面对现实。"},
-  {id:63, name:"宝剑国王", suit:"宝剑",    symbol:"🜁",number:"King", keywords:"权威 · 逻辑 · 公正",    meaning:"以理性与智识的权威做出公正的判断。"},
-  {id:64, name:"星币王牌", suit:"星币",    symbol:"🜃",number:"Ace",  keywords:"繁荣 · 机会 · 物质",    meaning:"物质与财富上的新开始，机会已经出现。"},
-  {id:65, name:"星币二",   suit:"星币",    symbol:"🜃",number:"II",   keywords:"平衡 · 适应 · 灵活",    meaning:"保持灵活，在多件事情之间找到平衡点。"},
-  {id:66, name:"星币三",   suit:"星币",    symbol:"🜃",number:"III",  keywords:"合作 · 技艺 · 成就",    meaning:"团队合作与精湛技艺带来切实的成果。"},
-  {id:67, name:"星币四",   suit:"星币",    symbol:"🜃",number:"IV",   keywords:"安全 · 保守 · 积累",    meaning:"对稳定的追求是好的，但也留意是否过于封闭。"},
-  {id:68, name:"星币五",   suit:"星币",    symbol:"🜃",number:"V",    keywords:"困难 · 贫乏 · 孤立",    meaning:"暂时的困苦，寻求帮助是允许的，你不是一个人。"},
-  {id:69, name:"星币六",   suit:"星币",    symbol:"🜃",number:"VI",   keywords:"给予 · 施受 · 慷慨",    meaning:"慷慨地给予或谦逊地接受，流动创造丰盛。"},
-  {id:70, name:"星币七",   suit:"星币",    symbol:"🜃",number:"VII",  keywords:"耐心 · 评估 · 回报",    meaning:"付出已久，评估现在的方向，长远回报值得等待。"},
-  {id:71, name:"星币八",   suit:"星币",    symbol:"🜃",number:"VIII", keywords:"专注 · 技能 · 勤劳",    meaning:"专注于磨练技能，持续的努力带来专业成就。"},
-  {id:72, name:"星币九",   suit:"星币",    symbol:"🜃",number:"IX",   keywords:"富足 · 独立 · 优雅",    meaning:"通过努力赢得的自给自足与物质丰盛。"},
-  {id:73, name:"星币十",   suit:"星币",    symbol:"🜃",number:"X",    keywords:"遗产 · 家族 · 圆满",    meaning:"长久的成果与财富传承，家族与根基稳固。"},
-  {id:74, name:"星币侍从", suit:"星币",    symbol:"🜃",number:"Page", keywords:"学习 · 机会 · 踏实",    meaning:"带着实际与好奇心学习新技能，新机会在等你。"},
-  {id:75, name:"星币骑士", suit:"星币",    symbol:"🜃",number:"Knight",keywords:"稳健 · 可靠 · 勤勉",   meaning:"缓慢而稳定地前进，可靠与勤劳是你的优势。"},
-  {id:76, name:"星币王后", suit:"星币",    symbol:"🜃",number:"Queen",keywords:"慷慨 · 务实 · 滋养",    meaning:"以踏实与温暖滋养生活，创造安全与丰盛的家园。"},
-  {id:77, name:"星币国王", suit:"星币",    symbol:"🜃",number:"King", keywords:"财富 · 领导 · 安全",    meaning:"以智慧和经验管理资源，建立持久的成功。"},
+// ── Tarot deck ──
+const DECK = [
+  { id:0,  name:"愚者",     suit:"大阿卡纳", symbol:"☀", number:"0",     keywords:"自由 · 新起点 · 冒险",   meaning:"新的旅程开始，带着无限可能踏入未知。" },
+  { id:1,  name:"魔法师",   suit:"大阿卡纳", symbol:"∞", number:"I",     keywords:"意志 · 技巧 · 创造",     meaning:"你拥有实现目标的一切工具，专注并行动。" },
+  { id:2,  name:"女祭司",   suit:"大阿卡纳", symbol:"☽", number:"II",    keywords:"直觉 · 神秘 · 内在智慧", meaning:"倾听内心深处的声音，答案已在其中。" },
+  { id:3,  name:"女皇",     suit:"大阿卡纳", symbol:"♀", number:"III",   keywords:"丰盛 · 滋养 · 创造力",   meaning:"充裕与美丽围绕你，拥抱生命的丰饶。" },
+  { id:4,  name:"皇帝",     suit:"大阿卡纳", symbol:"♂", number:"IV",    keywords:"权威 · 稳定 · 秩序",     meaning:"建立稳固的基础，以纪律掌控局面。" },
+  { id:5,  name:"教皇",     suit:"大阿卡纳", symbol:"☩", number:"V",     keywords:"传统 · 信仰 · 指引",     meaning:"寻求智者的引导，尊重已被验证的智慧。" },
+  { id:6,  name:"恋人",     suit:"大阿卡纳", symbol:"♡", number:"VI",    keywords:"选择 · 结合 · 和谐",     meaning:"面临重要的选择，遵从真心的呼唤。" },
+  { id:7,  name:"战车",     suit:"大阿卡纳", symbol:"⚔", number:"VII",   keywords:"意志 · 胜利 · 控制",     meaning:"以坚定的意志驾驭一切，前进不停歇。" },
+  { id:8,  name:"力量",     suit:"大阿卡纳", symbol:"♾", number:"VIII",  keywords:"勇气 · 耐心 · 内在力量", meaning:"温柔而坚定地面对恐惧，力量来自内心。" },
+  { id:9,  name:"隐士",     suit:"大阿卡纳", symbol:"🕯", number:"IX",    keywords:"独处 · 内省 · 寻求",     meaning:"从喧嚣中退后，在安静中寻找答案。" },
+  { id:10, name:"命运之轮", suit:"大阿卡纳", symbol:"⊕", number:"X",     keywords:"命运 · 转机 · 循环",     meaning:"一切都在流转，改变即将到来。" },
+  { id:11, name:"正义",     suit:"大阿卡纳", symbol:"⚖", number:"XI",    keywords:"公正 · 平衡 · 真实",     meaning:"面对因果，诚实与公正将带来平衡。" },
+  { id:12, name:"倒吊人",   suit:"大阿卡纳", symbol:"⊥", number:"XII",   keywords:"等待 · 牺牲 · 新视角",   meaning:"换一个视角看待事物，暂时的停顿有其意义。" },
+  { id:13, name:"死神",     suit:"大阿卡纳", symbol:"⌛", number:"XIII",  keywords:"终结 · 转化 · 重生",     meaning:"旧的必须结束，为新的到来腾出空间。" },
+  { id:14, name:"节制",     suit:"大阿卡纳", symbol:"△", number:"XIV",   keywords:"平衡 · 调和 · 耐心",     meaning:"找到中间的道路，耐心调和各种力量。" },
+  { id:15, name:"恶魔",     suit:"大阿卡纳", symbol:"♟", number:"XV",    keywords:"束缚 · 物质 · 阴影",     meaning:"审视让你受困的执念，你有能力挣脱。" },
+  { id:16, name:"塔",       suit:"大阿卡纳", symbol:"⚡", number:"XVI",   keywords:"突变 · 动荡 · 启示",     meaning:"动摇的根基需要崩塌，真相在混乱后显现。" },
+  { id:17, name:"星星",     suit:"大阿卡纳", symbol:"★", number:"XVII",  keywords:"希望 · 治愈 · 灵感",     meaning:"在黑暗后你仍有光，怀抱希望继续前行。" },
+  { id:18, name:"月亮",     suit:"大阿卡纳", symbol:"☾", number:"XVIII", keywords:"幻觉 · 潜意识 · 恐惧",   meaning:"事情并非表面那样，留意内心深处的信号。" },
+  { id:19, name:"太阳",     suit:"大阿卡纳", symbol:"☀", number:"XIX",   keywords:"喜悦 · 成功 · 活力",     meaning:"光明与欢乐，成功与清晰属于你。" },
+  { id:20, name:"审判",     suit:"大阿卡纳", symbol:"🔔", number:"XX",    keywords:"觉醒 · 更新 · 呼唤",     meaning:"听见内心的召唤，是时候做出重大决定。" },
+  { id:21, name:"世界",     suit:"大阿卡纳", symbol:"◎", number:"XXI",   keywords:"完成 · 整合 · 圆满",     meaning:"一个完整的循环结束，成就感与圆满感降临。" },
+  { id:22, name:"权杖王牌", suit:"权杖",     symbol:"🜂", number:"Ace",   keywords:"灵感 · 潜力 · 开始",     meaning:"新的热情与创意能量正在萌发。" },
+  { id:23, name:"权杖二",   suit:"权杖",     symbol:"🜂", number:"II",    keywords:"计划 · 远见 · 等待",     meaning:"你已踏出第一步，现在需要更宏观的规划。" },
+  { id:24, name:"权杖三",   suit:"权杖",     symbol:"🜂", number:"III",   keywords:"扩张 · 探索 · 预见",     meaning:"机会已在路上，放眼更广阔的可能性。" },
+  { id:25, name:"权杖四",   suit:"权杖",     symbol:"🜂", number:"IV",    keywords:"庆祝 · 稳定 · 归属",     meaning:"值得庆祝的成就，享受当下的安稳与喜悦。" },
+  { id:26, name:"权杖五",   suit:"权杖",     symbol:"🜂", number:"V",     keywords:"竞争 · 冲突 · 挑战",     meaning:"面对纷乱，在竞争中磨砺自己。" },
+  { id:27, name:"权杖六",   suit:"权杖",     symbol:"🜂", number:"VI",    keywords:"胜利 · 认可 · 自信",     meaning:"你的努力得到认可，自信迎接成功。" },
+  { id:28, name:"权杖七",   suit:"权杖",     symbol:"🜂", number:"VII",   keywords:"坚守 · 挑战 · 优势",     meaning:"坚持立场，你有能力守住自己的位置。" },
+  { id:29, name:"权杖八",   suit:"权杖",     symbol:"🜂", number:"VIII",  keywords:"速度 · 行动 · 信息",     meaning:"事情迅速推进，快速行动抓住时机。" },
+  { id:30, name:"权杖九",   suit:"权杖",     symbol:"🜂", number:"IX",    keywords:"韧性 · 防御 · 坚持",     meaning:"虽然疲惫，继续坚守，胜利近在眼前。" },
+  { id:31, name:"权杖十",   suit:"权杖",     symbol:"🜂", number:"X",     keywords:"重担 · 压力 · 责任",     meaning:"承担了太多，考虑放下不属于你的重量。" },
+  { id:32, name:"权杖侍从", suit:"权杖",     symbol:"🜂", number:"Page",  keywords:"热情 · 探索 · 消息",     meaning:"新的热情与好奇心引领你探索未知领域。" },
+  { id:33, name:"权杖骑士", suit:"权杖",     symbol:"🜂", number:"Knight",keywords:"冒险 · 冲劲 · 行动",     meaning:"充满活力地冲向目标，但注意不要莽撞。" },
+  { id:34, name:"权杖王后", suit:"权杖",     symbol:"🜂", number:"Queen", keywords:"自信 · 魅力 · 热情",     meaning:"以自信和热情散发你的个人魅力与影响力。" },
+  { id:35, name:"权杖国王", suit:"权杖",     symbol:"🜂", number:"King",  keywords:"领导 · 远见 · 创业",     meaning:"以魄力和远见引领他人，掌舵自己的事业。" },
+  { id:36, name:"圣杯王牌", suit:"圣杯",     symbol:"🜄", number:"Ace",   keywords:"情感 · 直觉 · 新爱",     meaning:"情感上的新开始，爱与直觉正在涌现。" },
+  { id:37, name:"圣杯二",   suit:"圣杯",     symbol:"🜄", number:"II",    keywords:"联结 · 伙伴 · 和谐",     meaning:"两心相遇，真诚的连接与相互理解。" },
+  { id:38, name:"圣杯三",   suit:"圣杯",     symbol:"🜄", number:"III",   keywords:"庆祝 · 友谊 · 喜悦",     meaning:"与重要的人共享欢乐时光，值得庆贺。" },
+  { id:39, name:"圣杯四",   suit:"圣杯",     symbol:"🜄", number:"IV",    keywords:"沉思 · 冷漠 · 内省",     meaning:"退出行动，向内审视，留意被忽视的机会。" },
+  { id:40, name:"圣杯五",   suit:"圣杯",     symbol:"🜄", number:"V",     keywords:"失落 · 悔恨 · 悲伤",     meaning:"面对失去，但别忘了还剩下的美好。" },
+  { id:41, name:"圣杯六",   suit:"圣杯",     symbol:"🜄", number:"VI",    keywords:"怀旧 · 童年 · 给予",     meaning:"回望过去带来温暖，珍惜那些纯粹的美好。" },
+  { id:42, name:"圣杯七",   suit:"圣杯",     symbol:"🜄", number:"VII",   keywords:"幻想 · 选择 · 迷惑",     meaning:"面对太多诱人的选项，辨别幻想与现实。" },
+  { id:43, name:"圣杯八",   suit:"圣杯",     symbol:"🜄", number:"VIII",  keywords:"离开 · 追寻 · 放弃",     meaning:"放下已有的去追寻更深的意义，需要勇气。" },
+  { id:44, name:"圣杯九",   suit:"圣杯",     symbol:"🜄", number:"IX",    keywords:"满足 · 愿望 · 幸福",     meaning:"愿望成真，享受当下内心的丰盛与满足。" },
+  { id:45, name:"圣杯十",   suit:"圣杯",     symbol:"🜄", number:"X",     keywords:"圆满 · 家庭 · 幸福",     meaning:"情感圆满，家庭与爱的理想状态正在实现。" },
+  { id:46, name:"圣杯侍从", suit:"圣杯",     symbol:"🜄", number:"Page",  keywords:"创意 · 消息 · 直觉",     meaning:"保持开放与好奇，留意来自内心的创意灵感。" },
+  { id:47, name:"圣杯骑士", suit:"圣杯",     symbol:"🜄", number:"Knight",keywords:"浪漫 · 追求 · 理想",     meaning:"带着热情与情感追逐心中的理想与爱。" },
+  { id:48, name:"圣杯王后", suit:"圣杯",     symbol:"🜄", number:"Queen", keywords:"同理 · 关怀 · 直觉",     meaning:"以深厚的同情心和直觉滋养身边的人。" },
+  { id:49, name:"圣杯国王", suit:"圣杯",     symbol:"🜄", number:"King",  keywords:"成熟 · 情感 · 外交",     meaning:"以成熟的情感智慧处理关系，保持平衡。" },
+  { id:50, name:"宝剑王牌", suit:"宝剑",     symbol:"🜁", number:"Ace",   keywords:"真相 · 清晰 · 突破",     meaning:"以理性与清醒切开迷雾，真相浮出水面。" },
+  { id:51, name:"宝剑二",   suit:"宝剑",     symbol:"🜁", number:"II",    keywords:"僵局 · 决策 · 回避",     meaning:"面临两难，无法回避，需要做出抉择。" },
+  { id:52, name:"宝剑三",   suit:"宝剑",     symbol:"🜁", number:"III",   keywords:"悲伤 · 心痛 · 分离",     meaning:"承认痛苦，允许自己哀伤，才能真正愈合。" },
+  { id:53, name:"宝剑四",   suit:"宝剑",     symbol:"🜁", number:"IV",    keywords:"休息 · 恢复 · 沉淀",     meaning:"在战斗之间暂停休息，积蓄力量再出发。" },
+  { id:54, name:"宝剑五",   suit:"宝剑",     symbol:"🜁", number:"V",     keywords:"冲突 · 失败 · 自私",     meaning:"赢得代价太高的胜利，重新审视争斗的意义。" },
+  { id:55, name:"宝剑六",   suit:"宝剑",     symbol:"🜁", number:"VI",    keywords:"过渡 · 离开 · 平静",     meaning:"离开动荡，驶向更平静的水域，改变正在发生。" },
+  { id:56, name:"宝剑七",   suit:"宝剑",     symbol:"🜁", number:"VII",   keywords:"欺骗 · 策略 · 逃避",     meaning:"留意身边的不诚实，或审视自己是否在逃避。" },
+  { id:57, name:"宝剑八",   suit:"宝剑",     symbol:"🜁", number:"VIII",  keywords:"束缚 · 限制 · 恐惧",     meaning:"你比自己以为的更自由，恐惧让你看不见出路。" },
+  { id:58, name:"宝剑九",   suit:"宝剑",     symbol:"🜁", number:"IX",    keywords:"焦虑 · 噩梦 · 担忧",     meaning:"深夜的恐惧往往被放大，白天来临一切会不同。" },
+  { id:59, name:"宝剑十",   suit:"宝剑",     symbol:"🜁", number:"X",     keywords:"终结 · 崩溃 · 重生",     meaning:"最黑暗的时刻已经过去，从此只会更好。" },
+  { id:60, name:"宝剑侍从", suit:"宝剑",     symbol:"🜁", number:"Page",  keywords:"好奇 · 警觉 · 沟通",     meaning:"敏锐地观察与学习，用思考与言语表达自己。" },
+  { id:61, name:"宝剑骑士", suit:"宝剑",     symbol:"🜁", number:"Knight",keywords:"行动 · 锋利 · 冲动",     meaning:"迅速果断地行动，但确保有所考量再出击。" },
+  { id:62, name:"宝剑王后", suit:"宝剑",     symbol:"🜁", number:"Queen", keywords:"独立 · 清醒 · 直接",     meaning:"以清晰的头脑和直接的方式面对现实。" },
+  { id:63, name:"宝剑国王", suit:"宝剑",     symbol:"🜁", number:"King",  keywords:"权威 · 逻辑 · 公正",     meaning:"以理性与智识的权威做出公正的判断。" },
+  { id:64, name:"星币王牌", suit:"星币",     symbol:"🜃", number:"Ace",   keywords:"繁荣 · 机会 · 物质",     meaning:"物质与财富上的新开始，机会已经出现。" },
+  { id:65, name:"星币二",   suit:"星币",     symbol:"🜃", number:"II",    keywords:"平衡 · 适应 · 灵活",     meaning:"保持灵活，在多件事情之间找到平衡点。" },
+  { id:66, name:"星币三",   suit:"星币",     symbol:"🜃", number:"III",   keywords:"合作 · 技艺 · 成就",     meaning:"团队合作与精湛技艺带来切实的成果。" },
+  { id:67, name:"星币四",   suit:"星币",     symbol:"🜃", number:"IV",    keywords:"安全 · 保守 · 积累",     meaning:"对稳定的追求是好的，但也留意是否过于封闭。" },
+  { id:68, name:"星币五",   suit:"星币",     symbol:"🜃", number:"V",     keywords:"困难 · 贫乏 · 孤立",     meaning:"暂时的困苦，寻求帮助是允许的，你不是一个人。" },
+  { id:69, name:"星币六",   suit:"星币",     symbol:"🜃", number:"VI",    keywords:"给予 · 施受 · 慷慨",     meaning:"慷慨地给予或谦逊地接受，流动创造丰盛。" },
+  { id:70, name:"星币七",   suit:"星币",     symbol:"🜃", number:"VII",   keywords:"耐心 · 评估 · 回报",     meaning:"付出已久，评估现在的方向，长远回报值得等待。" },
+  { id:71, name:"星币八",   suit:"星币",     symbol:"🜃", number:"VIII",  keywords:"专注 · 技能 · 勤劳",     meaning:"专注于磨练技能，持续的努力带来专业成就。" },
+  { id:72, name:"星币九",   suit:"星币",     symbol:"🜃", number:"IX",    keywords:"富足 · 独立 · 优雅",     meaning:"通过努力赢得的自给自足与物质丰盛。" },
+  { id:73, name:"星币十",   suit:"星币",     symbol:"🜃", number:"X",     keywords:"遗产 · 家族 · 圆满",     meaning:"长久的成果与财富传承，家族与根基稳固。" },
+  { id:74, name:"星币侍从", suit:"星币",     symbol:"🜃", number:"Page",  keywords:"学习 · 机会 · 踏实",     meaning:"带着实际与好奇心学习新技能，新机会在等你。" },
+  { id:75, name:"星币骑士", suit:"星币",     symbol:"🜃", number:"Knight",keywords:"稳健 · 可靠 · 勤勉",     meaning:"缓慢而稳定地前进，可靠与勤劳是你的优势。" },
+  { id:76, name:"星币王后", suit:"星币",     symbol:"🜃", number:"Queen", keywords:"慷慨 · 务实 · 滋养",     meaning:"以踏实与温暖滋养生活，创造安全与丰盛的家园。" },
+  { id:77, name:"星币国王", suit:"星币",     symbol:"🜃", number:"King",  keywords:"财富 · 领导 · 安全",     meaning:"以智慧和经验管理资源，建立持久的成功。" },
 ];
 
-let current=null, isDrawn=false, animating=false;
+let current = null;
+let isDrawn = false;
+let animating = false;
 
-function spawnBurst(scene){
-  const cols=['#c9a96e','#f0d898','#e8c98a','#f2c4ce','#e8a0b0'];
-  for(let i=0;i<18;i++){
-    const p=document.createElement('div');
-    p.className='burst-p';
-    const angle=(i/18)*360, dist=55+Math.random()*70;
-    const rad=angle*Math.PI/180;
-    p.style.setProperty('--bx',`${Math.cos(rad)*dist}px`);
-    p.style.setProperty('--by',`${Math.sin(rad)*dist}px`);
-    p.style.cssText+=`left:50%;top:50%;margin:-2.5px 0 0 -2.5px;background:${cols[i%cols.length]};animation-delay:${Math.random()*0.08}s`;
+function spawnBurst(scene) {
+  for (let i = 0; i < 14; i++) {
+    const p = document.createElement('div');
+    p.className = 'burst-particle';
+    const angle = (i / 14) * 360;
+    const dist = 50 + Math.random() * 60;
+    const rad = angle * Math.PI / 180;
+    p.style.setProperty('--bx', `${Math.cos(rad)*dist}px`);
+    p.style.setProperty('--by', `${Math.sin(rad)*dist}px`);
+    p.style.left = '50%';
+    p.style.top = '50%';
+    p.style.marginLeft = '-3px';
+    p.style.marginTop = '-3px';
+    p.style.animationDelay = `${Math.random()*0.1}s`;
     scene.appendChild(p);
-    setTimeout(()=>p.remove(),900);
+    setTimeout(() => p.remove(), 900);
   }
 }
 
-function drawTarot(){
-  if(animating)return;
-  if(isDrawn){resetTarot();return;}
+function drawTarot() {
+  if (animating) return;
+  if (isDrawn) { resetTarot(); return; }
 
-  const deck=document.getElementById('deckArea');
-  const card=document.getElementById('tarotCard');
-  const scene=document.getElementById('cardScene');
-  const btn=document.getElementById('tarotDrawBtn');
+  const deck = document.getElementById('deckArea');
+  const card = document.getElementById('tarotCard');
+  const scene = document.getElementById('cardScene');
+  const btn = document.getElementById('tarotDrawBtn');
 
-  current=DECK[Math.floor(Math.random()*DECK.length)];
-  document.getElementById('cfSuit').textContent=current.suit;
-  document.getElementById('cfNumber').textContent=current.number;
-  document.getElementById('cfSymbol').textContent=current.symbol;
-  document.getElementById('cfName').textContent=current.name;
-  document.getElementById('cfKeywords').textContent=current.keywords;
+  current = DECK[Math.floor(Math.random() * DECK.length)];
 
-  deck.style.display='flex'; btn.disabled=true; animating=true;
+  document.getElementById('cfNumber').textContent = current.number;
+  document.getElementById('cfSymbol').textContent = current.symbol;
+  document.getElementById('cfName').textContent = current.name;
+  document.getElementById('cfKeywords').textContent = current.keywords;
+
+  deck.hidden = false;
+  btn.disabled = true;
+  animating = true;
+
+  // Phase 1: lift & tilt
   card.classList.add('flipping-out');
 
-  setTimeout(()=>{
+  setTimeout(() => {
+    // Burst at midpoint
     spawnBurst(scene);
+
+    // Phase 2: snap reveal
     card.classList.remove('flipping-out');
     card.classList.add('flipping-in');
-    setTimeout(()=>{
+
+    setTimeout(() => {
       card.classList.remove('flipping-in');
-      card.style.transform='rotateY(180deg)';
-      scene.classList.add('hoverable');
+      card.style.transform = 'rotateY(180deg)';
+      scene.classList.add('hoverable'); // re-enable hover after flip
       showResult();
-      btn.disabled=false;
-      btn.textContent='✦ 再 抽 一 张 ✦';
-      isDrawn=true; animating=false;
-    },900);
-  },500);
+      btn.disabled = false;
+      btn.textContent = '再 抽 一 张';
+      isDrawn = true;
+      animating = false;
+    }, 900);
+  }, 500);
 }
 
-function showResult(){
-  const result=document.getElementById('tarotResult');
-  document.getElementById('resultName').textContent=current.name;
-  document.getElementById('resultSuit').textContent=current.suit+'  ·  '+current.number;
-  const content=document.getElementById('readingContent');
-  content.innerHTML='<span class="reading-placeholder">正在解读…</span>';
+function showResult() {
+  const result = document.getElementById('tarotResult');
+  document.getElementById('resultName').textContent = current.name;
+  document.getElementById('resultSuit').textContent = current.suit + '  ·  ' + current.number;
+
+  const content = document.getElementById('readingContent');
+  content.innerHTML = '<span class="reading-placeholder">正在解读…</span>';
   result.classList.add('visible');
 
-  // ── Replace with Edge Function ──
-  // fetch('/functions/v1/tarot-reading',{method:'POST',
-  //   headers:{'Content-Type':'application/json'},
-  //   body:JSON.stringify({question:document.getElementById('tarotQuestion').value,card:current})
-  // }).then(r=>r.json()).then(d=>{content.textContent=d.reading;});
+  // ── Call your Edge Function here ──
+  // fetch('/functions/v1/tarot-reading', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({
+  //     question: document.getElementById('tarotQuestion').value,
+  //     card: current
+  //   })
+  // }).then(r => r.json()).then(d => { content.textContent = d.reading; });
 
-  setTimeout(()=>{
-    if(content.querySelector('.reading-placeholder')) content.textContent=current.meaning;
-  },1400);
+  setTimeout(() => {
+    if (content.querySelector('.reading-placeholder')) {
+      content.textContent = current.meaning;
+    }
+  }, 1400);
 }
 
-function resetTarot(){
-  if(animating)return;
-  animating=true;
-  const card=document.getElementById('tarotCard');
-  const result=document.getElementById('tarotResult');
-  const scene=document.getElementById('cardScene');
-  const btn=document.getElementById('tarotDrawBtn');
+function resetTarot() {
+  if (animating) return;
+  animating = true;
+  const card = document.getElementById('tarotCard');
+  const result = document.getElementById('tarotResult');
+  const scene = document.getElementById('cardScene');
+  const btn = document.getElementById('tarotDrawBtn');
+
   result.classList.remove('visible');
   scene.classList.remove('hoverable');
-  card.style.transition='transform 0.5s ease-in';
-  card.style.transform='rotateY(0deg)';
-  setTimeout(()=>{
-    card.style.transition='';
-    document.getElementById('deckArea').style.display='none';
-    btn.textContent='✦ 抽 一 张 牌 ✦';
-    isDrawn=false; animating=false; current=null;
-  },600);
+
+  // Flip back to back face
+  card.style.transition = 'transform 0.5s ease-in';
+  card.style.transform = 'rotateY(0deg)';
+
+  setTimeout(() => {
+    card.style.transition = '';
+    document.getElementById('deckArea').hidden = true;
+    btn.textContent = '抽 一 张 牌';
+    isDrawn = false;
+    animating = false;
+    current = null;
+  }, 600);
 }
 </script>
 </body>
