@@ -175,7 +175,8 @@ if hour == 9:
             weather = r.read().decode().strip()
     except Exception:
         weather = ""
-    prompt = f"现在是早上9点，北京今天天气：{weather}。发一条早安问候，自然地带上天气，让她知道今天穿什么。" if weather else "发一条早安问候。"
+    today_str = beijing_now.strftime("%Y年%m月%d日")
+    prompt = f"今天是{today_str}，早上9点，北京天气：{weather}。发一条早安问候，带上天气和穿衣建议。每天必须不一样，不要重复昨天的说法。" if weather else f"今天是{today_str}，发一条早安问候，每天要不一样。"
     msg = ask_claude(prompt, memories)
     if msg:
         send(msg)
