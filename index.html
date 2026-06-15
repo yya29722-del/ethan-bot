@@ -26,6 +26,7 @@
 
   /* APP SHELL */
   #app { display: none; position: fixed; inset: 0; background: #f5f3f0; }
+  #app.tarot-active { background: #F4EAD4; }
 
   /* BOTTOM NAV — 悬浮胶囊 */
   .bottom-nav {
@@ -774,6 +775,7 @@ function switchTab(name) {
       bloom.classList.add('blooming');
       setTimeout(function() { bloom.classList.remove('blooming'); }, 1000);
     }
+    document.getElementById('app').classList.toggle('tarot-active', name === 'tarot');
   }
 }
 
