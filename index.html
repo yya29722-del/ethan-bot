@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>yaya & Ethan</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -178,7 +178,7 @@
   .tab-section-header {
     position: sticky; top: 0; background: rgba(245,243,240,.95);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    padding: 14px 20px 12px;
+    padding: max(14px, calc(env(safe-area-inset-top) + 14px)) 20px 12px;
     display: flex; align-items: center; gap: 10px;
     z-index: 5; border-bottom: 1px solid rgba(0,0,0,.05);
   }
