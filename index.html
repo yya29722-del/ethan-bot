@@ -6,12 +6,13 @@
 <title>yaya & Ethan</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="我们">
 <link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#1a1814">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: -apple-system, sans-serif; background: #f5f3f0; color: #2c2c2c; min-height: 100vh; overflow-x: hidden; }
+  body { font-family: -apple-system, sans-serif; background: #1a1814; color: #2c2c2c; min-height: 100vh; overflow-x: hidden; }
 
   /* COVER */
   #cover { position: fixed; inset: 0; background: #1a1814; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity .6s ease; }
@@ -25,7 +26,7 @@
 
   /* HOME */
   #home { padding: 0 0 40px; }
-  .home-header { padding: 56px 24px 24px; }
+  .home-header { padding: max(56px, env(safe-area-inset-top) + 16px) 24px 24px; }
   .home-header h1 { font-size: 13px; font-weight: 400; letter-spacing: 3px; color: #bbb; }
   .home-header p { font-size: 24px; font-weight: 300; color: #2c2c2c; margin-top: 6px; }
 
@@ -46,7 +47,7 @@
   .section { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #f5f3f0; overflow-y: auto; transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1); z-index: 10; }
   .section.open { display: block; transform: translateX(0); }
 
-  .section-header { position: sticky; top: 0; background: #f5f3f0; padding: 52px 20px 16px; display: flex; align-items: center; gap: 12px; z-index: 5; border-bottom: 1px solid rgba(0,0,0,.06); }
+  .section-header { position: sticky; top: 0; background: #f5f3f0; padding: max(52px, env(safe-area-inset-top) + 12px) 20px 16px; display: flex; align-items: center; gap: 12px; z-index: 5; border-bottom: 1px solid rgba(0,0,0,.06); }
   .back-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #888; padding: 0 4px; }
   .section-header h2 { font-size: 18px; font-weight: 500; }
 
