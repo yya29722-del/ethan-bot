@@ -345,7 +345,7 @@
   .draw-btn:hover::before { opacity:1; }
   .draw-btn:active { transform:translateY(0); }
   .draw-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
-  .reading-stage { position:relative; z-index:1; display:none; flex-direction:column; align-items:center; gap:32px; width:100%; max-width:480px; margin-top:8px; animation:fadeInUp 0.6s ease forwards; }
+  .reading-stage { position:relative; z-index:1; display:none; flex-direction:column; align-items:center; gap:14px; width:100%; max-width:480px; margin-top:8px; animation:fadeInUp 0.6s ease forwards; }
   .reading-stage.visible { display:flex; }
   @keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
   .drawn-card-wrap { perspective:1200px; width:var(--card-w); height:var(--card-h); position:relative; }
@@ -1681,7 +1681,9 @@ function startTarotEntry() {
     if (hasFlipped) return;
     hasFlipped = true;
     var card = document.getElementById('drawn-card');
-    document.getElementById('reveal-btn').disabled = true;
+    var revealBtn = document.getElementById('reveal-btn');
+    revealBtn.disabled = true;
+    setTimeout(function() { revealBtn.style.display = 'none'; }, 340);
     card.classList.add('is-flipping');
     setTimeout(triggerParticles, 500);
     setTimeout(function() {
@@ -1717,6 +1719,10 @@ function startTarotEntry() {
     document.getElementById('deck-area').style.display = '';
     document.getElementById('tarot-reading-result').textContent = '';
     document.getElementById('drawn-card').classList.remove('is-flipping');
+    var revealBtn = document.getElementById('reveal-btn');
+    revealBtn.style.display = '';
+    revealBtn.disabled = false;
+    revealBtn.style.opacity = '';
   }
 
   initCardBacks();
