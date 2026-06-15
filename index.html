@@ -137,6 +137,16 @@
   .todo-peek-del:active { color: #e08080; }
   .todo-peek-more { text-align: center; font-size: 12px; color: #c9a96e; padding: 6px; cursor: pointer; }
 
+  /* CONTEXT MODAL */
+  #ctx-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.4); display: none; align-items: flex-end; }
+  #ctx-modal.open { display: flex; }
+  #ctx-modal-sheet { width: 100%; background: #f7f4f0; border-radius: 22px 22px 0 0; padding: 20px 20px 40px; max-height: 75vh; overflow-y: auto; animation: slideUp .25s ease; }
+  .ctx-modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+  .ctx-modal-label { font-size: 11px; color: #bbb; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
+  .ctx-modal-body { font-size: 14px; line-height: 1.8; color: #555; white-space: pre-wrap; }
+  .has-context { cursor: pointer; }
+  .has-context::after { content: '…'; position: absolute; bottom: 10px; right: 14px; font-size: 11px; color: #c9a96e; opacity: 0.7; }
+
   /* CALENDAR DAY MODAL */
   #cal-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.35); display: none; align-items: flex-end; }
   #cal-modal.open { display: flex; }
@@ -512,6 +522,15 @@
         <div class="todo-peek-label">T O D O</div>
       </div>
       <div id="todo-peek-list"></div>
+    </div>
+  </div>
+
+  <!-- Context Modal -->
+  <div id="ctx-modal" onclick="closeCtxModal()">
+    <div id="ctx-modal-sheet" onclick="event.stopPropagation()">
+      <div class="ctx-modal-handle"></div>
+      <div class="ctx-modal-label">当时的聊天</div>
+      <div id="ctx-modal-body" class="ctx-modal-body"></div>
     </div>
   </div>
 
@@ -1024,6 +1043,14 @@ async function openCalModal(dateStr) {
   await refreshCalModal();
 }
 
+function openCtxModal(ctx) {
+  document.getElementById('ctx-modal-body').textContent = ctx;
+  document.getElementById('ctx-modal').classList.add('open');
+}
+function closeCtxModal() {
+  document.getElementById('ctx-modal').classList.remove('open');
+}
+
 function closeCalModal() {
   document.getElementById('cal-modal').classList.remove('open');
   _refreshTodosFromServer();
@@ -1071,8 +1098,10 @@ async function loadFeed() {
   if (!data.length) { el.innerHTML = '<div class="empty">No posts yet</div>'; return; }
   var typeMap = {note:'Note',event:'Event',quote:'Quote',emotion:'Mood',gacha:'Gacha Prize'};
   el.innerHTML = data.map(function(f) {
-    return '<div class="card stripe-' + f.author + '">' +
-      '<button class="del-btn" onclick="delFeed(' + f.id + ')">×</button>' +
+    var hasCtx = !!f.context;
+    return '<div class="card stripe-' + f.author + (hasCtx ? ' has-context' : '') + '"' +
+      (hasCtx ? ' onclick="openCtxModal(' + JSON.stringify(f.context) + ')"' : '') + '>' +
+      '<button class="del-btn" onclick="event.stopPropagation();delFeed(' + f.id + ')">×</button>' +
       '<span class="tag ' + f.type + '">' + (typeMap[f.type] || f.type) + '</span>' +
       '<div class="meta">' + (f.author === 'ethan' ? 'Ethan' : 'yaya') + ' · ' + fmt(f.created_at) + '</div>' +
       '<div class="body">' + f.content + '</div>' +
@@ -1193,7 +1222,9 @@ function openNotesCat(cat) {
     ? items.map(function(n) {
         var tag = tagOf(n);
         var tagClass = 'tag-' + tag.replace(/\s+/g,'');
-        return '<div class="card">' +
+        var hasCtx = !!n.context;
+        return '<div class="card' + (hasCtx ? ' has-context' : '') + '"' +
+          (hasCtx ? ' onclick="openCtxModal(' + JSON.stringify(n.context) + ')"' : '') + '>' +
           '<span class="note-tag ' + tagClass + '">' + tag + '</span>' +
           '<div class="meta">' + (n.date_ref || fmt(n.created_at)) + '</div>' +
           '<div class="body">' + n.content + '</div>' +
