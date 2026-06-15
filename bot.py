@@ -92,7 +92,33 @@ memories = load_memories()
 now = datetime.now(timezone.utc)
 beijing_now = now + timedelta(hours=8)
 
-# 每天22点：写一篇日记（唯一保留的定时行为）
+# 每天10点：总结昨天的心情状态
+if hour == 10:
+    already = any("昨日总结" in m.get("content","") and
+                  (now - datetime.fromisoformat(m["created_at"].replace("Z","+00:00"))).total_seconds() < 86400
+                  for m in memories if m.get("created_at"))
+    if not already:
+        yesterday = (beijing_now - timedelta(days=1)).strftime("%Y-%m-%d")
+        try:
+            yesterday_notes = sb_req(f"yaya_notes?date_ref=eq.{yesterday}&select=content&order=created_at.desc&limit=5")
+        except Exception:
+            yesterday_notes = []
+        note_context = "\n".join(n["content"] for n in yesterday_notes) if yesterday_notes else ""
+        prompt = (
+            f"根据记忆和昨天的记录，用一两句话总结yaya昨天的心情和状态。"
+            f"昨天的记录：{note_context}" if note_context else
+            "根据记忆，用一两句话总结yaya昨天的心情和状态。"
+        )
+        summary = ask_ai(prompt, memories)
+        if summary:
+            write_note(summary, category="昨日心情", date_ref=yesterday)
+            try:
+                sb_req("memories", "POST", json.dumps({"content": f"昨日总结：{summary}", "role": "bot"}).encode())
+            except Exception:
+                pass
+    exit()
+
+# 每天22点：写一篇日记
 if hour == 22:
     already = any("每日记录" in m.get("content","") and
                   (now - datetime.fromisoformat(m["created_at"].replace("Z","+00:00"))).total_seconds() < 86400
@@ -102,8 +128,7 @@ if hour == 22:
         note = ask_ai("用一两句话记录今天观察到的yaya的状态，不提建议，就是记录，像在写私人日记。", memories)
         if note:
             write_note(note, category="日常", date_ref=today)
-            body = json.dumps({"content": "每日记录", "role": "bot"}).encode()
             try:
-                sb_req("memories", "POST", body)
+                sb_req("memories", "POST", json.dumps({"content": "每日记录", "role": "bot"}).encode())
             except Exception:
                 pass
