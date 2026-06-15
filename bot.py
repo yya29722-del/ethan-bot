@@ -41,7 +41,7 @@ def check_pending_bark():
 # pending_bark在任何时间都要发，不受小时限制
 check_pending_bark()
 
-if hour < 8:
+if 1 <= hour < 8:
     exit()
 
 SYSTEM = (
@@ -167,6 +167,65 @@ def ask_claude(user_prompt, memories=None):
     return None
 
 memories = load_memories()
+
+# 每天00:00：写昨日心情
+if hour == 0:
+    bj_now = datetime.now(timezone.utc) + timedelta(hours=8)
+    yesterday = (bj_now - timedelta(days=1)).strftime("%Y-%m-%d")
+    # 检查是否已写过
+    ck_url = os.environ["SUPABASE_URL"] + "/rest/v1/yaya_notes?category=eq." + urllib.parse.quote("心情") + "&date_ref=eq." + yesterday + "&select=id&limit=1"
+    ck_req = urllib.request.Request(ck_url, headers={
+        "apikey": os.environ["SUPABASE_KEY"],
+        "Authorization": "Bearer " + os.environ["SUPABASE_KEY"]
+    })
+    try:
+        with urllib.request.urlopen(ck_req) as r:
+            if json.loads(r.read()):
+                exit()
+        # 拉昨天手机使用
+        ph_url = os.environ["SUPABASE_URL"] + "/rest/v1/phone_activity?opened_at=gte." + yesterday + "T00:00:00+08:00&opened_at=lt." + bj_now.strftime("%Y-%m-%d") + "T00:00:00+08:00&order=opened_at.asc"
+        ph_req = urllib.request.Request(ph_url, headers={
+            "apikey": os.environ["SUPABASE_KEY"],
+            "Authorization": "Bearer " + os.environ["SUPABASE_KEY"]
+        })
+        with urllib.request.urlopen(ph_req) as r:
+            ph_data = json.loads(r.read())
+        # 拉昨天健康数据
+        hd_url = os.environ["SUPABASE_URL"] + "/rest/v1/health_data?recorded_at=gte." + yesterday + "T00:00:00+08:00&order=recorded_at.desc&limit=3"
+        hd_req = urllib.request.Request(hd_url, headers={
+            "apikey": os.environ["SUPABASE_KEY"],
+            "Authorization": "Bearer " + os.environ["SUPABASE_KEY"]
+        })
+        with urllib.request.urlopen(hd_req) as r:
+            hd_data = json.loads(r.read())
+        # 统计手机时长（每次打开约10分钟估算）
+        apps = {}
+        for row in ph_data:
+            name = row["app_name"]
+            if not name.endswith("-关闭"):
+                apps[name] = apps.get(name, 0) + 1
+        phone_summary = "、".join(f"{k}约{v*10}分钟" for k, v in apps.items()) if apps else "没有手机记录"
+        health_summary = ""
+        if hd_data:
+            h = hd_data[0]
+            parts = []
+            if h.get("steps"): parts.append(f"步数{h['steps']}")
+            if h.get("sleep_hours"): parts.append(f"睡了{h['sleep_hours']}小时")
+            if h.get("heart_rate"): parts.append(f"心率{h['heart_rate']}")
+            if parts: health_summary = "、".join(parts)
+        prompt = (
+            f"今天是{yesterday}，现在是深夜零点，我在写关于yaya今天的心情记录。"
+            f"根据以下观察，用2-3句话记录她今天的状态（以"她"为主语，客观，不加评判和建议）。"
+            f"手机使用：{phone_summary}。" +
+            (f"身体数据：{health_summary}。" if health_summary else "")
+        )
+        mood = ask_claude(prompt, memories)
+        if mood:
+            write_note(mood, category="心情", date_ref=yesterday)
+            save_memory(f"心情记录{yesterday}：{mood}")
+    except Exception as e:
+        print("midnight mood failed:", e)
+    exit()
 
 # 早上9点：天气问候
 if hour == 9:
