@@ -42,6 +42,59 @@ except Exception as e:
 if hour < 8:
     exit()
 
+def embed(text):
+    openai_key = os.environ.get("OPENAI_API_KEY", "")
+    if not openai_key:
+        return None
+    body = json.dumps({"input": text[:2000], "model": "text-embedding-3-small"}).encode()
+    req = urllib.request.Request(
+        "https://api.openai.com/v1/embeddings",
+        data=body,
+        headers={"Authorization": "Bearer " + openai_key, "Content-Type": "application/json"}
+    )
+    try:
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read())["data"][0]["embedding"]
+    except Exception as e:
+        print("embed failed:", e)
+        return None
+
+def sync_embeddings():
+    tables = [
+        ("feed", "feed?select=id,content&order=created_at.desc&limit=50"),
+        ("yaya_notes", "yaya_notes?select=id,content&order=created_at.desc&limit=50"),
+        ("ethan_memory", "ethan_memory?select=id,content&order=created_at.desc&limit=50"),
+    ]
+    try:
+        existing = sb_req("memory_vectors?select=source_table,source_id")
+        done = {(r["source_table"], r["source_id"]) for r in existing}
+    except Exception:
+        done = set()
+
+    for table, path in tables:
+        try:
+            rows = sb_req(path)
+        except Exception:
+            continue
+        for row in rows:
+            if (table, row["id"]) in done:
+                continue
+            vec = embed(row["content"])
+            if vec is None:
+                continue
+            try:
+                sb_req("memory_vectors", "POST", json.dumps({
+                    "source_table": table,
+                    "source_id": row["id"],
+                    "content": row["content"],
+                    "embedding": vec
+                }).encode())
+                print(f"embedded {table}/{row['id']}")
+            except Exception as e:
+                print(f"insert vector failed {table}/{row['id']}:", e)
+
+sync_embeddings()
+
 def load_memories():
     try:
         return list(reversed(sb_req("memories?select=role,content,created_at&order=created_at.desc&limit=20")))
