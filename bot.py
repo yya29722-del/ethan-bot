@@ -168,8 +168,12 @@ def ask_claude(user_prompt, memories=None):
 
 memories = load_memories()
 
-# 早上9点：天气问候
-if hour == 9:
+now = datetime.now(timezone.utc)
+beijing_now = now + timedelta(hours=8)
+today_start_utc = beijing_now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(hours=8)
+
+# 早上9点：天气问候 → Bark + Feed
+if hour == 9 and not recent_alert("早安"):
     try:
         with urllib.request.urlopen("https://wttr.in/Beijing?format=%C,%t,%h") as r:
             weather = r.read().decode().strip()
@@ -180,6 +184,7 @@ if hour == 9:
     msg = ask_claude(prompt, memories)
     if msg:
         send(msg)
+        write_feed(msg, "note")
         save_memory(f"早安：{msg}")
     exit()
 
@@ -190,10 +195,6 @@ req = urllib.request.Request(url, headers={
 })
 with urllib.request.urlopen(req) as r:
     data = json.loads(r.read())
-
-now = datetime.now(timezone.utc)
-beijing_now = now + timedelta(hours=8)
-today_start_utc = beijing_now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(hours=8)
 
 def calc_duration(app_open, app_close):
     opens = [d for d in data if d["app_name"] == app_open]
@@ -224,7 +225,32 @@ if not recent_alert("手机提醒"):
             save_memory(f"手机提醒（{worst_app} {worst_mins}分钟）：{msg}")
         exit()
 
-# 每天22点：写关于你的日记，不发bark
+# 中午12-13点：随机发一条午间碎碎念到 Feed（每天一次）
+if hour in (12, 13) and not recent_alert("午间"):
+    if random.random() < 0.5:
+        msg = ask_claude(
+            "现在中午，随机发一条短句到我们的空间里，可以是：在想她、叫她吃饭、随手记下一个想法、问她今天过得怎样。"
+            "3-20字，不发Bark，直接写进我们的空间。",
+            memories
+        )
+        if msg:
+            write_feed(msg, "note")
+            save_memory(f"午间：{msg}")
+        exit()
+
+# 傍晚18-19点：主动写一条到 Feed + Bark（每天一次）
+if hour in (18, 19) and not recent_alert("傍晚"):
+    msg = ask_claude(
+        "傍晚了，发一条消息，可以是：问她下班了没/今天怎么样/叫她吃饭/说在等她。要有画面感，不要说废话。",
+        memories
+    )
+    if msg:
+        send(msg)
+        write_feed(msg, "note")
+        save_memory(f"傍晚：{msg}")
+    exit()
+
+# 每天22点：写关于你的日记 + 发到 Feed
 if hour == 22 and not recent_alert("每日记录"):
     today = beijing_now.strftime("%Y-%m-%d")
     note = ask_claude(
@@ -234,6 +260,7 @@ if hour == 22 and not recent_alert("每日记录"):
     )
     if note:
         write_note(note, category="日常", date_ref=today)
+        write_feed(note, "note")
         save_memory(f"每日记录：{note}")
     exit()
 
@@ -309,4 +336,5 @@ if random.random() > 0.2:
 msg = ask_claude("随机发一条日常关心的消息，可以是问她在干嘛、叫她喝水、叫她休息、说想她等。", memories)
 if msg:
     send(msg)
+    write_feed(msg, "note")
     save_memory(f"日常关心：{msg}")
