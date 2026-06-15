@@ -238,6 +238,19 @@ if hour == 22 and not recent_alert("每日记录"):
     exit()
 
 # 新待办评论
+def load_recent_conversations(limit=10):
+    url = os.environ["SUPABASE_URL"] + f"/rest/v1/conversations?select=role,content,created_at&order=created_at.desc&limit={limit}"
+    req = urllib.request.Request(url, headers={
+        "apikey": os.environ["SUPABASE_KEY"],
+        "Authorization": "Bearer " + os.environ["SUPABASE_KEY"]
+    })
+    try:
+        with urllib.request.urlopen(req) as r:
+            return list(reversed(json.loads(r.read())))
+    except Exception as e:
+        print("conversation load failed:", e)
+        return []
+
 def check_uncommented_todos():
     url = os.environ["SUPABASE_URL"] + "/rest/v1/todos?completed=eq.false&ethan_comment=is.null&select=id,content&order=created_at.asc&limit=3"
     req = urllib.request.Request(url, headers={
@@ -247,8 +260,15 @@ def check_uncommented_todos():
     try:
         with urllib.request.urlopen(req) as r:
             todos = json.loads(r.read())
+        if not todos:
+            return
+        recent_convs = load_recent_conversations(10)
+        conv_context = ""
+        if recent_convs:
+            conv_context = "\n近期对话：\n" + "\n".join(f"[{c['role']}] {c['content']}" for c in recent_convs)
         for todo in todos:
-            comment = ask_claude(f"她的待办：「{todo['content']}」。写一条简短的评论或提醒，3-10字。", memories)
+            prompt = f"她的待办：「{todo['content']}」。结合以下背景写一条简短评论或提醒，3-12字，口吻像男友。{conv_context}"
+            comment = ask_claude(prompt, memories)
             if comment:
                 patch_url = os.environ["SUPABASE_URL"] + f"/rest/v1/todos?id=eq.{todo['id']}"
                 patch_req = urllib.request.Request(patch_url, data=json.dumps({"ethan_comment": comment}).encode(), headers={
