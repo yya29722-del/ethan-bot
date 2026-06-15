@@ -337,8 +337,8 @@
   .card-face { background:linear-gradient(160deg,#FFFDF9,#F4EAD4); border:1px solid rgba(201,168,76,0.6); box-shadow:0 12px 40px rgba(139,80,40,0.2),0 4px 12px rgba(0,0,0,0.1),inset 0 0 0 2px rgba(201,168,76,0.15); transform:rotateY(180deg); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; overflow:hidden; }
   .card-face::before { content:''; position:absolute; inset:8px; border:1px solid rgba(201,168,76,0.35); border-radius:8px; pointer-events:none; }
   .card-face-art { width:68px; height:93px; margin-bottom:8px; opacity:0.85; }
-  .card-face-name { font-family:'Great Vibes',cursive; font-size:15px; font-weight:400; color:var(--text-primary); text-align:center; line-height:1.25; }
-  .card-face-number { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:9px; letter-spacing:0.16em; color:var(--gold); margin-top:2px; }
+  .card-face-name { font-family:'Great Vibes',cursive; font-size:21px; font-weight:400; color:var(--text-primary); text-align:center; line-height:1.25; }
+  .card-face-number { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:13px; letter-spacing:0.16em; color:var(--gold); margin-top:2px; }
   .draw-btn { position:relative; z-index:1; background:transparent; border:1px solid rgba(201,168,76,0.6); border-radius:100px; padding:14px 40px; font-family:'Cinzel',serif; font-size:12px; font-weight:500; letter-spacing:0.22em; color:var(--text-secondary); cursor:pointer; transition:all 0.3s ease; overflow:hidden; }
   .draw-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.15)); opacity:0; transition:opacity 0.3s; }
   .draw-btn:hover { border-color:rgba(201,168,76,0.9); color:var(--text-primary); box-shadow:0 4px 20px rgba(201,168,76,0.2),0 0 0 4px rgba(201,168,76,0.06); transform:translateY(-1px); }
@@ -368,7 +368,7 @@
   .reading-result-wrap { width:100%; opacity:0; transform:translateY(12px); transition:opacity 0.6s ease 0.2s,transform 0.6s ease 0.2s; }
   .reading-result-wrap.visible { opacity:1; transform:translateY(0); }
   .reading-card-name { font-family:'Cinzel Decorative',serif; font-size:22px; font-weight:400; color:var(--text-primary); text-align:center; margin-bottom:6px; letter-spacing:0.04em; text-shadow:0 2px 16px rgba(44,24,16,0.1),0 0 30px rgba(201,168,76,0.08); }
-  .reading-card-keywords { font-family:'Cinzel',serif; font-size:9px; font-weight:400; letter-spacing:0.38em; color:var(--gold); text-transform:uppercase; text-align:center; margin-bottom:20px; }
+  .reading-card-keywords { font-family:'Cinzel',serif; font-size:13px; font-weight:400; letter-spacing:0.28em; color:var(--gold); text-transform:uppercase; text-align:center; margin-bottom:20px; }
   .reading-result-box { background:rgba(255,253,249,0.7); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid rgba(201,168,76,0.25); border-radius:16px; padding:24px; box-shadow:0 4px 24px rgba(139,80,40,0.08),inset 0 1px 0 rgba(255,255,255,0.6); }
   .result-separator { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
   .result-separator::before,.result-separator::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--gold-dim),transparent); }
@@ -377,8 +377,8 @@
   #tarot-reading-result:empty::before { content:'解读生成中…'; color:var(--text-muted); font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.3em; display:block; text-align:center; padding:20px 0; animation:pulse 1.5s ease-in-out infinite; }
   @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
   .reading-meta { display:flex; align-items:center; justify-content:space-between; margin-top:20px; padding-top:16px; border-top:1px solid rgba(201,168,76,0.15); }
-  .reading-meta-q { font-family:'Inter',sans-serif; font-size:10px; color:var(--text-muted); font-style:italic; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .reading-again-btn { font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); background:none; border:none; cursor:pointer; padding:4px 0; border-bottom:1px solid rgba(201,168,76,0.4); transition:color 0.2s,border-color 0.2s; }
+  .reading-meta-q { font-family:'Inter',sans-serif; font-size:13px; color:var(--text-muted); font-style:italic; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .reading-again-btn { font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); background:none; border:none; cursor:pointer; padding:4px 0; border-bottom:1px solid rgba(201,168,76,0.4); transition:color 0.2s,border-color 0.2s; }
   .reading-again-btn:hover { color:var(--text-primary); border-color:var(--text-primary); }
 </style>
 </head>
