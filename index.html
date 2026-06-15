@@ -211,15 +211,27 @@
   .note-cat { font-size: 11px; color: #c9a96e; font-weight: 600; letter-spacing: .5px; margin-bottom: 4px; }
   .private-badge { font-size: 10px; color: #e8a0a0; background: #fce8e8; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
 
-  .cat-grid { display: flex; flex-direction: column; gap: 10px; }
-  .cat-card { background: #fff; border-radius: 14px; padding: 18px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,.05); transition: transform .15s; }
-  .cat-card:active { transform: scale(.98); }
-  .cat-card-name { font-size: 17px; font-weight: 500; color: #2c2c2c; margin-bottom: 3px; }
-  .cat-card-count { font-size: 12px; color: #bbb; }
-  .cat-card-arrow { color: #ddd; font-size: 20px; }
-  .cat-她        { border-left: 3px solid #e8b4b8; }
-  .cat-我们      { border-left: 3px solid #b4c8e8; }
-  .cat-重要      { border-left: 3px solid #c9a96e; }
+  #tab-notes .section-body { padding: 12px; display: flex; flex-direction: column; height: calc(100% - 56px); box-sizing: border-box; }
+  .cat-grid { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .cat-card {
+    flex: 1; border-radius: 20px; padding: 24px 28px; cursor: pointer;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    position: relative; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06); transition: transform .15s, box-shadow .15s;
+  }
+  .cat-card:active { transform: scale(.97); box-shadow: 0 1px 6px rgba(0,0,0,.05); }
+  .cat-card-watermark {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-family: 'Cormorant Garamond', serif; font-size: 120px; font-weight: 300;
+    opacity: 0.06; pointer-events: none; white-space: nowrap; letter-spacing: -4px;
+    user-select: none;
+  }
+  .cat-card-count { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em; margin-bottom: 10px; opacity: 0.5; }
+  .cat-card-name { font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 300; line-height: 1; letter-spacing: 0.04em; }
+  .cat-card-arrow { display: none; }
+  .cat-她   { background: linear-gradient(145deg, #fdeef0, #f0dde2); color: #8a4a56; }
+  .cat-我们 { background: linear-gradient(145deg, #eaeff8, #d8e5f5); color: #4a5e8a; }
+  .cat-重要 { background: linear-gradient(145deg, #fdf5e6, #f0e4c8); color: #8a6a2a; }
   .note-tag { display:inline-block; font-size:10px; letter-spacing:0.06em; padding:2px 8px; border-radius:20px; margin-bottom:6px; font-weight:500; }
   .tag-月经      { background:#fdeef0; color:#c97b8a; }
   .tag-心情      { background:#ede8f5; color:#7b6aad; }
@@ -1129,10 +1141,12 @@ function renderNotesCats() {
   _notesData.forEach(function(n) { counts[bucketOf(n)]++; });
 
   document.getElementById('notes-cats').innerHTML = NOTE_CATS.map(function(cat) {
+    var n = counts[cat];
     return '<div class="cat-card cat-' + cat + '" onclick="openNotesCat(\'' + cat + '\')">' +
-      '<div><div class="cat-card-name">' + cat + '</div>' +
-      '<div class="cat-card-count">' + counts[cat] + ' entries</div></div>' +
-      '<div class="cat-card-arrow">›</div></div>';
+      '<div class="cat-card-watermark">' + cat + '</div>' +
+      '<div class="cat-card-count">' + (n ? n + ' entries' : 'empty') + '</div>' +
+      '<div class="cat-card-name">' + cat + '</div>' +
+      '</div>';
   }).join('');
 
   document.getElementById('notes-cats').style.display = '';
