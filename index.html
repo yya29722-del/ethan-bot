@@ -699,8 +699,11 @@ async function loadNotes() {
   renderNotesCats();
 }
 
+var CAT_MAP = {'月经':'Period','心情':'Mood','情绪':'Mood','身体':'Body','日常':'Daily','重要':'Important','重要的一天':'Important'};
 function catOf(n) {
-  return n.category && NOTE_CATS.indexOf(n.category) >= 0 ? n.category : 'Daily';
+  if (!n.category) return 'Daily';
+  if (NOTE_CATS.indexOf(n.category) >= 0) return n.category;
+  return CAT_MAP[n.category] || 'Daily';
 }
 
 function renderNotesCats() {
