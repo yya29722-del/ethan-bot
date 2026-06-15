@@ -370,7 +370,7 @@
   <div class="tab-page" id="tab-notes">
     <div class="tab-section-header">
       <button class="back-btn" id="notes-back-btn" onclick="notesBack()" style="display:none">‹</button>
-      <h2 id="notes-title">Notes</h2>
+      <h2 id="notes-title">关于我</h2>
     </div>
     <div class="section-body">
       <div id="notes-cats" class="cat-grid"></div>
@@ -416,7 +416,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
       </svg>
-      Notes
+      关于我
     </button>
     <button class="nav-tab" id="nav-game" onclick="switchTab('game')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -720,7 +720,7 @@ function renderNotesCats() {
 
   document.getElementById('notes-cats').style.display = '';
   document.getElementById('notes-detail').style.display = 'none';
-  document.getElementById('notes-title').textContent = 'Notes';
+  document.getElementById('notes-title').textContent = '关于我';
   document.getElementById('notes-back-btn').style.display = 'none';
   _notesInDetail = false;
 }
