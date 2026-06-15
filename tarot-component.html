@@ -5,7 +5,7 @@
 -->
 <style>
   /* ===== IMPORT FONTS ===== */
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&family=Inter:wght@300;400&display=swap');
 
   /* ===== ROOT VARIABLES ===== */
   :root {
@@ -81,30 +81,34 @@
   }
 
   .tarot-eyebrow {
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 300;
-    letter-spacing: 0.4em;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.55em;
     text-transform: uppercase;
     color: var(--gold);
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    text-shadow: 0 0 20px rgba(201,168,76,0.4);
   }
 
   .tarot-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 36px;
-    font-weight: 300;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 28px;
+    font-weight: 700;
     color: var(--text-primary);
-    line-height: 1.2;
+    line-height: 1.25;
     margin: 0 0 8px;
+    letter-spacing: 0.04em;
+    text-shadow: 0 2px 12px rgba(44,24,16,0.12), 0 0 40px rgba(201,168,76,0.1);
   }
 
   .tarot-subtitle {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 14px;
+    font-family: 'IM Fell English', serif;
+    font-size: 15px;
     font-style: italic;
     color: var(--text-muted);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
+    line-height: 1.6;
   }
 
   /* Gold divider */
@@ -143,13 +147,14 @@
   }
 
   .question-label {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 13px;
-    font-style: italic;
-    color: var(--text-secondary);
-    letter-spacing: 0.08em;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     text-align: center;
   }
 
@@ -163,8 +168,8 @@
     border: 1px solid rgba(201, 168, 76, 0.35);
     border-radius: 12px;
     padding: 16px 20px;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
+    font-family: 'IM Fell English', serif;
+    font-size: 17px;
     color: var(--text-primary);
     outline: none;
     box-sizing: border-box;
@@ -200,9 +205,10 @@
   }
 
   .deck-label {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 12px;
-    letter-spacing: 0.3em;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.35em;
     text-transform: uppercase;
     color: var(--text-muted);
   }
@@ -327,19 +333,20 @@
   }
 
   .card-face-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 13px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.08em;
     color: var(--text-primary);
     text-align: center;
-    line-height: 1.3;
+    line-height: 1.4;
   }
 
   .card-face-number {
-    font-family: 'Inter', sans-serif;
-    font-size: 9px;
-    letter-spacing: 0.25em;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 10px;
+    letter-spacing: 0.12em;
     color: var(--gold);
     text-transform: uppercase;
     margin-top: 4px;
@@ -353,10 +360,10 @@
     border: 1px solid rgba(201, 168, 76, 0.6);
     border-radius: 100px;
     padding: 14px 40px;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 15px;
-    font-style: italic;
-    letter-spacing: 0.12em;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.3s ease;
@@ -464,10 +471,10 @@
     border: 1px solid rgba(201, 168, 76, 0.5);
     border-radius: 100px;
     padding: 14px 44px;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.22em;
     color: #F4EAD4;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -557,18 +564,21 @@
   }
 
   .reading-card-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 26px;
-    font-weight: 300;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 22px;
+    font-weight: 400;
     color: var(--text-primary);
     text-align: center;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+    text-shadow: 0 2px 16px rgba(44,24,16,0.1), 0 0 30px rgba(201,168,76,0.08);
   }
 
   .reading-card-keywords {
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    letter-spacing: 0.3em;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.38em;
     color: var(--gold);
     text-transform: uppercase;
     text-align: center;
@@ -609,9 +619,9 @@
 
   /* The actual result content area — populate via Edge Function */
   #tarot-reading-result {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
-    line-height: 1.8;
+    font-family: 'IM Fell English', serif;
+    font-size: 17px;
+    line-height: 1.85;
     color: var(--text-secondary);
     font-style: italic;
     min-height: 80px;
@@ -620,8 +630,9 @@
   #tarot-reading-result:empty::before {
     content: '解读生成中…';
     color: var(--text-muted);
-    font-size: 13px;
-    letter-spacing: 0.05em;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 0.3em;
     display: block;
     text-align: center;
     padding: 20px 0;
@@ -654,9 +665,9 @@
   }
 
   .reading-again-btn {
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    letter-spacing: 0.15em;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--gold);
     background: none;
