@@ -12,18 +12,17 @@
 <meta name="theme-color" content="#1a1814">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { background: #1a1814; }
-  body { font-family: -apple-system, sans-serif; color: #2c2c2c; min-height: 100vh; overflow-x: hidden; }
+  body { font-family: -apple-system, sans-serif; background: #f5f3f0; color: #2c2c2c; min-height: 100vh; overflow-x: hidden; }
 
   /* COVER */
-  #cover { position: fixed; inset: 0; background: #1a1814; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity .6s ease; }
+  #cover { position: fixed; inset: 0; background: #f5f3f0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity .6s ease; }
   #cover.fade { opacity: 0; pointer-events: none; }
   .cover-icons { display: flex; gap: 28px; margin-bottom: 40px; align-items: flex-end; }
   .cover-icons svg { opacity: .85; }
-  .cover-title { font-size: 15px; letter-spacing: 4px; color: rgba(255,255,255,.5); font-weight: 300; }
-  .cover-date { font-size: 28px; color: #fff; font-weight: 300; margin-top: 10px; letter-spacing: 2px; }
-  .cover-btn { margin-top: 56px; padding: 12px 32px; border: 1px solid rgba(255,255,255,.2); border-radius: 30px; background: none; color: rgba(255,255,255,.6); font-size: 13px; letter-spacing: 2px; cursor: pointer; transition: all .2s; }
-  .cover-btn:active { background: rgba(255,255,255,.1); }
+  .cover-title { font-size: 15px; letter-spacing: 4px; color: #bbb; font-weight: 300; }
+  .cover-date { font-size: 28px; color: #2c2c2c; font-weight: 300; margin-top: 10px; letter-spacing: 2px; }
+  .cover-btn { margin-top: 56px; padding: 12px 32px; border: 1px solid rgba(0,0,0,.15); border-radius: 30px; background: none; color: #888; font-size: 13px; letter-spacing: 2px; cursor: pointer; transition: all .2s; }
+  .cover-btn:active { background: rgba(0,0,0,.05); }
 
   /* HOME */
   #home { padding: 0 0 40px; background: #f5f3f0; min-height: 100vh; min-height: -webkit-fill-available; }
