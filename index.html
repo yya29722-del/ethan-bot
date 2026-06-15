@@ -145,7 +145,7 @@
   .ctx-modal-label { font-size: 11px; color: #bbb; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
   .ctx-modal-body { font-size: 14px; line-height: 1.8; color: #555; white-space: pre-wrap; }
   .has-context { cursor: pointer; }
-  .has-context::after { content: '…'; position: absolute; bottom: 10px; right: 14px; font-size: 11px; color: #c9a96e; opacity: 0.7; }
+  .has-context::after { content: '查看当时对话 ›'; position: absolute; bottom: 12px; right: 14px; font-size: 12px; color: #c9a96e; font-weight: 500; letter-spacing: 0.02em; }
 
   /* CALENDAR DAY MODAL */
   #cal-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.35); display: none; align-items: flex-end; }
@@ -208,6 +208,7 @@
   .todo-row input[type=checkbox] { margin-top: 3px; width: 17px; height: 17px; accent-color: #2c2c2c; flex-shrink: 0; }
   .todo-row .todo-text { flex: 1; }
   .card.done .body { text-decoration: line-through; color: #ccc; }
+  .card.has-context { padding-bottom: 30px; }
 
   .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px; }
   .tag.note    { background: #f0ede9; color: #999; }
@@ -1043,8 +1044,8 @@ async function openCalModal(dateStr) {
   await refreshCalModal();
 }
 
-function openCtxModal(ctx) {
-  document.getElementById('ctx-modal-body').textContent = ctx;
+function openCtxModal(encodedCtx) {
+  document.getElementById('ctx-modal-body').textContent = decodeURIComponent(encodedCtx);
   document.getElementById('ctx-modal').classList.add('open');
 }
 function closeCtxModal() {
@@ -1100,7 +1101,7 @@ async function loadFeed() {
   el.innerHTML = data.map(function(f) {
     var hasCtx = !!f.context;
     return '<div class="card stripe-' + f.author + (hasCtx ? ' has-context' : '') + '"' +
-      (hasCtx ? ' onclick="openCtxModal(' + JSON.stringify(f.context) + ')"' : '') + '>' +
+      (hasCtx ? ' onclick="openCtxModal(this.dataset.ctx)" data-ctx="' + encodeURIComponent(f.context) + '"' : '') + '>' +
       '<button class="del-btn" onclick="event.stopPropagation();delFeed(' + f.id + ')">×</button>' +
       '<span class="tag ' + f.type + '">' + (typeMap[f.type] || f.type) + '</span>' +
       '<div class="meta">' + (f.author === 'ethan' ? 'Ethan' : 'yaya') + ' · ' + fmt(f.created_at) + '</div>' +
@@ -1224,7 +1225,7 @@ function openNotesCat(cat) {
         var tagClass = 'tag-' + tag.replace(/\s+/g,'');
         var hasCtx = !!n.context;
         return '<div class="card' + (hasCtx ? ' has-context' : '') + '"' +
-          (hasCtx ? ' onclick="openCtxModal(' + JSON.stringify(n.context) + ')"' : '') + '>' +
+          (hasCtx ? ' onclick="openCtxModal(this.dataset.ctx)" data-ctx="' + encodeURIComponent(n.context) + '"' : '') + '>' +
           '<span class="note-tag ' + tagClass + '">' + tag + '</span>' +
           '<div class="meta">' + (n.date_ref || fmt(n.created_at)) + '</div>' +
           '<div class="body">' + n.content + '</div>' +
