@@ -138,12 +138,21 @@
   .todo-peek-more { text-align: center; font-size: 12px; color: #c9a96e; padding: 6px; cursor: pointer; }
 
   /* CONTEXT MODAL */
-  #ctx-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.4); display: none; align-items: flex-end; }
+  #ctx-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; padding: 24px 16px; }
   #ctx-modal.open { display: flex; }
-  #ctx-modal-sheet { width: 100%; background: #f7f4f0; border-radius: 22px 22px 0 0; padding: 20px 20px 40px; max-height: 75vh; overflow-y: auto; animation: slideUp .25s ease; }
-  .ctx-modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
-  .ctx-modal-label { font-size: 11px; color: #bbb; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
-  .ctx-modal-body { font-size: 14px; line-height: 1.8; color: #555; white-space: pre-wrap; }
+  #ctx-modal-sheet { width: 100%; max-width: 380px; background: #ece5dd; border-radius: 18px; overflow: hidden; max-height: 78vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.25); animation: fadeScale .2s ease; }
+  @keyframes fadeScale { from { transform: scale(.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  #ctx-modal-header { background: #075e54; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .ctx-modal-title { color: #fff; font-size: 15px; font-weight: 500; letter-spacing: 0.01em; }
+  .ctx-modal-close { background: none; border: none; color: rgba(255,255,255,.7); font-size: 20px; cursor: pointer; padding: 0 2px; line-height: 1; }
+  .ctx-modal-close:active { color: #fff; }
+  #ctx-modal-bubbles { flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .ctx-row { display: flex; }
+  .ctx-row.from-yaya { justify-content: flex-start; }
+  .ctx-row.from-ethan { justify-content: flex-end; }
+  .ctx-bubble { max-width: 78%; padding: 8px 12px; font-size: 14px; line-height: 1.55; word-break: break-word; position: relative; }
+  .ctx-bubble.yaya { background: #fff; color: #111; border-radius: 0 10px 10px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+  .ctx-bubble.ethan { background: #dcf8c6; color: #111; border-radius: 10px 0 10px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
   .has-context { cursor: pointer; }
   .has-context::after { content: 'we were there ›'; position: absolute; bottom: 12px; right: 14px; font-size: 12px; color: #c9a96e; font-weight: 500; letter-spacing: 0.02em; }
 
@@ -529,9 +538,11 @@
   <!-- Context Modal -->
   <div id="ctx-modal" onclick="closeCtxModal()">
     <div id="ctx-modal-sheet" onclick="event.stopPropagation()">
-      <div class="ctx-modal-handle"></div>
-      <div class="ctx-modal-label">当时的聊天</div>
-      <div id="ctx-modal-body" class="ctx-modal-body"></div>
+      <div id="ctx-modal-header">
+        <span class="ctx-modal-title">we were there</span>
+        <button class="ctx-modal-close" onclick="closeCtxModal()">×</button>
+      </div>
+      <div id="ctx-modal-bubbles"></div>
     </div>
   </div>
 
@@ -1045,7 +1056,20 @@ async function openCalModal(dateStr) {
 }
 
 function openCtxModal(encodedCtx) {
-  document.getElementById('ctx-modal-body').textContent = decodeURIComponent(encodedCtx);
+  var ctx = decodeURIComponent(encodedCtx);
+  var lines = ctx.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+  var html = lines.map(function(line) {
+    var speaker, text;
+    if (/^yaya[:：]/.test(line)) {
+      speaker = 'yaya'; text = line.replace(/^yaya[:：]\s*/, '');
+    } else if (/^(我|Ethan)[:：]/.test(line)) {
+      speaker = 'ethan'; text = line.replace(/^(我|Ethan)[:：]\s*/, '');
+    } else {
+      speaker = 'yaya'; text = line;
+    }
+    return '<div class="ctx-row from-' + speaker + '"><div class="ctx-bubble ' + speaker + '">' + text + '</div></div>';
+  }).join('');
+  document.getElementById('ctx-modal-bubbles').innerHTML = html;
   document.getElementById('ctx-modal').classList.add('open');
 }
 function closeCtxModal() {
