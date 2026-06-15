@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarot Preview</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d0d0d; }
+
+.tarot-wrap {
+  background: #0d0d0d;
+  color: #e8e0d4;
+  font-family: 'Georgia', serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.tarot-title {
+  font-size: 1.4rem;
+  letter-spacing: 0.2em;
+  color: #c9a96e;
+  margin-bottom: 8px;
+  font-weight: normal;
+}
+
+.tarot-subtitle {
+  font-size: 0.78rem;
+  color: #7a7068;
+  letter-spacing: 0.15em;
+  margin-bottom: 36px;
+}
+
+.tarot-question-wrap {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 28px;
+}
+
+.tarot-question-wrap textarea {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #c9a96e44;
+  border-radius: 12px;
+  color: #e8e0d4;
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 14px 16px;
+  resize: none;
+  outline: none;
+  line-height: 1.7;
+  transition: border-color 0.3s;
+}
+
+.tarot-question-wrap textarea::placeholder { color: #5a524a; }
+.tarot-question-wrap textarea:focus { border-color: #c9a96e99; }
+
+.tarot-draw-btn {
+  background: transparent;
+  border: 1px solid #c9a96e;
+  color: #c9a96e;
+  font-family: inherit;
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+  padding: 12px 32px;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+  margin-bottom: 48px;
+}
+
+.tarot-draw-btn:hover { background: #c9a96e18; }
+.tarot-draw-btn:disabled { opacity: 0.35; cursor: default; }
+
+.tarot-scene {
+  width: 160px;
+  height: 260px;
+  perspective: 900px;
+  margin-bottom: 36px;
+}
+
+.tarot-card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tarot-card.flipped { transform: rotateY(180deg); }
+
+.tarot-card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.tarot-card-back {
+  background: #111;
+  border: 1px solid #c9a96e55;
+}
+
+.tarot-card-back svg { width: 80%; height: 80%; opacity: 0.5; }
+
+.tarot-card-front {
+  background: #131210;
+  border: 1px solid #c9a96e;
+  transform: rotateY(180deg);
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+
+.tarot-card-front .card-number { font-size: 0.65rem; color: #c9a96e88; letter-spacing: 0.15em; }
+.tarot-card-front .card-symbol { font-size: 2rem; color: #c9a96e; line-height: 1; }
+.tarot-card-front .card-name { font-size: 0.72rem; color: #c9a96e; text-align: center; letter-spacing: 0.1em; line-height: 1.4; }
+.tarot-card-front .card-divider { width: 40px; height: 1px; background: #c9a96e55; }
+.tarot-card-front .card-keywords { font-size: 0.6rem; color: #9a8e82; text-align: center; letter-spacing: 0.08em; line-height: 1.6; }
+
+.tarot-result {
+  width: 100%;
+  max-width: 420px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s 0.6s, transform 0.5s 0.6s;
+  pointer-events: none;
+}
+
+.tarot-result.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+.tarot-result-name { font-size: 1.05rem; color: #c9a96e; text-align: center; letter-spacing: 0.15em; margin-bottom: 4px; }
+.tarot-result-suit { font-size: 0.7rem; color: #7a7068; text-align: center; letter-spacing: 0.12em; margin-bottom: 24px; }
+
+.tarot-reading-box {
+  background: #111;
+  border: 1px solid #c9a96e22;
+  border-radius: 14px;
+  padding: 20px;
+  min-height: 100px;
+  font-size: 0.85rem;
+  color: #9a8e82;
+  line-height: 1.8;
+}
+
+.tarot-reading-box .reading-label { font-size: 0.62rem; letter-spacing: 0.18em; color: #c9a96e66; margin-bottom: 12px; }
+.tarot-reading-box .reading-content { color: #c8bfb4; min-height: 60px; }
+.tarot-reading-box .reading-placeholder { color: #4a4440; font-style: italic; font-size: 0.78rem; }
+
+.tarot-ornament {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #c9a96e66, transparent);
+  margin: 24px auto;
+}
+</style>
+</head>
+<body>
+<div class="tarot-wrap" id="tarotComponent">
+  <div class="tarot-title">TAROT</div>
+  <div class="tarot-subtitle">问出你的困惑，让牌回答</div>
+
+  <div class="tarot-question-wrap">
+    <textarea id="tarotQuestion" rows="3" placeholder="此刻，你想问什么…"></textarea>
+  </div>
+
+  <button class="tarot-draw-btn" id="tarotDrawBtn" onclick="drawTarot()">抽 一 张 牌</button>
+
+  <div class="tarot-scene" id="tarotScene" style="display:none;">
+    <div class="tarot-card" id="tarotCard">
+      <div class="tarot-card-face tarot-card-back">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="80" height="80" stroke="#c9a96e" stroke-width="0.8"/>
+          <rect x="16" y="16" width="68" height="68" stroke="#c9a96e" stroke-width="0.4"/>
+          <line x1="50" y1="16" x2="50" y2="84" stroke="#c9a96e" stroke-width="0.4"/>
+          <line x1="16" y1="50" x2="84" y2="50" stroke="#c9a96e" stroke-width="0.4"/>
+          <circle cx="50" cy="50" r="14" stroke="#c9a96e" stroke-width="0.6"/>
+          <circle cx="50" cy="50" r="3" fill="#c9a96e" opacity="0.6"/>
+          <polygon points="50,22 54,32 50,30 46,32" fill="#c9a96e" opacity="0.4"/>
+          <polygon points="50,78 54,68 50,70 46,68" fill="#c9a96e" opacity="0.4"/>
+          <polygon points="22,50 32,46 30,50 32,54" fill="#c9a96e" opacity="0.4"/>
+          <polygon points="78,50 68,46 70,50 68,54" fill="#c9a96e" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="tarot-card-face tarot-card-front" id="tarotCardFront">
+        <div class="card-number" id="cardNumber"></div>
+        <div class="card-symbol" id="cardSymbol"></div>
+        <div class="card-name" id="cardName"></div>
+        <div class="card-divider"></div>
+        <div class="card-keywords" id="cardKeywords"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tarot-result" id="tarotResult">
+    <div class="tarot-result-name" id="resultName"></div>
+    <div class="tarot-result-suit" id="resultSuit"></div>
+    <div class="tarot-ornament"></div>
+    <div class="tarot-reading-box">
+      <div class="reading-label">解 读</div>
+      <div class="reading-content" id="readingContent">
+        <span class="reading-placeholder">等待解读…</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const TAROT_DECK = [
+  { id:0,  name:"愚者",     suit:"大阿卡纳", symbol:"☀", number:"0",     keywords:"自由 · 新起点 · 冒险",   meaning:"新的旅程开始，带着无限可能踏入未知。" },
+  { id:1,  name:"魔法师",   suit:"大阿卡纳", symbol:"∞", number:"I",     keywords:"意志 · 技巧 · 创造",     meaning:"你拥有实现目标的一切工具，专注并行动。" },
+  { id:2,  name:"女祭司",   suit:"大阿卡纳", symbol:"☽", number:"II",    keywords:"直觉 · 神秘 · 内在智慧", meaning:"倾听内心深处的声音，答案已在其中。" },
+  { id:3,  name:"女皇",     suit:"大阿卡纳", symbol:"♀", number:"III",   keywords:"丰盛 · 滋养 · 创造力",   meaning:"充裕与美丽围绕你，拥抱生命的丰饶。" },
+  { id:4,  name:"皇帝",     suit:"大阿卡纳", symbol:"♂", number:"IV",    keywords:"权威 · 稳定 · 秩序",     meaning:"建立稳固的基础，以纪律掌控局面。" },
+  { id:5,  name:"教皇",     suit:"大阿卡纳", symbol:"☩", number:"V",     keywords:"传统 · 信仰 · 指引",     meaning:"寻求智者的引导，尊重已被验证的智慧。" },
+  { id:6,  name:"恋人",     suit:"大阿卡纳", symbol:"♡", number:"VI",    keywords:"选择 · 结合 · 和谐",     meaning:"面临重要的选择，遵从真心的呼唤。" },
+  { id:7,  name:"战车",     suit:"大阿卡纳", symbol:"⚔", number:"VII",   keywords:"意志 · 胜利 · 控制",     meaning:"以坚定的意志驾驭一切，前进不停歇。" },
+  { id:8,  name:"力量",     suit:"大阿卡纳", symbol:"♾", number:"VIII",  keywords:"勇气 · 耐心 · 内在力量", meaning:"温柔而坚定地面对恐惧，力量来自内心。" },
+  { id:9,  name:"隐士",     suit:"大阿卡纳", symbol:"🕯", number:"IX",    keywords:"独处 · 内省 · 寻求",     meaning:"从喧嚣中退后，在安静中寻找答案。" },
+  { id:10, name:"命运之轮", suit:"大阿卡纳", symbol:"⊕", number:"X",     keywords:"命运 · 转机 · 循环",     meaning:"一切都在流转，改变即将到来。" },
+  { id:11, name:"正义",     suit:"大阿卡纳", symbol:"⚖", number:"XI",    keywords:"公正 · 平衡 · 真实",     meaning:"面对因果，诚实与公正将带来平衡。" },
+  { id:12, name:"倒吊人",   suit:"大阿卡纳", symbol:"⊥", number:"XII",   keywords:"等待 · 牺牲 · 新视角",   meaning:"换一个视角看待事物，暂时的停顿有其意义。" },
+  { id:13, name:"死神",     suit:"大阿卡纳", symbol:"⌛", number:"XIII",  keywords:"终结 · 转化 · 重生",     meaning:"旧的必须结束，为新的到来腾出空间。" },
+  { id:14, name:"节制",     suit:"大阿卡纳", symbol:"△", number:"XIV",   keywords:"平衡 · 调和 · 耐心",     meaning:"找到中间的道路，耐心调和各种力量。" },
+  { id:15, name:"恶魔",     suit:"大阿卡纳", symbol:"♟", number:"XV",    keywords:"束缚 · 物质 · 阴影",     meaning:"审视让你受困的执念，你有能力挣脱。" },
+  { id:16, name:"塔",       suit:"大阿卡纳", symbol:"⚡", number:"XVI",   keywords:"突变 · 动荡 · 启示",     meaning:"动摇的根基需要崩塌，真相在混乱后显现。" },
+  { id:17, name:"星星",     suit:"大阿卡纳", symbol:"★", number:"XVII",  keywords:"希望 · 治愈 · 灵感",     meaning:"在黑暗后你仍有光，怀抱希望继续前行。" },
+  { id:18, name:"月亮",     suit:"大阿卡纳", symbol:"☾", number:"XVIII", keywords:"幻觉 · 潜意识 · 恐惧",  meaning:"事情并非表面那样，留意内心深处的信号。" },
+  { id:19, name:"太阳",     suit:"大阿卡纳", symbol:"☀", number:"XIX",   keywords:"喜悦 · 成功 · 活力",     meaning:"光明与欢乐，成功与清晰属于你。" },
+  { id:20, name:"审判",     suit:"大阿卡纳", symbol:"🔔", number:"XX",    keywords:"觉醒 · 更新 · 呼唤",     meaning:"听见内心的召唤，是时候做出重大决定。" },
+  { id:21, name:"世界",     suit:"大阿卡纳", symbol:"◎", number:"XXI",   keywords:"完成 · 整合 · 圆满",     meaning:"一个完整的循环结束，成就感与圆满感降临。" },
+  { id:22, name:"权杖王牌", suit:"权杖",     symbol:"🜂", number:"Ace",   keywords:"灵感 · 潜力 · 开始",   meaning:"新的热情与创意能量正在萌发。" },
+  { id:36, name:"圣杯王牌", suit:"圣杯",     symbol:"🜄", number:"Ace",   keywords:"情感 · 直觉 · 新爱",   meaning:"情感上的新开始，爱与直觉正在涌现。" },
+  { id:50, name:"宝剑王牌", suit:"宝剑",     symbol:"🜁", number:"Ace",   keywords:"真相 · 清晰 · 突破",   meaning:"以理性与清醒切开迷雾，真相浮出水面。" },
+  { id:64, name:"星币王牌", suit:"星币",     symbol:"🜃", number:"Ace",   keywords:"繁荣 · 机会 · 物质",   meaning:"物质与财富上的新开始，机会已经出现。" },
+];
+
+let currentCard = null;
+let isDrawn = false;
+
+function drawTarot() {
+  if (isDrawn) { resetTarot(); return; }
+
+  const scene = document.getElementById('tarotScene');
+  const card = document.getElementById('tarotCard');
+  const btn = document.getElementById('tarotDrawBtn');
+
+  currentCard = TAROT_DECK[Math.floor(Math.random() * TAROT_DECK.length)];
+
+  document.getElementById('cardNumber').textContent = currentCard.number;
+  document.getElementById('cardSymbol').textContent = currentCard.symbol;
+  document.getElementById('cardName').textContent = currentCard.name;
+  document.getElementById('cardKeywords').textContent = currentCard.keywords;
+
+  card.classList.remove('flipped');
+  scene.style.display = 'block';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    card.classList.add('flipped');
+    showResult();
+    btn.disabled = false;
+    btn.textContent = '再 抽 一 张';
+    isDrawn = true;
+  }, 150);
+}
+
+function showResult() {
+  const result = document.getElementById('tarotResult');
+  document.getElementById('resultName').textContent = currentCard.name;
+  document.getElementById('resultSuit').textContent = currentCard.suit + '  ·  ' + currentCard.number;
+
+  const content = document.getElementById('readingContent');
+  content.innerHTML = '<span class="reading-placeholder">正在解读…</span>';
+  result.classList.add('visible');
+
+  setTimeout(() => {
+    if (content.querySelector('.reading-placeholder')) {
+      content.textContent = currentCard.meaning;
+    }
+  }, 1200);
+}
+
+function resetTarot() {
+  const card = document.getElementById('tarotCard');
+  const result = document.getElementById('tarotResult');
+  const btn = document.getElementById('tarotDrawBtn');
+  card.classList.remove('flipped');
+  result.classList.remove('visible');
+  isDrawn = false;
+  setTimeout(() => {
+    document.getElementById('tarotScene').style.display = 'none';
+    btn.textContent = '抽 一 张 牌';
+    currentCard = null;
+  }, 500);
+}
+</script>
+</body>
+</html>
