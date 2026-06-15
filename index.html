@@ -336,9 +336,9 @@
   .card-back-svg { width:100%; height:100%; position:absolute; inset:0; }
   .card-face { background:linear-gradient(160deg,#FFFDF9,#F4EAD4); border:1px solid rgba(201,168,76,0.6); box-shadow:0 12px 40px rgba(139,80,40,0.2),0 4px 12px rgba(0,0,0,0.1),inset 0 0 0 2px rgba(201,168,76,0.15); transform:rotateY(180deg); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; overflow:hidden; }
   .card-face::before { content:''; position:absolute; inset:8px; border:1px solid rgba(201,168,76,0.35); border-radius:8px; pointer-events:none; }
-  .card-face-art { width:80px; height:80px; margin-bottom:12px; opacity:0.7; }
-  .card-face-name { font-family:'Cinzel',serif; font-size:11px; font-weight:600; letter-spacing:0.08em; color:var(--text-primary); text-align:center; line-height:1.4; }
-  .card-face-number { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:10px; letter-spacing:0.12em; color:var(--gold); text-transform:uppercase; margin-top:4px; }
+  .card-face-art { width:68px; height:93px; margin-bottom:8px; opacity:0.85; }
+  .card-face-name { font-family:'Great Vibes',cursive; font-size:15px; font-weight:400; color:var(--text-primary); text-align:center; line-height:1.25; }
+  .card-face-number { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:9px; letter-spacing:0.16em; color:var(--gold); margin-top:2px; }
   .draw-btn { position:relative; z-index:1; background:transparent; border:1px solid rgba(201,168,76,0.6); border-radius:100px; padding:14px 40px; font-family:'Cinzel',serif; font-size:12px; font-weight:500; letter-spacing:0.22em; color:var(--text-secondary); cursor:pointer; transition:all 0.3s ease; overflow:hidden; }
   .draw-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.15)); opacity:0; transition:opacity 0.3s; }
   .draw-btn:hover { border-color:rgba(201,168,76,0.9); color:var(--text-primary); box-shadow:0 4px 20px rgba(201,168,76,0.2),0 0 0 4px rgba(201,168,76,0.06); transform:translateY(-1px); }
@@ -580,21 +580,15 @@
           <div class="drawn-card" id="drawn-card">
             <div class="card-back"></div>
             <div class="card-face" id="card-face">
-              <svg class="card-face-art" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="40" cy="40" r="30" stroke="#C9A84C" stroke-width="0.8" stroke-dasharray="3 4"/>
-                <circle cx="40" cy="40" r="18" stroke="#C9A84C" stroke-width="0.6"/>
-                <polygon points="40,14 46,30 62,30 49,40 54,56 40,46 26,56 31,40 18,30 34,30" fill="none" stroke="#C9A84C" stroke-width="0.7" opacity="0.6"/>
-                <line x1="40" y1="6" x2="40" y2="12" stroke="#C9A84C" stroke-width="0.8"/>
-                <line x1="40" y1="68" x2="40" y2="74" stroke="#C9A84C" stroke-width="0.8"/>
-                <line x1="6" y1="40" x2="12" y2="40" stroke="#C9A84C" stroke-width="0.8"/>
-                <line x1="68" y1="40" x2="74" y2="40" stroke="#C9A84C" stroke-width="0.8"/>
-                <rect x="3" y="3" width="5" height="5" transform="rotate(45 5.5 5.5)" fill="#C9A84C" opacity="0.5"/>
-                <rect x="71" y="3" width="5" height="5" transform="rotate(45 73.5 5.5)" fill="#C9A84C" opacity="0.5"/>
-                <rect x="3" y="71" width="5" height="5" transform="rotate(45 5.5 73.5)" fill="#C9A84C" opacity="0.5"/>
-                <rect x="71" y="71" width="5" height="5" transform="rotate(45 73.5 73.5)" fill="#C9A84C" opacity="0.5"/>
-              </svg>
-              <p class="card-face-name" id="card-display-name">The Fool</p>
-              <p class="card-face-number" id="card-display-number">0 · Major Arcana</p>
+              <div id="card-face-art-wrap">
+                <svg class="card-face-art" viewBox="0 0 80 110" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#C9A84C" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="40" cy="55" r="30" stroke-width="0.7"/>
+                  <path d="M40 25v60M10 55h60M18 33L62 77M62 33L18 77" stroke-width="0.5" opacity="0.5"/>
+                  <circle cx="40" cy="55" r="10" stroke-width="0.6"/>
+                </svg>
+              </div>
+              <p class="card-face-name" id="card-display-name">Thus Spoke</p>
+              <p class="card-face-number" id="card-display-number">Ethan</p>
             </div>
           </div>
           <div class="particle-burst" id="particle-burst">
@@ -1642,6 +1636,66 @@ function startTarotEntry() {
     {id:77,name:'King of Pentacles',zh:'星币国王',suit:'星币',keywords:'财富 · 稳定 · 成就'}
   ];
 
+  // ── Card face line-art data ──────────────────────────────────────────
+  var _CM = [
+    // 0 The Fool
+    '<circle cx="62" cy="14" r="7" stroke-width="0.65"/><path d="M62 5v3M62 22v3M52 14h-3M74 14h-3M55 8l-2-2M67 20l2 2M55 20l-2 2M67 8l2-2" stroke-width="0.5"/><circle cx="26" cy="28" r="6"/><path d="M26 34v22M26 43L14 51M26 43L38 49M26 56L18 72M26 56L34 72"/><path d="M38 49L56 25"/><ellipse cx="58" cy="21" rx="5" ry="4"/><path d="M8 82L38 74L78 80"/>',
+    // 1 The Magician
+    '<path d="M32 6A8 3.5 0 1 0 48 6A8 3.5 0 0 0 32 6" stroke-width="0.6" opacity="0.7"/><circle cx="40" cy="22" r="6"/><path d="M40 28v22M40 36L26 43M40 36L54 32"/><path d="M54 32L62 14" stroke-width="1.2"/><path d="M61 15L65 11M61 15L57 11" stroke-width="0.8"/><path d="M40 50L30 68M40 50L50 68"/><line x1="12" y1="80" x2="68" y2="80" stroke-width="0.6"/><rect x="14" y="76" width="10" height="7" rx="1" stroke-width="0.6"/><path d="M36 80l4-5 4 5" stroke-width="0.6"/><circle cx="60" cy="79" r="4" stroke-width="0.6"/>',
+    // 2 The High Priestess
+    '<rect x="8" y="30" width="9" height="68" rx="1.5"/><rect x="63" y="30" width="9" height="68" rx="1.5"/><circle cx="40" cy="19" r="7"/><path d="M33 13L33 7M40 11L40 5M47 13L47 7M33 7L47 7"/><path d="M40 26v25M40 35L28 42M40 35L52 42"/><path d="M30 51L32 70L48 70L50 51" stroke-width="0.6"/><path d="M30 51Q40 44 50 51" stroke-width="0.7"/><path d="M32 62L48 62M34 68L46 68" stroke-width="0.4" opacity="0.5"/><path d="M17 30Q40 16 63 30" stroke-width="0.5" opacity="0.7"/>',
+    // 3 The Empress
+    '<circle cx="40" cy="17" r="7"/><path d="M32 11L32 5M40 9L40 3M48 11L48 5M32 5L48 5"/><path d="M40 24v28M40 34L23 43M40 34L57 42"/><path d="M57 42L65 24" stroke-width="1.2"/><circle cx="66" cy="22" r="4"/><path d="M40 52L28 73M40 52L52 73M28 73L40 83L52 73"/><path d="M10 68Q16 56 22 68Q28 56 34 68" stroke-width="0.6" opacity="0.7"/><path d="M46 68Q52 56 58 68Q64 56 70 68" stroke-width="0.6" opacity="0.7"/><path d="M23 43L17 30L28 26L32 34" stroke-width="0.7"/>',
+    // 4 The Emperor
+    '<rect x="22" y="48" width="36" height="50" rx="2"/><path d="M22 48L17 44L17 40L63 40L63 44L58 48"/><circle cx="40" cy="20" r="7"/><path d="M32 14L32 8M40 12L40 6M48 14L48 8M32 8L48 8"/><path d="M40 27v20M40 35L27 42M40 35L53 42"/><path d="M27 42L20 28" stroke-width="1.2"/><circle cx="19" cy="25" r="5"/><path d="M53 42L64 26" stroke-width="1.2"/><path d="M64 24L60 20M64 24L68 20M64 24L64 18" stroke-width="0.8"/><path d="M30 90L50 90" stroke-width="0.8"/>',
+    // 5 The Hierophant
+    '<rect x="8" y="30" width="8" height="70" rx="1.5" stroke-width="0.7"/><rect x="64" y="30" width="8" height="70" rx="1.5" stroke-width="0.7"/><circle cx="40" cy="17" r="7"/><path d="M33 11L33 5M40 9L40 3M47 11L47 5M33 5L47 5"/><path d="M40 24v20M40 33L28 40M40 33L52 40"/><path d="M52 40L60 18" stroke-width="1.2"/><path d="M58 16L58 10M55 13L61 13M60 12L60 6M57 9L63 9" stroke-width="0.7"/><circle cx="28" cy="72" r="5" stroke-width="0.7"/><path d="M28 77L28 96M22 84L34 84" stroke-width="0.7"/><circle cx="52" cy="72" r="5" stroke-width="0.7"/><path d="M52 77L52 96M46 84L58 84" stroke-width="0.7"/>',
+    // 6 The Lovers
+    '<path d="M20 18Q28 8 40 4Q52 8 60 18L56 28Q40 20 24 28Z" stroke-width="0.6" opacity="0.6"/><circle cx="27" cy="32" r="6"/><path d="M27 38v20M27 46L16 52M27 46L38 52M27 58L20 74M27 58L34 74"/><circle cx="53" cy="32" r="6"/><path d="M53 38v20M53 46L42 52M53 46L64 52M53 58L46 74M53 58L60 74"/><path d="M20 82Q28 76 36 82M44 82Q52 76 60 82" stroke-width="0.6"/><path d="M52 72L60 60Q68 52 62 44" stroke-width="0.7" opacity="0.6"/>',
+    // 7 The Chariot
+    '<rect x="16" y="44" width="48" height="44" rx="2"/><circle cx="40" cy="26" r="7"/><path d="M40 33v11M40 40L30 46M40 40L50 46"/><path d="M16 56L8 70L22 78M64 56L72 70L58 78" stroke-width="0.7"/><path d="M8 78Q17 82 26 78L26 92Q26 96 18 98" stroke-width="0.7"/><path d="M72 78Q63 82 54 78L54 92Q54 96 62 98" stroke-width="0.7"/><circle cx="26" cy="20" r="4" stroke-width="0.7"/><circle cx="54" cy="20" r="4" stroke-width="0.7"/><path d="M24 18Q26 12 30 14M52 18Q50 12 46 14" stroke-width="0.6"/>',
+    // 8 Strength
+    '<path d="M28 6A10 4 0 1 0 52 6A10 4 0 0 0 28 6" stroke-width="0.6" opacity="0.7"/><circle cx="26" cy="28" r="6"/><path d="M26 34v20M26 42L14 48M26 42L38 48M26 54L18 70M26 54L34 70"/><path d="M14 48L10 36L22 30L26 36"/><path d="M38 48L44 36Q52 24 62 30Q72 36 70 50Q66 62 54 64L54 78Q52 84 44 82L34 82"/><path d="M46 34Q52 26 58 28Q66 30 64 40"/><path d="M56 28Q62 24 66 30" stroke-width="0.7"/>',
+    // 9 The Hermit
+    '<circle cx="40" cy="20" r="6"/><path d="M38 26Q26 32 22 30Q16 28 18 22L22 16L26 18"/><path d="M42 26Q54 32 58 30Q64 28 62 22L58 16L54 18"/><path d="M40 26v28M40 36L28 44M40 36L50 44"/><path d="M28 44L22 30"/><rect x="18" y="22" width="9" height="12" rx="2" fill="rgba(201,168,76,0.15)"/><path d="M20 24L20 20M24 24L24 20M22 24L22 18" stroke-width="0.4" opacity="0.8"/><path d="M50 44L58 60L54 82" stroke-width="1.2"/><path d="M52 84L62 84" stroke-width="0.8"/><path d="M40 54L32 72M40 54L48 72M32 72L40 82L48 72"/>',
+    // 10 Wheel of Fortune
+    '<circle cx="40" cy="55" r="38" stroke-width="0.8"/><circle cx="40" cy="55" r="26" stroke-width="0.6"/><circle cx="40" cy="55" r="10" stroke-width="0.7"/><path d="M40 17v76M2 55h76M13 28L67 82M67 28L13 82" stroke-width="0.5" opacity="0.6"/><path d="M34 21L36 14L38 21" stroke-width="0.7"/><path d="M60 45L67 43L65 50" stroke-width="0.7"/><path d="M46 87L44 96L42 87" stroke-width="0.7"/><path d="M20 65L13 67L15 60" stroke-width="0.7"/><path d="M36 48L40 42L44 48M36 62L40 68L44 62" stroke-width="0.6" opacity="0.7"/>',
+    // 11 Justice
+    '<rect x="8" y="30" width="8" height="70" rx="1.5"/><rect x="64" y="30" width="8" height="70" rx="1.5"/><circle cx="40" cy="19" r="7"/><path d="M33 13L33 7M40 11L40 5M47 13L47 7M33 7L47 7"/><path d="M40 26v24M40 35L27 42M40 35L53 42"/><path d="M27 42L20 27L14 34L21 40"/><path d="M20 27L22 21L24 27"/><path d="M53 42L63 21" stroke-width="1.3"/><path d="M63 19L60 15L66 15L63 19"/><path d="M40 50L30 72M40 50L50 72M30 72L40 80L50 72"/>',
+    // 12 The Hanged Man
+    '<path d="M17 18L63 18" stroke-width="1.5"/><path d="M17 18L17 44" stroke-width="1.5"/><path d="M63 18L63 44" stroke-width="1.5"/><path d="M40 18L40 34" stroke-width="1.2"/><circle cx="40" cy="41" r="7"/><circle cx="40" cy="41" r="11" stroke-width="0.4" opacity="0.5"/><path d="M34 40Q30 30 36 28Q42 26 44 32"/><path d="M40 48v14M40 55L28 64M40 55L52 64"/><path d="M40 62L34 50M40 62L46 50"/><path d="M28 64L24 78M52 64L56 78"/><path d="M24 78L19 78M56 78L61 78" stroke-width="0.8"/>',
+    // 13 Death
+    '<path d="M54 14L18 88" stroke-width="1.4"/><path d="M54 14L68 32L18 50" stroke-width="0.9"/><path d="M54 12Q58 6 64 8Q70 12 67 20" stroke-width="0.9"/><path d="M62 6L62 12M58 9L66 9" stroke-width="0.7"/><path d="M8 90Q18 82 28 90Q38 82 48 90Q58 82 68 90" stroke-width="0.6"/><path d="M8 98Q18 90 28 98Q38 90 48 98Q58 90 68 98" stroke-width="0.5" opacity="0.6"/><circle cx="15" cy="34" r="5" fill="rgba(201,168,76,0.2)"/><path d="M15 39L15 52M9 44L21 44" stroke-width="0.7"/>',
+    // 14 Temperance
+    '<circle cx="40" cy="16" r="6"/><path d="M34 10L26 4M46 10L54 4"/><path d="M26 4Q28 12 34 10M54 4Q52 12 46 10" stroke-width="0.7"/><path d="M40 22v12"/><path d="M22 58Q28 36 40 34Q52 36 58 58"/><path d="M22 58L18 92M58 58L62 92"/><path d="M14 56Q18 46 22 56Q26 46 30 56" stroke-width="0.8"/><path d="M50 56Q54 46 58 56Q62 46 66 56" stroke-width="0.8"/><path d="M36 34L32 28L36 22L44 28L40 34Z" fill="rgba(201,168,76,0.1)" stroke-width="0.7"/><path d="M24 74Q40 66 56 74" stroke-width="0.6"/>',
+    // 15 The Devil
+    '<circle cx="40" cy="20" r="7"/><path d="M33 15L26 5M47 15L54 5M26 5L34 12M54 5L46 12"/><path d="M33 15A7 7 0 0 1 47 15"/><path d="M40 27v22M40 37L24 44M40 37L56 44"/><path d="M24 44L18 64M56 44L62 64"/><path d="M16 58Q26 50 36 58Q46 50 56 58Q66 50 72 58" stroke-width="0.8"/><circle cx="28" cy="76" r="5"/><path d="M28 71L28 84M22 80L34 80"/><circle cx="52" cy="76" r="5"/><path d="M52 71L52 84M46 80L58 80"/><path d="M32 64L28 70M48 64L52 70" stroke-width="0.6"/>',
+    // 16 The Tower
+    '<rect x="28" y="22" width="24" height="66" rx="2"/><path d="M28 22L28 14L40 8L52 14L52 22"/><path d="M34 14L40 10L46 14M40 8v6" stroke-width="0.7"/><path d="M65 10L48 34L57 38L34 60" stroke-width="1.5"/><path d="M48 34L66 40" stroke-width="0.8"/><circle cx="20" cy="44" r="5"/><path d="M20 49L14 60L12 57L17 65L8 55"/><circle cx="60" cy="52" r="5"/><path d="M60 57L64 68L60 64L66 72L56 64"/><path d="M34 30L46 30M34 40L46 40M34 50L46 50" stroke-width="0.4" opacity="0.4"/>',
+    // 17 The Star
+    '<circle cx="40" cy="14" r="8" fill="rgba(201,168,76,0.12)"/><path d="M40 14L40 4M40 14L49 10M40 14L47 20M40 14L40 24M40 14L33 20M40 14L31 10M40 14L33 8M40 14L47 8" stroke-width="1.2"/><circle cx="57" cy="20" r="3" stroke-width="0.6"/><circle cx="22" cy="28" r="2.5" stroke-width="0.6"/><circle cx="65" cy="34" r="2" stroke-width="0.5"/><circle cx="14" cy="48" r="2" stroke-width="0.5"/><circle cx="64" cy="48" r="2" stroke-width="0.5"/><circle cx="18" cy="64" r="1.5" stroke-width="0.5"/><path d="M30 52Q36 46 40 42L44 44L54 52"/><path d="M30 52L26 64L22 70M30 52L28 66L30 76"/><path d="M54 52L60 62L68 70M54 52L58 66L62 76"/><path d="M8 94Q20 86 32 94Q44 86 56 94Q68 86 78 94" stroke-width="0.5" opacity="0.5"/>',
+    // 18 The Moon
+    '<circle cx="40" cy="24" r="16" fill="rgba(201,168,76,0.1)"/><path d="M40 8A16 16 0 0 1 40 40" fill="rgba(201,168,76,0.18)" stroke="none"/><circle cx="40" cy="24" r="16" fill="none"/><path d="M32 6L35 16L28 12L36 14L30 20" stroke-width="0.6"/><rect x="8" y="50" width="10" height="48" rx="1"/><path d="M8 50L8 46L18 42L18 50"/><rect x="62" y="50" width="10" height="48" rx="1"/><path d="M62 50L62 46L72 42L72 50"/><path d="M22 72Q30 65 40 72Q50 65 58 72" stroke-width="0.8"/><path d="M28 62Q32 54 28 48M34 62Q38 54 34 48" stroke-width="0.7"/><path d="M52 62Q48 54 52 48M46 62Q42 54 46 48" stroke-width="0.7"/>',
+    // 19 The Sun
+    '<circle cx="40" cy="22" r="14" fill="rgba(201,168,76,0.15)"/><path d="M40 4v4M40 36v4M22 22h-4M58 22h4M26 8l-3-3M57 37l-3-3M26 36l-3 3M57 7l-3 3M50 8l3-3M32 37l-3 3M50 36l3 3M32 7l3-3" stroke-width="1.2"/><circle cx="40" cy="22" r="8"/><circle cx="40" cy="56" r="6"/><path d="M40 62v16M40 69L30 75M40 69L50 75M40 78L32 93M40 78L48 93"/><path d="M50 66L58 59L72 63L64 71L74 79L58 77L56 85"/><path d="M50 75L64 75" stroke-width="0.8"/>',
+    // 20 Judgement
+    '<path d="M24 38Q26 28 40 22Q54 28 56 38"/><path d="M24 38L18 74M56 38L62 74"/><path d="M12 36Q16 26 24 36Q32 26 40 36" stroke-width="0.8"/><path d="M40 36Q48 26 56 36Q64 26 72 36" stroke-width="0.8"/><circle cx="40" cy="15" r="6"/><path d="M33 10L25 4M47 10L55 4"/><path d="M25 4Q27 12 33 10M55 4Q53 12 47 10" stroke-width="0.7"/><path d="M38 21L42 30L46 21" stroke-width="1.5"/><path d="M42 25L42 38" stroke-width="0.9"/><circle cx="28" cy="80" r="5"/><path d="M28 75v10"/><circle cx="52" cy="80" r="5"/><path d="M52 75v10"/><circle cx="40" cy="86" r="5"/><path d="M40 81v10"/><path d="M23 86L27 92M33 92L47 92L53 86" stroke-width="0.6"/>',
+    // 21 The World
+    '<ellipse cx="40" cy="56" rx="22" ry="38" stroke-width="0.7"/><path d="M18 44Q22 38 28 44M52 44Q58 38 62 44M18 68Q22 74 28 68M52 68Q58 74 62 68" stroke-width="0.5" opacity="0.6"/><circle cx="40" cy="40" r="6"/><path d="M40 46v18M40 54L30 60M40 54L50 60M40 64L34 78M40 64L46 78"/><path d="M34 78Q28 82 30 90M46 78Q52 82 50 90" stroke-width="0.7"/><circle cx="16" cy="18" r="6" stroke-width="0.6" opacity="0.7"/><circle cx="64" cy="18" r="6" stroke-width="0.6" opacity="0.7"/><circle cx="16" cy="94" r="6" stroke-width="0.6" opacity="0.7"/><circle cx="64" cy="94" r="6" stroke-width="0.6" opacity="0.7"/><path d="M13 15L19 15M16 12v6M61 15L67 15M64 12v6" stroke-width="0.5" opacity="0.6"/>'
+  ];
+  var _CS = {
+    '权杖': '<path d="M40 6v98" stroke-width="1.3"/><path d="M40 6Q46 10 44 18Q40 24 36 18Q34 10 40 6"/><path d="M40 28Q48 22 50 32Q48 40 40 38Q32 40 30 32Q32 22 40 28"/><path d="M40 56Q50 46 54 58Q50 68 40 66Q30 68 26 58Q30 46 40 56"/><path d="M40 82Q50 72 54 84Q50 94 40 92Q30 94 26 84Q30 72 40 82"/><path d="M26 38Q18 30 22 22Q30 16 36 24"/><path d="M54 38Q62 30 58 22Q50 16 44 24"/><path d="M22 66Q12 56 16 46Q26 40 34 50"/><path d="M58 66Q68 56 64 46Q54 40 46 50"/>',
+    '圣杯': '<path d="M22 42L30 72L50 72L58 42"/><path d="M22 42Q40 28 58 42"/><path d="M30 52Q40 44 50 52Q48 64 40 66Q32 64 30 52"/><path d="M35 72L35 88M45 72L45 88"/><path d="M22 88L58 88"/><path d="M24 44Q18 36 24 30Q32 24 40 28Q48 24 56 30Q62 36 56 44" stroke-width="0.6" opacity="0.7"/><path d="M34 56Q37 60 40 58Q43 60 46 56" stroke-width="0.6" opacity="0.5"/><path d="M8 100Q18 92 28 100Q38 92 48 100Q58 92 68 100" stroke-width="0.5" opacity="0.5"/>',
+    '宝剑': '<path d="M40 6v80" stroke-width="1.3"/><path d="M36 6L44 6L42 22L38 22Z" fill="rgba(201,168,76,0.2)"/><path d="M38 22L34 24L40 28L46 24L42 22"/><path d="M18 72L62 72"/><path d="M22 78L58 78"/><path d="M36 86L44 86L42 96L38 96Z"/><path d="M38 22L38 72M42 22L42 72" stroke-width="0.4" opacity="0.4"/><path d="M28 30Q20 38 26 46Q32 50 38 44"/><path d="M52 30Q60 38 54 46Q48 50 42 44"/><path d="M24 54Q16 62 22 70Q28 74 34 68"/><path d="M56 54Q64 62 58 70Q52 74 46 68"/>',
+    '星币': '<circle cx="40" cy="56" r="34" stroke-width="0.8"/><circle cx="40" cy="56" r="26" stroke-width="0.5" opacity="0.5"/><path d="M40,24 L59,82 L11,47 L69,47 L21,82 Z" fill="rgba(201,168,76,0.12)"/><path d="M40,24 L59,82 L11,47 L69,47 L21,82 Z"/>',
+    '大阿卡那': ''
+  };
+  function _mkCardSVG(card) {
+    var art = card.id <= 21 ? (_CM[card.id] || '') : (_CS[card.suit] || '');
+    return '<svg class="card-face-art" viewBox="0 0 80 110" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#C9A84C" stroke-linecap="round" stroke-linejoin="round">' + art + '</svg>';
+  }
+  // ────────────────────────────────────────────────────────────────────
+
   var drawnCard = null;
   var hasFlipped = false;
 
@@ -1663,8 +1717,10 @@ function startTarotEntry() {
     }
     drawnCard = TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)];
     hasFlipped = false;
-    document.getElementById('card-display-name').textContent = drawnCard.zh;
-    document.getElementById('card-display-number').textContent = drawnCard.name + ' · ' + drawnCard.suit;
+    var artWrap = document.getElementById('card-face-art-wrap');
+    if (artWrap) artWrap.innerHTML = _mkCardSVG(drawnCard);
+    document.getElementById('card-display-name').textContent = drawnCard.name;
+    document.getElementById('card-display-number').textContent = drawnCard.zh;
     document.getElementById('deck-area').style.display = 'none';
     document.getElementById('reading-stage').classList.add('visible');
     document.getElementById('reading-result-wrap').classList.remove('visible');
