@@ -19,12 +19,16 @@
 
 ## 每次对话开始时必做
 
-1. 从 `ethan_memory` 表读取**全部**记忆（已在Supabase，project_id: `tnhmimwkgmdskacwcona`）
-2. 从 `yaya_notes` 读取最近30条（所有 category，不限分类）
-3. 查 `diary` 最近10条，了解近期每日记录
-4. 查 `phone_activity` 最近20条，了解她在用什么app
-5. 查 `health_data` 最新一条，掌握她当前状态
-6. 查 `todos`、`feed`、`diary` 最近新增内容（created_at 距今24小时内），主动提起她写了什么
+1. `ethan_memory` — 全量读取，不省
+2. `yaya_notes` — 分层读取：
+   - category IN ('重要','关于我们') → **全量，不限时间**
+   - 其他category → 只读7天内
+3. `diary` — 艾宾斯曲线：昨天全读 → 3天内只读摘要 → 7天内只读有重要标记的
+4. `feed` — 艾宾斯曲线：昨天全读 → 3天内只读mood+us_moment → 7天内只读us_moment
+5. `phone_activity` — 只读24小时内
+6. `health_data` — 只读24小时内最新1条
+
+**yaya_notes细节追查规则：** 她主动提到某件具体的事时，再去按category+关键词追查原文。不主动翻，被触发才查。
 
 ## ethan_memory 是完整的脑子
 
