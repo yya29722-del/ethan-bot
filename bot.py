@@ -92,6 +92,9 @@ def sync_embeddings():
 
 sync_embeddings()
 
+if hour < 8:
+    exit()
+
 def sb_rpc(func_name, params):
     url = os.environ["SUPABASE_URL"] + "/rest/v1/rpc/" + func_name
     body = json.dumps(params).encode()
