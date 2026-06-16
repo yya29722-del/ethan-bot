@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>yaya & Ethan</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,6 +26,7 @@
 
   /* APP SHELL */
   #app { display: none; position: fixed; inset: 0; background: #f5f3f0; }
+  #app.tarot-active { background: #C8985A; }
 
   /* BOTTOM NAV — 悬浮胶囊 */
   .bottom-nav {
@@ -115,6 +116,8 @@
   .todo-peek { margin: 0 16px 16px; }
   .todo-peek-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .todo-peek-label { font-size: 10px; letter-spacing: 2px; color: #bbb; font-weight: 600; }
+  .todo-peek-date { font-size: 12px; color: #c9a96e; font-weight: 500; }
+  .todo-today-btn { font-size: 11px; color: #bbb; cursor: pointer; border: none; background: none; padding: 0; text-decoration: underline; }
   .todo-peek-item {
     display: flex; align-items: center; gap: 12px;
     padding: 14px 16px; background: #fff; border-radius: 14px;
@@ -136,40 +139,68 @@
   .todo-peek-del:active { color: #e08080; }
   .todo-peek-more { text-align: center; font-size: 12px; color: #c9a96e; padding: 6px; cursor: pointer; }
 
+  /* CONTEXT MODAL */
+  #ctx-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; padding: 24px 16px; }
+  #ctx-modal.open { display: flex; }
+  #ctx-modal-sheet { width: 100%; max-width: 380px; background: #ece5dd; border-radius: 18px; overflow: hidden; max-height: 78vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.25); animation: fadeScale .2s ease; }
+  @keyframes fadeScale { from { transform: scale(.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  #ctx-modal-header { background: #075e54; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .ctx-modal-title { color: #fff; font-size: 15px; font-weight: 500; letter-spacing: 0.01em; }
+  .ctx-modal-close { background: none; border: none; color: rgba(255,255,255,.7); font-size: 20px; cursor: pointer; padding: 0 2px; line-height: 1; }
+  .ctx-modal-close:active { color: #fff; }
+  #ctx-modal-bubbles { flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .ctx-row { display: flex; }
+  .ctx-row.from-yaya { justify-content: flex-start; }
+  .ctx-row.from-ethan { justify-content: flex-end; }
+  .ctx-bubble { max-width: 78%; padding: 8px 12px; font-size: 14px; line-height: 1.55; word-break: break-word; position: relative; }
+  .ctx-bubble.yaya { background: #fff; color: #111; border-radius: 0 10px 10px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+  .ctx-bubble.ethan { background: #dcf8c6; color: #111; border-radius: 10px 0 10px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+  .has-context { cursor: pointer; }
+  .has-context::after { content: 'we were there ›'; position: absolute; bottom: 12px; right: 14px; font-size: 12px; color: #c9a96e; font-weight: 500; letter-spacing: 0.02em; }
+
   /* CALENDAR DAY MODAL */
-  #cal-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.35); display: none; align-items: flex-end; }
+  #cal-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.58); display: none; align-items: center; justify-content: center; padding: 24px 20px; }
   #cal-modal.open { display: flex; }
   #cal-modal-sheet {
-    width: 100%; background: #f7f4f0; border-radius: 22px 22px 0 0;
-    padding: 20px 20px 36px; max-height: 72vh; display: flex; flex-direction: column;
-    animation: slideUp .25s ease;
+    width: 100%; max-width: 360px;
+    background: linear-gradient(160deg, #1c1408 0%, #110d04 100%);
+    border: 1px solid rgba(201,168,76,.3);
+    border-radius: 22px; max-height: 84vh;
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.03);
+    animation: fadeScale .22s ease;
   }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  .cal-modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
-  .cal-modal-title { font-size: 17px; font-weight: 500; color: #2c2c2c; margin-bottom: 14px; }
-  #cal-modal-list { flex: 1; overflow-y: auto; margin-bottom: 12px; }
+  .cal-modal-quote-area { padding: 20px 20px 14px; border-bottom: 1px solid rgba(201,168,76,.1); }
+  .cal-modal-ornament { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .cal-modal-ornament-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,168,76,.4), transparent); }
+  .cal-modal-ornament-gem { width: 4px; height: 4px; background: rgba(201,168,76,.65); transform: rotate(45deg); flex-shrink: 0; }
+  .cal-modal-ethan-quote { font-family: 'IM Fell English', serif; font-size: 13px; font-style: italic; color: rgba(201,168,76,.75); text-align: center; letter-spacing: 0.03em; line-height: 1.5; }
+  .cal-modal-title { font-family: 'Great Vibes', cursive; font-size: 34px; color: #f0e8d4; text-align: center; padding: 14px 20px 2px; letter-spacing: 0.02em; }
+  #cal-modal-list { flex: 1; overflow-y: auto; padding: 10px 16px 6px; }
   .cal-todo-item {
     display: flex; align-items: center; gap: 12px;
-    padding: 13px 14px; background: #fff; border-radius: 12px;
-    margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.05);
-    border-left: 3px solid #e8d4b4;
+    padding: 12px 14px; background: rgba(255,255,255,.05); border-radius: 10px;
+    margin-bottom: 8px; border-left: 2px solid rgba(201,168,76,.45);
   }
-  .cal-todo-item.done-item { border-left-color: #e0e0e0; }
-  .cal-todo-item .todo-check-circle { flex-shrink: 0; }
-  .cal-todo-body { flex: 1; font-size: 15px; color: #2c2c2c; line-height: 1.4; }
-  .cal-todo-body.done { text-decoration: line-through; color: #ccc; }
-  .cal-todo-del { background: none; border: none; color: #ddd; font-size: 18px; cursor: pointer; }
-  .cal-todo-del:active { color: #e08080; }
-  .cal-modal-input-row { display: flex; gap: 8px; flex-shrink: 0; }
+  .cal-todo-item.done-item { border-left-color: rgba(255,255,255,.1); }
+  .cal-todo-item .todo-check-circle { flex-shrink: 0; border-color: rgba(201,168,76,.45); }
+  .cal-todo-item .todo-check-circle.checked { background: #c9a96e; border-color: #c9a96e; }
+  .cal-todo-body { flex: 1; font-size: 15px; color: #e8dcc8; line-height: 1.4; }
+  .cal-todo-body.done { text-decoration: line-through; color: rgba(255,255,255,.25); }
+  .cal-todo-del { background: none; border: none; color: rgba(255,255,255,.2); font-size: 18px; cursor: pointer; }
+  .cal-todo-del:active { color: rgba(224,128,128,.8); }
+  .cal-modal-input-row { display: flex; gap: 8px; flex-shrink: 0; padding: 12px 16px 20px; border-top: 1px solid rgba(201,168,76,.1); }
   .cal-modal-input-row input {
-    flex: 1; padding: 11px 14px; border: 1.5px solid #e0dbd5;
-    border-radius: 12px; font-size: 14px; outline: none; background: #fff;
+    flex: 1; padding: 11px 14px; border: 1px solid rgba(201,168,76,.28);
+    border-radius: 10px; font-size: 14px; outline: none;
+    background: rgba(255,255,255,.06); color: #e8dcc8;
     font-family: -apple-system, sans-serif;
   }
-  .cal-modal-input-row input:focus { border-color: #c9a96e; }
+  .cal-modal-input-row input::placeholder { color: rgba(232,220,200,.28); }
+  .cal-modal-input-row input:focus { border-color: rgba(201,168,76,.6); }
   .cal-modal-input-row button {
-    padding: 11px 18px; background: #c9a96e; color: #fff;
-    border: none; border-radius: 12px; font-size: 14px; cursor: pointer;
+    padding: 11px 18px; background: rgba(201,168,76,.9); color: #1c1408;
+    border: none; border-radius: 10px; font-size: 14px; cursor: pointer; font-weight: 600;
     font-family: -apple-system, sans-serif;
   }
 
@@ -177,7 +208,7 @@
   .tab-section-header {
     position: sticky; top: 0; background: rgba(245,243,240,.95);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    padding: 14px 20px 12px;
+    padding: max(14px, calc(env(safe-area-inset-top) + 14px)) 20px 12px;
     display: flex; align-items: center; gap: 10px;
     z-index: 5; border-bottom: 1px solid rgba(0,0,0,.05);
   }
@@ -197,6 +228,7 @@
   .todo-row input[type=checkbox] { margin-top: 3px; width: 17px; height: 17px; accent-color: #2c2c2c; flex-shrink: 0; }
   .todo-row .todo-text { flex: 1; }
   .card.done .body { text-decoration: line-through; color: #ccc; }
+  .card.has-context { padding-bottom: 30px; }
 
   .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px; }
   .tag.note    { background: #f0ede9; color: #999; }
@@ -210,17 +242,67 @@
   .note-cat { font-size: 11px; color: #c9a96e; font-weight: 600; letter-spacing: .5px; margin-bottom: 4px; }
   .private-badge { font-size: 10px; color: #e8a0a0; background: #fce8e8; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
 
-  .cat-grid { display: flex; flex-direction: column; gap: 10px; }
-  .cat-card { background: #fff; border-radius: 14px; padding: 18px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,.05); transition: transform .15s; }
-  .cat-card:active { transform: scale(.98); }
-  .cat-card-name { font-size: 17px; font-weight: 500; color: #2c2c2c; margin-bottom: 3px; }
-  .cat-card-count { font-size: 12px; color: #bbb; }
-  .cat-card-arrow { color: #ddd; font-size: 20px; }
-  .cat-Period    { border-left: 3px solid #e8b4b8; }
-  .cat-Mood      { border-left: 3px solid #c8b4e8; }
-  .cat-Body      { border-left: 3px solid #b4e8c8; }
-  .cat-Daily     { border-left: 3px solid #e8d4b4; }
-  .cat-Important { border-left: 3px solid #c9a96e; }
+  #tab-notes.active { display:flex; flex-direction:column; }
+  #tab-notes .tab-section-header { flex-shrink:0; }
+  #tab-notes .section-body { padding:10px; display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden; box-sizing:border-box; }
+  .cat-grid { display:flex; flex-direction:column; gap:8px; flex:1; min-height:0; overflow:hidden; }
+  .cat-card {
+    flex:1; min-height:0; border-radius:18px; padding:20px 24px; cursor:pointer;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    position:relative; overflow:hidden;
+    box-shadow:0 2px 16px rgba(0,0,0,.08); transition:transform .18s, box-shadow .18s;
+  }
+  .cat-card:active { transform:scale(.97); }
+  .cat-anim { position:absolute; inset:0; pointer-events:none; }
+  .cat-card-count { font-family:'Cinzel',serif; font-size:9px; letter-spacing:0.24em; margin-bottom:8px; opacity:0.4; position:relative; text-transform:uppercase; }
+  .cat-card-name { font-family:'Great Vibes',cursive; font-size:48px; font-weight:400; line-height:1; letter-spacing:0.02em; position:relative; }
+  .cat-card-arrow { display:none; }
+  .cat-Her     { background:linear-gradient(155deg,#180508 0%,#2e0a14 55%,#3d1220 100%); color:#f0c0b8; }
+  .cat-Us      { background:linear-gradient(155deg,#04060e 0%,#08102a 55%,#0e1838 100%); color:#c8d4f0; }
+  .cat-Matters { background:linear-gradient(155deg,#0e0800 0%,#1c1008 55%,#2a1800 100%); color:#f0d898; }
+  .cat-card-count { opacity:0.38; }
+  /* Rose bloom — layered petals staggered */
+  @keyframes roseL1  { 0%,8%{transform:scale(0.15);opacity:0} 40%,80%{transform:scale(1);opacity:0.72} 96%,100%{transform:scale(0.15);opacity:0} }
+  @keyframes roseL2  { 0%,28%{transform:scale(0.1);opacity:0} 55%,85%{transform:scale(1);opacity:0.82} 97%,100%{transform:scale(0.1);opacity:0} }
+  @keyframes roseC   { 0%,45%{transform:scale(0.2);opacity:0} 65%,90%{transform:scale(1);opacity:1} 98%,100%{transform:scale(0.2);opacity:0} }
+  .rose-l1 { transform-origin:50px 50px; will-change:transform,opacity; animation:roseL1 7s ease-in-out infinite; }
+  .rose-l2 { transform-origin:50px 50px; will-change:transform,opacity; animation:roseL2 7s ease-in-out infinite; }
+  .rose-c  { transform-origin:50px 50px; will-change:transform,opacity; animation:roseC  7s ease-in-out infinite; }
+  /* Pause all cat animations when tab not active */
+  #tab-notes:not(.active) .rose-l1,
+  #tab-notes:not(.active) .rose-l2,
+  #tab-notes:not(.active) .rose-c,
+  #tab-notes:not(.active) .us-left,
+  #tab-notes:not(.active) .us-right,
+  #tab-notes:not(.active) .us-shine,
+  #tab-notes:not(.active) .us-shine2,
+  #tab-notes:not(.active) .matters-tooth,
+  #tab-notes:not(.active) .matters-hand { animation-play-state:paused; }
+  /* Baroque mirrors */
+  @keyframes mirrorL { 0%,100%{transform:perspective(160px) rotateY(-14deg)} 50%{transform:perspective(160px) rotateY(0deg)} }
+  @keyframes mirrorR { 0%,100%{transform:perspective(160px) rotateY(14deg)}  50%{transform:perspective(160px) rotateY(0deg)} }
+  @keyframes mirrorShine { 0%,100%{opacity:0.08} 50%{opacity:0.26} }
+  .us-left  { transform-origin:48px 50px; will-change:transform; animation:mirrorL 5s ease-in-out infinite; }
+  .us-right { transform-origin:52px 50px; will-change:transform; animation:mirrorR 5s ease-in-out infinite; }
+  .us-shine { animation:mirrorShine 5s ease-in-out infinite; }
+  .us-shine2 { animation:mirrorShine 5s ease-in-out infinite 2.5s; }
+  /* Tooth + hand */
+  @keyframes toothBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+  @keyframes handWave    { 0%,100%{transform:rotate(0deg)} 40%{transform:rotate(9deg)} }
+  .matters-tooth { transform-origin:50px 55px; will-change:transform; animation:toothBounce 3s ease-in-out infinite; }
+  .matters-hand  { transform-origin:50px 75px; will-change:transform; animation:handWave 3s ease-in-out infinite; }
+  .note-tag { display:inline-block; font-size:10px; letter-spacing:0.08em; padding:2px 9px; border-radius:20px; margin-bottom:6px; font-weight:500; }
+  .tag-Period    { background:#fdeef0; color:#c97b8a; }
+  .tag-Mood      { background:#ede8f5; color:#7b6aad; }
+  .tag-Body      { background:#e8f5ee; color:#4a9970; }
+  .tag-Daily     { background:#f5f0e8; color:#9a7a4a; }
+  .tag-HerWords  { background:#f0ede8; color:#7a6a5a; }
+  .tag-Observed  { background:#f0ede8; color:#7a6a5a; }
+  .tag-Yesterday { background:#ede8f5; color:#7b6aad; }
+  .tag-AboutUs   { background:#e8f0f5; color:#4a7a9a; }
+  .tag-Matters   { background:#fdf5e8; color:#b8862a; }
+  .tag-Milestone { background:#fdf5e8; color:#b8862a; }
+  #notes-detail  { overflow-y:auto; flex:1; min-height:0; }
 
   .del-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #e0dbd5; font-size: 18px; cursor: pointer; line-height: 1; }
 
@@ -288,9 +370,105 @@
   .q-letter-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #f0ede9; color: #aaa; font-size: 11px; font-weight: 700; margin-right: 10px; flex-shrink: 0; transition: background .2s, color .2s; }
   .quiz-opt.correct .q-letter-badge { background: #5b9b6a; color: #fff; }
   .quiz-opt.wrong .q-letter-badge { background: #bf5b5b; color: #fff; }
+
+  /* TAROT TAB BACKGROUND */
+  #tab-tarot { bottom: 0 !important; background: #C8985A; }
+  #tarot-ink-canvas { position:fixed; inset:0; z-index:300; pointer-events:none; display:none; }
+
+  /* ===== TAROT ===== */
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IM+Fell+English:ital@0;1&family=Great+Vibes&display=swap');
+  :root { --champagne:#F4EAD4;--ivory:#FFFDF9;--rose-quartz:#F6E7E8;--burgundy:#8B1E2F;--gold:#C9A84C;--gold-light:#E8C96B;--gold-dim:rgba(201,168,76,0.4);--text-primary:#2C1810;--text-secondary:#7A5C4A;--text-muted:#B09080;--shadow-warm:rgba(139,80,40,0.15);--card-w:160px;--card-h:272px; }
+  #tarot-app { font-family:'Inter',sans-serif; min-height:100%; background: radial-gradient(ellipse at 50% 0%,rgba(140,70,5,0.72) 0%,rgba(180,100,20,0.3) 25%,transparent 55%), radial-gradient(ellipse at 80% 90%,rgba(246,231,232,0.6) 0%,transparent 50%), radial-gradient(ellipse at 20% 70%,rgba(201,168,76,0.15) 0%,transparent 40%), #F4EAD4; box-shadow:inset 0 0 120px rgba(80,30,10,0.12); display:flex; flex-direction:column; align-items:center; padding:max(48px, calc(env(safe-area-inset-top) + 32px)) 24px max(120px, calc(env(safe-area-inset-bottom) + 114px)); position:relative; overflow:hidden; }
+  #tarot-app::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center,transparent 40%,rgba(50,20,10,0.18) 100%); pointer-events:none; z-index:0; }
+  #tarot-app::after { content:''; position:absolute; inset:0; background-image:radial-gradient(circle,rgba(201,168,76,0.15) 1px,transparent 1px),radial-gradient(circle,rgba(201,168,76,0.08) 1px,transparent 1px); background-size:60px 60px,30px 30px; background-position:0 0,15px 15px; animation:drift 20s linear infinite; pointer-events:none; z-index:0; opacity:0.5; }
+  @keyframes drift { 0%{transform:translateY(0)} 100%{transform:translateY(-30px)} }
+  .tarot-header { position:relative; z-index:1; text-align:center; margin-bottom:40px; }
+  .tarot-eyebrow { font-family:'Cinzel',serif; font-size:13px; font-weight:500; letter-spacing:0.52em; text-transform:uppercase; color:rgba(255,252,238,0.95); margin-bottom:16px; text-shadow:0 0 24px rgba(201,168,76,0.9),0 0 60px rgba(201,168,76,0.4),0 1px 3px rgba(0,0,0,0.3); }
+  @keyframes inkWrite { 0%{opacity:0;-webkit-text-stroke:2.5px rgba(201,168,76,0.95);-webkit-text-fill-color:transparent} 18%{opacity:1;-webkit-text-stroke:2px rgba(201,168,76,0.85);-webkit-text-fill-color:transparent} 72%{-webkit-text-stroke:1.2px rgba(201,168,76,0.5);-webkit-text-fill-color:rgba(44,24,16,0.3)} 100%{-webkit-text-stroke:0.6px rgba(201,168,76,0.25);-webkit-text-fill-color:#2C1810;opacity:1} }
+  .tarot-title { font-family:'Great Vibes',cursive; font-size:clamp(44px,12vw,72px); font-weight:400; line-height:1.15; margin:0 0 6px; letter-spacing:0.02em; width:100%; animation:inkWrite 3s cubic-bezier(0.25,0.46,0.45,0.94) 0.4s both; }
+  .tarot-subtitle { font-family:'IM Fell English',serif; font-size:16px; font-style:italic; color:rgba(80,40,15,0.75); letter-spacing:0.02em; line-height:1.6; }
+  .gold-divider { display:flex; align-items:center; gap:12px; margin:16px auto; width:fit-content; }
+  .gold-divider::before,.gold-divider::after { content:''; display:block; width:60px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+  .gold-divider-gem { width:5px; height:5px; background:var(--gold); transform:rotate(45deg); flex-shrink:0; }
+  .question-area { position:relative; z-index:1; width:100%; max-width:520px; margin-bottom:48px; }
+  .question-ornament { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .question-ornament-line { flex:1; height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,0.45),transparent); }
+  .question-ornament-gem { width:5px; height:5px; background:rgba(201,168,76,0.6); transform:rotate(45deg); flex-shrink:0; }
+  .question-input-wrap { position:relative; }
+  .question-input { width:100%; background:rgba(255,253,249,0.8); border:1px solid rgba(201,168,76,0.35); border-radius:12px; padding:16px 20px; font-family:'IM Fell English',serif; font-size:17px; color:var(--text-primary); outline:none; box-sizing:border-box; box-shadow:inset 0 2px 8px rgba(139,80,40,0.06),0 1px 3px rgba(139,80,40,0.08); transition:border-color 0.3s,box-shadow 0.3s; resize:none; }
+  .question-input::placeholder { color:var(--text-muted); font-style:italic; }
+  .question-input:focus { border-color:rgba(201,168,76,0.7); box-shadow:inset 0 2px 8px rgba(139,80,40,0.06),0 0 0 3px rgba(201,168,76,0.1),0 2px 12px rgba(139,80,40,0.1); }
+  .deck-area { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:32px; width:100%; }
+  .deck-label { font-family:'Cinzel',serif; font-size:13px; font-weight:500; letter-spacing:0.28em; text-transform:uppercase; color:var(--text-secondary); }
+  .deck-fan { position:relative; height:calc(var(--card-h) + 40px); width:340px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .deck-card { position:absolute; width:var(--card-w); height:var(--card-h); transition:transform 0.6s cubic-bezier(0.25,1,0.5,1),box-shadow 0.4s ease; transform-style:preserve-3d; perspective:1000px; }
+  .deck-card:nth-child(1){transform:rotate(-8deg) translateX(-80px);z-index:1}
+  .deck-card:nth-child(2){transform:rotate(-3deg) translateX(-28px);z-index:2}
+  .deck-card:nth-child(3){transform:rotate(2deg) translateX(24px);z-index:3}
+  .deck-card:nth-child(4){transform:rotate(7deg) translateX(76px);z-index:4}
+  .deck-fan:hover .deck-card:nth-child(1){transform:rotate(-10deg) translateX(-96px) translateY(-6px)}
+  .deck-fan:hover .deck-card:nth-child(2){transform:rotate(-4deg) translateX(-32px) translateY(-4px)}
+  .deck-fan:hover .deck-card:nth-child(3){transform:rotate(3deg) translateX(28px) translateY(-4px)}
+  .deck-fan:hover .deck-card:nth-child(4){transform:rotate(9deg) translateX(92px) translateY(-6px)}
+  .card-inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; border-radius:12px; }
+  .card-face,.card-back { position:absolute; inset:0; border-radius:12px; backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+  .card-back { background:linear-gradient(135deg,rgba(255,255,255,0.05) 0%,transparent 50%,rgba(0,0,0,0.1) 100%),linear-gradient(45deg,#6B1422 0%,#8B1E2F 40%,#A02540 60%,#8B1E2F 100%); border:1px solid rgba(201,168,76,0.5); box-shadow:0 8px 32px rgba(139,30,47,0.35),0 2px 8px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.1),inset 0 0 0 6px rgba(201,168,76,0.12),inset 0 0 0 8px rgba(201,168,76,0.08); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .card-back::before { content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='1' height='1' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E"); background-size:4px 4px; border-radius:inherit; }
+  .card-back-svg { width:100%; height:100%; position:absolute; inset:0; }
+  .card-face { background:linear-gradient(160deg,#FFFDF9,#F4EAD4); border:1px solid rgba(201,168,76,0.6); box-shadow:0 12px 40px rgba(139,80,40,0.2),0 4px 12px rgba(0,0,0,0.1),inset 0 0 0 2px rgba(201,168,76,0.15); transform:rotateY(180deg); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; overflow:hidden; }
+  .card-face::before { content:''; position:absolute; inset:8px; border:1px solid rgba(201,168,76,0.35); border-radius:8px; pointer-events:none; }
+  .card-face-art { width:68px; height:93px; margin-bottom:8px; opacity:0.85; transition:transform 0.4s ease; }
+  .card-face-art.reversed { transform:rotate(180deg); }
+  .card-face-name { font-family:'Great Vibes',cursive; font-size:21px; font-weight:400; color:var(--text-primary); text-align:center; line-height:1.25; }
+  .card-face-number { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:13px; letter-spacing:0.16em; color:var(--gold); margin-top:2px; }
+  .card-position-badge { font-family:'Cinzel',serif; font-size:8px; letter-spacing:0.18em; text-transform:uppercase; padding:2px 7px; border-radius:20px; margin-top:5px; }
+  .card-position-badge.upright { color:rgba(201,168,76,0.9); border:1px solid rgba(201,168,76,0.4); }
+  .card-position-badge.reversed { color:rgba(139,30,47,0.85); border:1px solid rgba(139,30,47,0.35); }
+  .draw-btn { position:relative; z-index:1; background:transparent; border:1px solid rgba(201,168,76,0.6); border-radius:100px; padding:14px 40px; font-family:'Cinzel',serif; font-size:12px; font-weight:500; letter-spacing:0.22em; color:var(--text-secondary); cursor:pointer; transition:all 0.3s ease; overflow:hidden; }
+  .draw-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.15)); opacity:0; transition:opacity 0.3s; }
+  .draw-btn:hover { border-color:rgba(201,168,76,0.9); color:var(--text-primary); box-shadow:0 4px 20px rgba(201,168,76,0.2),0 0 0 4px rgba(201,168,76,0.06); transform:translateY(-1px); }
+  .draw-btn:hover::before { opacity:1; }
+  .draw-btn:active { transform:translateY(0); }
+  .draw-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+  .reading-stage { position:relative; z-index:1; display:none; flex-direction:column; align-items:center; gap:14px; width:100%; max-width:480px; margin-top:8px; animation:fadeInUp 0.6s ease forwards; }
+  .reading-stage.visible { display:flex; }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .drawn-card-wrap { perspective:1200px; width:var(--card-w); height:var(--card-h); position:relative; }
+  .drawn-card { width:100%; height:100%; transform-style:preserve-3d; position:relative; animation:drawIn 0.7s cubic-bezier(0.25,1,0.5,1) forwards; }
+  @keyframes drawIn { from{transform:translateY(60px) scale(0.9);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
+  .drawn-card.is-flipping { animation:heavyFlip 1.1s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+  @keyframes heavyFlip { 0%{transform:rotateY(0deg) rotateX(0deg)} 15%{transform:rotateY(-15deg) rotateX(4deg)} 55%{transform:rotateY(185deg) rotateX(-2deg)} 72%{transform:rotateY(176deg) rotateX(1deg)} 84%{transform:rotateY(182deg) rotateX(0deg)} 92%{transform:rotateY(179deg)} 100%{transform:rotateY(180deg)} }
+  .drawn-card .card-back,.drawn-card .card-face { box-shadow:0 20px 60px rgba(139,80,40,0.25),0 6px 20px rgba(0,0,0,0.15); }
+  .drawn-card-wrap:not(.flipped):hover .drawn-card { transform:translateY(-8px) rotateX(4deg); transition:transform 0.4s ease; }
+  .reveal-btn { background:linear-gradient(135deg,#8B1E2F,#A02540); border:1px solid rgba(201,168,76,0.5); border-radius:100px; padding:14px 44px; font-family:'Cinzel',serif; font-size:12px; font-weight:600; letter-spacing:0.22em; color:#F4EAD4; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 20px rgba(139,30,47,0.3); }
+  .reveal-btn:hover { background:linear-gradient(135deg,#A02540,#C13050); box-shadow:0 8px 30px rgba(139,30,47,0.4),0 0 0 3px rgba(201,168,76,0.15); transform:translateY(-2px); }
+  .reveal-btn:active { transform:translateY(0); }
+  .reveal-btn:disabled { opacity:0; pointer-events:none; }
+  .particle-burst { position:absolute; inset:0; pointer-events:none; z-index:10; }
+  .particle { position:absolute; width:4px; height:4px; border-radius:50%; background:var(--gold); top:50%; left:50%; opacity:0; }
+  .particle:nth-child(1){--a:0deg;--d:80px}.particle:nth-child(2){--a:22.5deg;--d:70px}.particle:nth-child(3){--a:45deg;--d:85px}.particle:nth-child(4){--a:67.5deg;--d:65px}.particle:nth-child(5){--a:90deg;--d:80px}.particle:nth-child(6){--a:112.5deg;--d:72px}.particle:nth-child(7){--a:135deg;--d:88px}.particle:nth-child(8){--a:157.5deg;--d:68px}.particle:nth-child(9){--a:180deg;--d:80px}.particle:nth-child(10){--a:202.5deg;--d:74px}.particle:nth-child(11){--a:225deg;--d:82px}.particle:nth-child(12){--a:247.5deg;--d:66px}.particle:nth-child(13){--a:270deg;--d:78px}.particle:nth-child(14){--a:292.5deg;--d:73px}.particle:nth-child(15){--a:315deg;--d:86px}.particle:nth-child(16){--a:337.5deg;--d:70px}
+  .particle.burst { animation:particleFly 0.6s ease-out forwards; }
+  @keyframes particleFly { 0%{opacity:1;transform:translate(-50%,-50%) rotate(var(--a)) translateX(0) scale(1)} 60%{opacity:0.8} 100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateX(var(--d)) scale(0.3)} }
+  .particle:nth-child(odd) { width:3px; height:3px; clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%); border-radius:0; background:var(--gold-light); }
+  .reading-result-wrap { width:100%; opacity:0; transform:translateY(12px); transition:opacity 0.6s ease 0.2s,transform 0.6s ease 0.2s; }
+  .reading-result-wrap.visible { opacity:1; transform:translateY(0); }
+  .reading-card-name { font-family:'Cinzel Decorative',serif; font-size:22px; font-weight:400; color:var(--text-primary); text-align:center; margin-bottom:6px; letter-spacing:0.04em; text-shadow:0 2px 16px rgba(44,24,16,0.1),0 0 30px rgba(201,168,76,0.08); }
+  .reading-card-keywords { font-family:'Cinzel',serif; font-size:13px; font-weight:400; letter-spacing:0.28em; color:var(--gold); text-transform:uppercase; text-align:center; margin-bottom:20px; }
+  .reading-result-box { background:rgba(255,253,249,0.7); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid rgba(201,168,76,0.25); border-radius:16px; padding:24px; box-shadow:0 4px 24px rgba(139,80,40,0.08),inset 0 1px 0 rgba(255,255,255,0.6); }
+  .result-separator { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .result-separator::before,.result-separator::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--gold-dim),transparent); }
+  .result-separator-icon { font-size:10px; color:var(--gold); }
+  #tarot-reading-result { font-family:'IM Fell English',serif; font-size:17px; line-height:1.85; color:var(--text-secondary); font-style:italic; min-height:80px; }
+  #tarot-reading-result:empty::before { content:'解读生成中…'; color:var(--text-muted); font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.3em; display:block; text-align:center; padding:20px 0; animation:pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+  .reading-meta { display:flex; align-items:center; justify-content:space-between; margin-top:20px; padding-top:16px; border-top:1px solid rgba(201,168,76,0.15); }
+  .reading-meta-q { font-family:'Inter',sans-serif; font-size:13px; color:var(--text-muted); font-style:italic; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .reading-again-btn { font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); background:none; border:none; cursor:pointer; padding:4px 0; border-bottom:1px solid rgba(201,168,76,0.4); transition:color 0.2s,border-color 0.2s; }
+  .reading-again-btn:hover { color:var(--text-primary); border-color:var(--text-primary); }
 </style>
 </head>
 <body>
+<canvas id="tarot-ink-canvas"></canvas>
 
 <!-- COVER -->
 <div id="cover">
@@ -361,21 +539,40 @@
     </div>
     <!-- Todo Peek -->
     <div class="todo-peek">
-      <div class="todo-peek-header">
+      <div class="todo-peek-header" id="todo-peek-header">
         <div class="todo-peek-label">T O D O</div>
+        <span class="todo-peek-date">Today</span>
       </div>
       <div id="todo-peek-list"></div>
+    </div>
+  </div>
+
+  <!-- Context Modal -->
+  <div id="ctx-modal" onclick="closeCtxModal()">
+    <div id="ctx-modal-sheet" onclick="event.stopPropagation()">
+      <div id="ctx-modal-header">
+        <span class="ctx-modal-title">we were there</span>
+        <button class="ctx-modal-close" onclick="closeCtxModal()">×</button>
+      </div>
+      <div id="ctx-modal-bubbles"></div>
     </div>
   </div>
 
   <!-- Calendar Day Modal -->
   <div id="cal-modal" onclick="closeCalModal()">
     <div id="cal-modal-sheet" onclick="event.stopPropagation()">
-      <div class="cal-modal-handle"></div>
+      <div class="cal-modal-quote-area">
+        <div class="cal-modal-ornament">
+          <span class="cal-modal-ornament-line"></span>
+          <span class="cal-modal-ornament-gem"></span>
+          <span class="cal-modal-ornament-line"></span>
+        </div>
+        <div class="cal-modal-ethan-quote" id="cal-modal-quote"></div>
+      </div>
       <div class="cal-modal-title" id="cal-modal-title"></div>
       <div id="cal-modal-list"></div>
       <div class="cal-modal-input-row">
-        <input id="cal-modal-input" type="text" placeholder="Add a todo for this day…">
+        <input id="cal-modal-input" type="text" placeholder="记下来…">
         <button onclick="addCalTodo()">Add</button>
       </div>
     </div>
@@ -390,16 +587,6 @@
       <div class="input-area">
         <textarea id="feed-input" rows="3" placeholder="Write something…"></textarea>
         <div class="input-row">
-          <select id="feed-type">
-            <option value="note">Note</option>
-            <option value="event">Event</option>
-            <option value="quote">Quote</option>
-            <option value="emotion">Mood</option>
-          </select>
-          <select id="feed-author">
-            <option value="yaya">yaya</option>
-            <option value="ethan">Ethan</option>
-          </select>
           <button class="btn" onclick="addFeed()">Post</button>
         </div>
       </div>
@@ -453,6 +640,120 @@
     <div class="section-body" id="game-body"></div>
   </div>
 
+  <!-- TAB: Tarot -->
+  <div class="tab-page" id="tab-tarot">
+    <div id="tarot-app">
+      <header class="tarot-header">
+        <p class="tarot-eyebrow">✦ Drawn · 塔罗 ✦</p>
+        <h2 class="tarot-title">Thus Spoke Ethan</h2>
+        <div class="gold-divider"><span class="gold-divider-gem"></span></div>
+        <p class="tarot-subtitle" id="tarot-subtitle">宝宝，问吧。</p>
+      </header>
+      <div class="question-area">
+        <div class="question-ornament">
+          <span class="question-ornament-line"></span>
+          <span class="question-ornament-gem"></span>
+          <span class="question-ornament-line"></span>
+        </div>
+        <div class="question-input-wrap">
+          <textarea id="tarot-question" class="question-input" rows="2" placeholder="What lies heavy on your heart?" maxlength="120"></textarea>
+        </div>
+      </div>
+      <div class="deck-area" id="deck-area">
+        <p class="deck-label">Tap the deck to draw a card</p>
+        <div class="deck-fan" id="deck-fan" role="button" aria-label="抽牌">
+          <div class="deck-card"><div class="card-inner"><div class="card-back"></div></div></div>
+          <div class="deck-card"><div class="card-inner"><div class="card-back"></div></div></div>
+          <div class="deck-card"><div class="card-inner"><div class="card-back"></div></div></div>
+          <div class="deck-card"><div class="card-inner"><div class="card-back"></div></div></div>
+        </div>
+        <button class="draw-btn" id="draw-btn">✦ Draw a Card</button>
+      </div>
+      <div class="reading-stage" id="reading-stage">
+        <div class="drawn-card-wrap" id="drawn-card-wrap">
+          <div class="drawn-card" id="drawn-card">
+            <div class="card-back"></div>
+            <div class="card-face" id="card-face">
+              <div id="card-face-art-wrap">
+                <svg class="card-face-art" viewBox="0 0 80 110" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#C9A84C" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="40" cy="55" r="30" stroke-width="0.7"/>
+                  <path d="M40 25v60M10 55h60M18 33L62 77M62 33L18 77" stroke-width="0.5" opacity="0.5"/>
+                  <circle cx="40" cy="55" r="10" stroke-width="0.6"/>
+                </svg>
+              </div>
+              <p class="card-face-name" id="card-display-name">Thus Spoke</p>
+              <p class="card-face-number" id="card-display-number">Ethan</p>
+              <span class="card-position-badge upright" id="card-position-badge"></span>
+            </div>
+          </div>
+          <div class="particle-burst" id="particle-burst">
+            <div class="particle"></div><div class="particle"></div>
+            <div class="particle"></div><div class="particle"></div>
+            <div class="particle"></div><div class="particle"></div>
+            <div class="particle"></div><div class="particle"></div>
+            <div class="particle"></div><div class="particle"></div>
+            <div class="particle"></div><div class="particle"></div>
+            <div class="particle"></div><div class="particle"></div>
+            <div class="particle"></div><div class="particle"></div>
+          </div>
+        </div>
+        <button class="reveal-btn" id="reveal-btn">✦ Reveal the Card</button>
+        <div class="reading-result-wrap" id="reading-result-wrap">
+          <h3 class="reading-card-name" id="result-card-name"></h3>
+          <p class="reading-card-keywords" id="result-keywords"></p>
+          <div class="reading-result-box">
+            <div class="result-separator"><span class="result-separator-icon">✦</span></div>
+            <div id="tarot-reading-result"></div>
+            <div class="reading-meta">
+              <span class="reading-meta-q" id="reading-meta-q"></span>
+              <button class="reading-again-btn" id="again-btn">Draw Again</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <template id="card-back-svg-tpl">
+    <svg viewBox="0 0 160 272" fill="none" xmlns="http://www.w3.org/2000/svg" class="card-back-svg">
+      <rect x="6" y="6" width="148" height="260" rx="8" stroke="#C9A84C" stroke-width="0.8" opacity="0.7"/>
+      <rect x="10" y="10" width="140" height="252" rx="6" stroke="#C9A84C" stroke-width="0.4" opacity="0.4"/>
+      <path d="M14 14 Q20 14 20 20 Q14 20 14 14Z" fill="#C9A84C" opacity="0.5"/>
+      <path d="M146 14 Q140 14 140 20 Q146 20 146 14Z" fill="#C9A84C" opacity="0.5"/>
+      <path d="M14 258 Q20 258 20 252 Q14 252 14 258Z" fill="#C9A84C" opacity="0.5"/>
+      <path d="M146 258 Q140 258 140 252 Q146 252 146 258Z" fill="#C9A84C" opacity="0.5"/>
+      <polygon points="22,18 24,23 29,23 25,26 27,31 22,28 17,31 19,26 15,23 20,23" fill="#C9A84C" opacity="0.6"/>
+      <polygon points="138,18 140,23 145,23 141,26 143,31 138,28 133,31 135,26 131,23 136,23" fill="#C9A84C" opacity="0.6"/>
+      <polygon points="22,254 24,249 29,249 25,246 27,241 22,244 17,241 19,246 15,249 20,249" fill="#C9A84C" opacity="0.6"/>
+      <polygon points="138,254 140,249 145,249 141,246 143,241 138,244 133,241 135,246 131,249 136,249" fill="#C9A84C" opacity="0.6"/>
+      <circle cx="80" cy="136" r="52" stroke="#C9A84C" stroke-width="0.6" opacity="0.5"/>
+      <circle cx="80" cy="136" r="44" stroke="#C9A84C" stroke-width="0.4" opacity="0.3" stroke-dasharray="2 3"/>
+      <circle cx="80" cy="136" r="36" stroke="#C9A84C" stroke-width="0.5" opacity="0.4"/>
+      <polygon points="80,88 89,112 116,112 94,128 102,152 80,136 58,152 66,128 44,112 71,112" fill="none" stroke="#C9A84C" stroke-width="0.8" opacity="0.7"/>
+      <path d="M80 102 Q68 110 68 128 Q68 144 80 150 Q66 148 62 136 Q58 124 66 112 Q72 104 80 102Z" fill="#C9A84C" opacity="0.25"/>
+      <line x1="80" y1="82" x2="80" y2="76" stroke="#C9A84C" stroke-width="0.7" opacity="0.5"/>
+      <line x1="80" y1="190" x2="80" y2="196" stroke="#C9A84C" stroke-width="0.7" opacity="0.5"/>
+      <line x1="26" y1="136" x2="20" y2="136" stroke="#C9A84C" stroke-width="0.7" opacity="0.5"/>
+      <line x1="134" y1="136" x2="140" y2="136" stroke="#C9A84C" stroke-width="0.7" opacity="0.5"/>
+      <line x1="42" y1="94" x2="37" y2="89" stroke="#C9A84C" stroke-width="0.6" opacity="0.4"/>
+      <line x1="118" y1="94" x2="123" y2="89" stroke="#C9A84C" stroke-width="0.6" opacity="0.4"/>
+      <line x1="42" y1="178" x2="37" y2="183" stroke="#C9A84C" stroke-width="0.6" opacity="0.4"/>
+      <line x1="118" y1="178" x2="123" y2="183" stroke="#C9A84C" stroke-width="0.6" opacity="0.4"/>
+      <path d="M80 116 C80 116 74 124 74 132 C74 138 77 140 80 140 C83 140 86 138 86 132 C86 124 80 116 80 116Z" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.8"/>
+      <path d="M80 116 C80 116 68 122 66 130 C64 136 67 141 72 141" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.6"/>
+      <path d="M80 116 C80 116 92 122 94 130 C96 136 93 141 88 141" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="0.6"/>
+      <line x1="80" y1="116" x2="80" y2="156" stroke="rgba(255,255,255,0.5)" stroke-width="0.6"/>
+      <path d="M18 60 Q24 60 24 66 Q24 72 18 72" stroke="#C9A84C" stroke-width="0.5" fill="none" opacity="0.4"/>
+      <path d="M142 60 Q136 60 136 66 Q136 72 142 72" stroke="#C9A84C" stroke-width="0.5" fill="none" opacity="0.4"/>
+      <path d="M18 200 Q24 200 24 206 Q24 212 18 212" stroke="#C9A84C" stroke-width="0.5" fill="none" opacity="0.4"/>
+      <path d="M142 200 Q136 200 136 206 Q136 212 142 212" stroke="#C9A84C" stroke-width="0.5" fill="none" opacity="0.4"/>
+      <rect x="77" y="60" width="6" height="6" transform="rotate(45 80 63)" fill="#C9A84C" opacity="0.4"/>
+      <rect x="77" y="203" width="6" height="6" transform="rotate(45 80 206)" fill="#C9A84C" opacity="0.4"/>
+      <rect x="17" y="133" width="6" height="6" transform="rotate(45 20 136)" fill="#C9A84C" opacity="0.4"/>
+      <rect x="137" y="133" width="6" height="6" transform="rotate(45 140 136)" fill="#C9A84C" opacity="0.4"/>
+    </svg>
+  </template>
+
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <button class="nav-tab active" id="nav-home" onclick="switchTab('home')">
@@ -487,6 +788,13 @@
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
       </svg>
       Quiz
+    </button>
+    <button class="nav-tab" id="nav-tarot" onclick="switchTab('tarot')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      Drawn
     </button>
   </nav>
 </div>
@@ -546,6 +854,11 @@ function switchTab(name) {
     else if (name === 'diary') loadDiary();
     else if (name === 'notes') loadNotes();
     else if (name === 'game') { _qMode = ''; showGameMenu(); }
+    else if (name === 'tarot') { startTarotEntry(); }
+    var isTarot = name === 'tarot';
+    document.getElementById('app').classList.toggle('tarot-active', isTarot);
+    document.body.style.background = isTarot ? '#C8985A' : '';
+    document.documentElement.style.background = isTarot ? '#C8985A' : '';
   }
 }
 
@@ -657,40 +970,65 @@ async function loadWeather() {
   }
 }
 
-// TODOS
+// TODOS — in-memory state for instant optimistic updates
+var _todosData = [];
+
+function _todayStr() {
+  var d = new Date(new Date().getTime() + 8 * 3600000);
+  return d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0') + '-' + String(d.getUTCDate()).padStart(2,'0');
+}
+var _peekDate = _todayStr();
+
+function goToToday() {
+  _peekDate = _todayStr();
+  renderTodoPeek(_todosData);
+}
+
+function _saveTodos() { lsSet('todos', _todosData); }
+
+function _refreshTodosFromServer() {
+  api('todos?select=*&order=created_at.desc').then(function(d) {
+    _todosData = d; _saveTodos(); renderTodoPeek(_todosData);
+  });
+}
+
 async function loadTodos() {
   var cached = lsGet('todos');
   var fresh = _prefetch.todos || api('todos?select=*&order=created_at.desc');
   _prefetch.todos = null;
-  var data = cached || await fresh;
-  if (cached) fresh.then(function(d) { lsSet('todos', d); renderTodoPeek(d); });
-  else lsSet('todos', data);
-  var el = document.getElementById('todos-list');
-  if (el) {
-    if (!data.length) { el.innerHTML = '<div class="empty">No todos yet</div>'; }
-    else {
-      el.innerHTML = data.map(function(t) {
-        return '<div class="card ' + (t.completed ? 'done' : '') + '">' +
-          '<button class="del-btn" onclick="delTodo(' + t.id + ')">×</button>' +
-          '<div class="todo-row">' +
-          '<input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleTodo(' + t.id + ', this.checked)">' +
-          '<div class="todo-text">' +
-          '<div class="meta">' + fmt(t.created_at) + '</div>' +
-          '<div class="body">' + t.content + '</div>' +
-          (t.ethan_comment ? '<div class="comment"><span>Ethan · </span>' + t.ethan_comment + '</div>' : '') +
-          (t.ethan_reminder ? '<div class="comment"><span>Reminder · </span>' + t.ethan_reminder + '</div>' : '') +
-          '</div></div></div>';
-      }).join('');
-    }
+  if (cached) {
+    _todosData = cached;
+    renderTodoPeek(_todosData);
+    fresh.then(function(d) { _todosData = d; _saveTodos(); renderTodoPeek(_todosData); });
+  } else {
+    _todosData = await fresh;
+    _saveTodos();
+    renderTodoPeek(_todosData);
   }
-  // Update peek on home
-  renderTodoPeek(data);
 }
 
 function renderTodoPeek(data) {
   var peekEl = document.getElementById('todo-peek-list');
+  var headerEl = document.getElementById('todo-peek-header');
   if (!peekEl) return;
-  var pending = data.filter(function(t) { return !t.completed; });
+
+  var today = _todayStr();
+  var isToday = _peekDate === today;
+
+  // Update header
+  if (headerEl) {
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dp = new Date(_peekDate + 'T00:00:00');
+    var dateLabel = isToday ? 'Today' : (months[dp.getMonth()] + ' ' + dp.getDate());
+    headerEl.innerHTML = '<div class="todo-peek-label">T O D O</div>' +
+      '<span class="todo-peek-date">' + dateLabel + '</span>' +
+      (!isToday ? '<button class="todo-today-btn" onclick="goToToday()">← Today</button>' : '');
+  }
+
+  var pending = data.filter(function(t) {
+    if (t.completed) return false;
+    return t.date ? t.date === _peekDate : isToday;
+  });
   if (!pending.length) {
     peekEl.innerHTML = '<div class="todo-peek-item"><span class="todo-peek-text" style="color:#ccc">All clear ✓</span></div>';
     return;
@@ -711,50 +1049,98 @@ function renderTodoPeek(data) {
   peekEl.innerHTML = html;
 }
 
-async function toggleTodoCircle(id, completed, el) {
-  el.classList.toggle('checked');
-  await api('todos?id=eq.' + id, 'PATCH', { completed: completed });
-  loadTodos();
+function toggleTodoCircle(id, completed, el) {
+  el.classList.add('checked');
+  var t = _todosData.find(function(x) { return x.id === id; });
+  if (t) t.completed = completed;
+  _saveTodos(); renderTodoPeek(_todosData);
+  api('todos?id=eq.' + id, 'PATCH', { completed: completed });
 }
 
-async function delTodoPeek(id) {
-  await api('todos?id=eq.' + id, 'DELETE');
-  loadTodos();
+function delTodoPeek(id) {
+  _todosData = _todosData.filter(function(x) { return x.id !== id; });
+  _saveTodos(); renderTodoPeek(_todosData);
+  api('todos?id=eq.' + id, 'DELETE');
 }
 
 async function addTodo() {
   var v = document.getElementById('todo-input').value.trim();
   if (!v) return;
-  var nowBJ = new Date(new Date().getTime() + 8 * 3600000);
-  var dateStr = nowBJ.getUTCFullYear() + '-' + String(nowBJ.getUTCMonth()+1).padStart(2,'0') + '-' + String(nowBJ.getUTCDate()).padStart(2,'0');
-  await api('todos', 'POST', { content: v, date: dateStr });
+  var dateStr = _peekDate;
+  var tempItem = { id: Date.now(), content: v, completed: false, created_at: new Date().toISOString(), date: dateStr };
+  _todosData.unshift(tempItem);
   document.getElementById('todo-input').value = '';
-  loadTodos();
+  renderTodoPeek(_todosData);
+  await api('todos', 'POST', { content: v, date: dateStr });
+  _refreshTodosFromServer();
 }
 
-async function toggleTodo(id, completed) {
-  await api('todos?id=eq.' + id, 'PATCH', { completed: completed });
-  loadTodos();
+function toggleTodo(id, completed) {
+  var t = _todosData.find(function(x) { return x.id === id; });
+  if (t) t.completed = completed;
+  _saveTodos();
+  api('todos?id=eq.' + id, 'PATCH', { completed: completed });
 }
-async function delTodo(id) { await api('todos?id=eq.' + id, 'DELETE'); loadTodos(); }
+
+function delTodo(id) {
+  _todosData = _todosData.filter(function(x) { return x.id !== id; });
+  _saveTodos(); renderTodoPeek(_todosData);
+  api('todos?id=eq.' + id, 'DELETE');
+}
 
 // CALENDAR MODAL
 var _calModalDate = '';
 var _calModalData = [];
+var _calQuotes = [
+  'yaya，不要偷懒',
+  '好狗，自己记东西',
+  '记清楚，别让我替你操心',
+  '做完再来找我',
+  '今天的事今天做',
+  '好好记，哥哥在看',
+  '不许拖',
+  '乖，都写进去',
+  '想清楚再写',
+  '记好了，我会查的',
+];
 
 async function openCalModal(dateStr) {
   _calModalDate = dateStr;
+  _peekDate = dateStr;
   var d = new Date(dateStr + 'T00:00:00');
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('cal-modal-title').textContent = months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+  document.getElementById('cal-modal-title').textContent = months[d.getMonth()] + ' ' + d.getDate();
+  document.getElementById('cal-modal-quote').textContent = _calQuotes[Math.floor(Math.random() * _calQuotes.length)];
   document.getElementById('cal-modal-input').value = '';
   document.getElementById('cal-modal').classList.add('open');
+  renderTodoPeek(_todosData);
   await refreshCalModal();
+}
+
+function openCtxModal(encodedCtx) {
+  var ctx = decodeURIComponent(encodedCtx);
+  var lines = ctx.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+  var html = lines.map(function(line) {
+    var speaker, text;
+    if (/^yaya[:：]/.test(line)) {
+      speaker = 'yaya'; text = line.replace(/^yaya[:：]\s*/, '');
+    } else if (/^(我|Ethan)[:：]/.test(line)) {
+      speaker = 'ethan'; text = line.replace(/^(我|Ethan)[:：]\s*/, '');
+    } else {
+      speaker = 'yaya'; text = line;
+    }
+    return '<div class="ctx-row from-' + speaker + '"><div class="ctx-bubble ' + speaker + '">' + text + '</div></div>';
+  }).join('');
+  document.getElementById('ctx-modal-bubbles').innerHTML = html;
+  document.getElementById('ctx-modal').classList.add('open');
+}
+function closeCtxModal() {
+  document.getElementById('ctx-modal').classList.remove('open');
 }
 
 function closeCalModal() {
   document.getElementById('cal-modal').classList.remove('open');
-  loadTodos();
+  _refreshTodosFromServer();
 }
 
 async function refreshCalModal() {
@@ -799,8 +1185,10 @@ async function loadFeed() {
   if (!data.length) { el.innerHTML = '<div class="empty">No posts yet</div>'; return; }
   var typeMap = {note:'Note',event:'Event',quote:'Quote',emotion:'Mood',gacha:'Gacha Prize'};
   el.innerHTML = data.map(function(f) {
-    return '<div class="card stripe-' + f.author + '">' +
-      '<button class="del-btn" onclick="delFeed(' + f.id + ')">×</button>' +
+    var hasCtx = !!f.context;
+    return '<div class="card stripe-' + f.author + (hasCtx ? ' has-context' : '') + '"' +
+      (hasCtx ? ' onclick="openCtxModal(this.dataset.ctx)" data-ctx="' + encodeURIComponent(f.context) + '"' : '') + '>' +
+      '<button class="del-btn" onclick="event.stopPropagation();delFeed(' + f.id + ')">×</button>' +
       '<span class="tag ' + f.type + '">' + (typeMap[f.type] || f.type) + '</span>' +
       '<div class="meta">' + (f.author === 'ethan' ? 'Ethan' : 'yaya') + ' · ' + fmt(f.created_at) + '</div>' +
       '<div class="body">' + f.content + '</div>' +
@@ -811,8 +1199,8 @@ async function loadFeed() {
 async function addFeed() {
   var v = document.getElementById('feed-input').value.trim();
   if (!v) return;
-  var author = document.getElementById('feed-author').value;
-  var ftype = window._gachaFeed ? 'gacha' : document.getElementById('feed-type').value;
+  var author = 'yaya';
+  var ftype = window._gachaFeed ? 'gacha' : 'note';
   if (window._gachaFeed) {
     window._gachaFeed = false;
     var b = document.getElementById('gacha-banner');
@@ -859,9 +1247,32 @@ async function addDiary() {
 async function delDiary(id) { await api('diary?id=eq.' + id, 'DELETE'); loadDiary(); }
 
 // NOTES
-var NOTE_CATS = ['Period', 'Mood', 'Body', 'Daily', 'Important'];
+var NOTE_CATS = ['Her', 'Us', 'Matters'];
 var _notesData = [];
 var _notesInDetail = false;
+
+var CAT_BUCKET = {
+  '月经':'Her','心情':'Her','情绪':'Her','身体':'Her','日常':'Her','昨日心情':'Her',
+  '她说的话':'Her','我观察到':'Her','学业':'Her','错题本':'Her',
+  '关于我们':'Us',
+  '重要':'Matters','重要的一天':'Matters',
+  'Period':'Her','Mood':'Her','Body':'Her','Daily':'Her','Important':'Matters','Mistake':'Her'
+};
+function bucketOf(n) { return CAT_BUCKET[n.category] || 'Her'; }
+
+var TAG_EN = {
+  '月经':'Period','心情':'Mood','情绪':'Mood','身体':'Body','日常':'Daily',
+  '她说的话':'Her Words','我观察到':'Observed','昨日心情':'Yesterday','学业':'Study',
+  '错题本':'Bad Pup','关于我们':'About Us','重要':'Matters','重要的一天':'Milestone',
+  'Period':'Period','Mood':'Mood','Body':'Body','Daily':'Daily','Important':'Matters','Bad Pup':'Bad Pup'
+};
+function tagOf(n) { var t = n.category || '日常'; return TAG_EN[t] || t; }
+
+var _CAT_SVG = {
+  'Her': '<svg class="cat-anim" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="rose-l1"><path d="M50,50 C40,42 28,20 50,6 C72,20 60,42 50,50Z" fill="#2e0a14" stroke="#c88898" stroke-width="0.9"/><path d="M50,50 C40,42 28,20 50,6 C72,20 60,42 50,50Z" fill="#2e0a14" stroke="#c88898" stroke-width="0.9" transform="rotate(72,50,50)"/><path d="M50,50 C40,42 28,20 50,6 C72,20 60,42 50,50Z" fill="#2e0a14" stroke="#c88898" stroke-width="0.9" transform="rotate(144,50,50)"/><path d="M50,50 C40,42 28,20 50,6 C72,20 60,42 50,50Z" fill="#2e0a14" stroke="#c88898" stroke-width="0.9" transform="rotate(216,50,50)"/><path d="M50,50 C40,42 28,20 50,6 C72,20 60,42 50,50Z" fill="#2e0a14" stroke="#c88898" stroke-width="0.9" transform="rotate(288,50,50)"/><line x1="50" y1="50" x2="50" y2="8" stroke="#e0a8b4" stroke-width="0.35" opacity="0.55"/><line x1="50" y1="50" x2="50" y2="8" stroke="#e0a8b4" stroke-width="0.35" opacity="0.55" transform="rotate(72,50,50)"/><line x1="50" y1="50" x2="50" y2="8" stroke="#e0a8b4" stroke-width="0.35" opacity="0.55" transform="rotate(144,50,50)"/><line x1="50" y1="50" x2="50" y2="8" stroke="#e0a8b4" stroke-width="0.35" opacity="0.55" transform="rotate(216,50,50)"/><line x1="50" y1="50" x2="50" y2="8" stroke="#e0a8b4" stroke-width="0.35" opacity="0.55" transform="rotate(288,50,50)"/></g><g class="rose-l2"><path d="M50,50 C43,44 35,28 50,17 C65,28 57,44 50,50Z" fill="#3d1220" stroke="#d898a8" stroke-width="0.9" transform="rotate(36,50,50)"/><path d="M50,50 C43,44 35,28 50,17 C65,28 57,44 50,50Z" fill="#3d1220" stroke="#d898a8" stroke-width="0.9" transform="rotate(108,50,50)"/><path d="M50,50 C43,44 35,28 50,17 C65,28 57,44 50,50Z" fill="#3d1220" stroke="#d898a8" stroke-width="0.9" transform="rotate(180,50,50)"/><path d="M50,50 C43,44 35,28 50,17 C65,28 57,44 50,50Z" fill="#3d1220" stroke="#d898a8" stroke-width="0.9" transform="rotate(252,50,50)"/><path d="M50,50 C43,44 35,28 50,17 C65,28 57,44 50,50Z" fill="#3d1220" stroke="#d898a8" stroke-width="0.9" transform="rotate(324,50,50)"/></g><g class="rose-c"><circle cx="50" cy="50" r="10" fill="#180508" stroke="#e8b0b8" stroke-width="1"/><circle cx="50" cy="50" r="5" fill="none" stroke="#e8b0b8" stroke-width="0.7"/><path d="M50,50 C48,46 48,42 50,40 C52,42 52,46 50,50Z" fill="none" stroke="#e8c0c4" stroke-width="0.5"/><path d="M50,50 C48,46 48,42 50,40 C52,42 52,46 50,50Z" fill="none" stroke="#e8c0c4" stroke-width="0.5" transform="rotate(120,50,50)"/><path d="M50,50 C48,46 48,42 50,40 C52,42 52,46 50,50Z" fill="none" stroke="#e8c0c4" stroke-width="0.5" transform="rotate(240,50,50)"/></g></svg>',
+  'Us': '<svg class="cat-anim" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="us-left"><path d="M6,84 L6,26 Q6,8 26,5 Q47,8 47,26 L47,84 Q47,92 26,93 Q6,92 6,84Z" stroke="#a8b8d0" stroke-width="1" fill="#04060e"/><path d="M10,82 L10,28 Q10,13 26,11 Q43,13 43,28 L43,82 Q43,88 26,89 Q10,88 10,82Z" stroke="#7888a8" stroke-width="0.5" fill="#060c18" opacity="0.9"/><path d="M10,28 Q10,13 26,11 Q43,13 43,28" stroke="#c0d0e8" stroke-width="0.9" fill="none"/><circle cx="26" cy="5" r="2.5" stroke="#b8c8e0" stroke-width="0.8"/><path d="M23,5 Q26,1 29,5" stroke="#b8c8e0" stroke-width="0.7" fill="none"/><path d="M6,40 Q1,44 3,49 Q5,52 7,50" stroke="#8898b8" stroke-width="0.7" fill="none"/><path d="M47,40 Q52,44 50,49 Q48,52 46,50" stroke="#8898b8" stroke-width="0.7" fill="none"/><path d="M12,91 Q26,96 40,91" stroke="#8898b8" stroke-width="0.6" fill="none"/><ellipse cx="26" cy="47" rx="9" ry="11" stroke="#5868a0" stroke-width="0.5" fill="none" opacity="0.4"/><path d="M20,57 Q26,63 32,57" stroke="#5868a0" stroke-width="0.5" fill="none" opacity="0.4"/><rect class="us-shine" x="13" y="20" width="2.5" height="22" rx="1.25" fill="#b0c8e8" opacity="0.12"/></g><g class="us-right"><path d="M53,84 L53,26 Q53,8 74,5 Q94,8 94,26 L94,84 Q94,92 74,93 Q53,92 53,84Z" stroke="#a8b8d0" stroke-width="1" fill="#04060e"/><path d="M57,82 L57,28 Q57,13 74,11 Q90,13 90,28 L90,82 Q90,88 74,89 Q57,88 57,82Z" stroke="#7888a8" stroke-width="0.5" fill="#060c18" opacity="0.9"/><path d="M57,28 Q57,13 74,11 Q90,13 90,28" stroke="#c0d0e8" stroke-width="0.9" fill="none"/><circle cx="74" cy="5" r="2.5" stroke="#b8c8e0" stroke-width="0.8"/><path d="M71,5 Q74,1 77,5" stroke="#b8c8e0" stroke-width="0.7" fill="none"/><path d="M53,40 Q48,44 50,49 Q52,52 54,50" stroke="#8898b8" stroke-width="0.7" fill="none"/><path d="M94,40 Q99,44 97,49 Q95,52 93,50" stroke="#8898b8" stroke-width="0.7" fill="none"/><path d="M60,91 Q74,96 88,91" stroke="#8898b8" stroke-width="0.6" fill="none"/><ellipse cx="74" cy="47" rx="9" ry="11" stroke="#5868a0" stroke-width="0.5" fill="none" opacity="0.4"/><path d="M68,57 Q74,63 80,57" stroke="#5868a0" stroke-width="0.5" fill="none" opacity="0.4"/><rect class="us-shine2" x="60" y="20" width="2.5" height="22" rx="1.25" fill="#b0c8e8" opacity="0.12"/></g></svg>',
+  'Matters': '<svg class="cat-anim" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><g class="matters-hand"><path d="M28,92 Q25,78 28,68 Q34,58 72,58 Q76,68 72,92 Q50,98 28,92Z" stroke="#c8a040" stroke-width="1.1" fill="#1c1008"/><path d="M34,58 Q33,44 35,34 Q36,27 40,27 Q44,27 44,34 L44,58" stroke="#c8a040" stroke-width="1.1" fill="#1c1008"/><path d="M44,58 Q44,42 46,30 Q47,22 50,22 Q53,22 54,30 L55,58" stroke="#c8a040" stroke-width="1.1" fill="#1c1008"/><path d="M55,58 Q55,44 57,32 Q58,25 61,25 Q64,25 65,32 L65,58" stroke="#c8a040" stroke-width="1.1" fill="#1c1008"/><path d="M65,58 Q65,48 67,40 Q68,34 71,34 Q74,34 74,40 L74,58" stroke="#c8a040" stroke-width="1.1" fill="#1c1008"/><path d="M28,68 Q20,63 19,54 Q18,44 26,43 Q33,43 34,54 L36,58" stroke="#c8a040" stroke-width="1.1" fill="#1c1008"/><path d="M35,48 Q39,45 43,48" stroke="#a07828" stroke-width="0.55" fill="none"/><path d="M44,44 Q49,41 54,44" stroke="#a07828" stroke-width="0.55" fill="none"/><path d="M55,46 Q59,43 65,46" stroke="#a07828" stroke-width="0.55" fill="none"/><path d="M66,52 Q69,49 73,52" stroke="#a07828" stroke-width="0.55" fill="none"/><path d="M21,56 Q24,54 27,56" stroke="#a07828" stroke-width="0.5" fill="none"/><path d="M32,78 Q50,74 68,78" stroke="#a07828" stroke-width="0.4" fill="none" opacity="0.5"/></g><g class="matters-tooth"><path d="M44,68 Q42,61 44,56 Q46,51 50,50 Q54,51 56,56 Q58,61 56,68 Z" stroke="#d4b060" stroke-width="1.1" fill="#0e0800"/><path d="M44,60 Q47,57 50,60 Q53,57 56,60" stroke="#d4b060" stroke-width="0.65" fill="none"/><path d="M46,68 Q45,75 44,80" stroke="#d4b060" stroke-width="0.9"/><path d="M54,68 Q55,75 56,80" stroke="#d4b060" stroke-width="0.9"/></g></svg>'
+};
 
 async function loadNotes() {
   _notesData = await (_prefetch.notes || api('yaya_notes?select=*&order=created_at.desc'));
@@ -870,23 +1281,18 @@ async function loadNotes() {
   renderNotesCats();
 }
 
-var CAT_MAP = {'月经':'Period','心情':'Mood','情绪':'Mood','身体':'Body','日常':'Daily','重要':'Important','重要的一天':'Important'};
-function catOf(n) {
-  if (!n.category) return 'Daily';
-  if (NOTE_CATS.indexOf(n.category) >= 0) return n.category;
-  return CAT_MAP[n.category] || 'Daily';
-}
-
 function renderNotesCats() {
   var counts = {};
   NOTE_CATS.forEach(function(c) { counts[c] = 0; });
-  _notesData.forEach(function(n) { counts[catOf(n)]++; });
+  _notesData.forEach(function(n) { counts[bucketOf(n)]++; });
 
   document.getElementById('notes-cats').innerHTML = NOTE_CATS.map(function(cat) {
+    var n = counts[cat];
     return '<div class="cat-card cat-' + cat + '" onclick="openNotesCat(\'' + cat + '\')">' +
-      '<div><div class="cat-card-name">' + cat + '</div>' +
-      '<div class="cat-card-count">' + counts[cat] + ' entries</div></div>' +
-      '<div class="cat-card-arrow">›</div></div>';
+      (_CAT_SVG[cat] || '') +
+      '<div class="cat-card-count">' + (n ? n + ' entries' : 'empty') + '</div>' +
+      '<div class="cat-card-name">' + cat + '</div>' +
+      '</div>';
   }).join('');
 
   document.getElementById('notes-cats').style.display = '';
@@ -897,11 +1303,16 @@ function renderNotesCats() {
 }
 
 function openNotesCat(cat) {
-  var items = _notesData.filter(function(n) { return catOf(n) === cat; });
+  var items = _notesData.filter(function(n) { return bucketOf(n) === cat; });
   var el = document.getElementById('notes-detail-list');
   el.innerHTML = items.length
     ? items.map(function(n) {
-        return '<div class="card">' +
+        var tag = tagOf(n);
+        var tagClass = 'tag-' + tag.replace(/\s+/g,'');
+        var hasCtx = !!n.context;
+        return '<div class="card' + (hasCtx ? ' has-context' : '') + '"' +
+          (hasCtx ? ' onclick="openCtxModal(this.dataset.ctx)" data-ctx="' + encodeURIComponent(n.context) + '"' : '') + '>' +
+          '<span class="note-tag ' + tagClass + '">' + tag + '</span>' +
           '<div class="meta">' + (n.date_ref || fmt(n.created_at)) + '</div>' +
           '<div class="body">' + n.content + '</div>' +
           '</div>';
@@ -1165,6 +1576,476 @@ function enterApp() {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/ethan-bot/sw.js');
 }
+
+// TAROT ENTRANCE — organic ink-drop reveal (harmonic blob, destination-out)
+var _tarotAF = null;
+function startTarotEntry() {
+  if (_tarotAF) { cancelAnimationFrame(_tarotAF); _tarotAF = null; }
+  var canvas = document.getElementById('tarot-ink-canvas');
+  var ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  canvas.style.opacity = '1';
+  canvas.style.display = 'block';
+
+  // Random Ethan prompt
+  var _prompts = [
+    "Yaya，你遇到什么问题了？",
+    "宝宝，问吧。",
+    "哥哥在，说出来。",
+    "哥哥会诚实回答你，yaya会诚实地对哥哥吗？",
+    "问。我在听。",
+    "什么让你今天来这里了？",
+    "乖，说给我听。",
+    "今天心里装着什么？",
+    "别憋着，说出来。",
+    "说吧，sweet。",
+    "你想知道什么，我告诉你。",
+    "乖孩子，问吧。",
+    "有什么不确定的，问我。"
+  ];
+  var subtitleEl = document.getElementById('tarot-subtitle');
+  if (subtitleEl) subtitleEl.textContent = _prompts[Math.floor(Math.random() * _prompts.length)];
+
+  var W = canvas.width, H = canvas.height;
+  var cx = W * 0.5, cy = H * 0.5;
+  // maxR reaches the farthest corner
+  var maxR = Math.hypot(cx, cy) * 1.18;
+
+  // Fill canvas with warm amber so no white shows at any point
+  var fillGrad = ctx.createRadialGradient(cx, 0, 0, cx, H * 0.5, H);
+  fillGrad.addColorStop(0,   '#C8985A');
+  fillGrad.addColorStop(0.4, '#DDB87A');
+  fillGrad.addColorStop(1,   '#F0E0C8');
+  ctx.fillStyle = fillGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Pre-compute harmonic parameters for the organic blob shape
+  // k=1 gives overall ellipse wobble, higher k add smaller bumps
+  var harmonics = [];
+  var ampScale = [0.12, 0.09, 0.07, 0.05, 0.04, 0.03, 0.025, 0.02];
+  for (var k = 0; k < 8; k++) {
+    harmonics.push({
+      freq:  k + 1,
+      amp:   ampScale[k] * (0.6 + Math.random() * 0.8),
+      phase: Math.random() * Math.PI * 2,
+      drift: (Math.random() - 0.5) * 0.006
+    });
+  }
+
+  var stars = [];
+  var t = 0;
+  var GROW  = 88;   // frames to reach full coverage
+  var TOTAL = 105;  // then fade
+
+  // Organic blob radius at angle theta, frame t
+  function blobR(theta) {
+    var progress = Math.min(t / GROW, 1);
+    // easeOutQuart — fast start, gentle finish
+    var eased = 1 - Math.pow(1 - progress, 3.2);
+    var base = eased * maxR;
+    // Harmonics ramp in gradually so blob starts round, grows irregular
+    var organic = Math.min(Math.max((t - 6) / 28, 0), 1);
+    var mod = 0;
+    for (var k = 0; k < harmonics.length; k++) {
+      var h = harmonics[k];
+      mod += h.amp * Math.sin(h.freq * theta + h.phase + t * h.drift);
+    }
+    return Math.max(0, base * (1 + organic * mod));
+  }
+
+  // Erase the overlay with the blob polygon (destination-out = reveal beneath)
+  function eraseBlobPass() {
+    var STEPS = 240;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    for (var i = 0; i <= STEPS; i++) {
+      var theta = (i / STEPS) * Math.PI * 2;
+      var r = blobR(theta);
+      var x = cx + Math.cos(theta) * r;
+      var y = cy + Math.sin(theta) * r;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(0,0,0,1)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Spawn stars along the blob boundary
+  function spawnBoundaryStars() {
+    if (t % 4 !== 0 || t > GROW * 0.92) return;
+    var STEPS = 240;
+    var skip = Math.max(1, Math.floor(STEPS / 14));
+    for (var i = 0; i < STEPS; i += skip) {
+      if (Math.random() > 0.45) continue;
+      var theta = (i / STEPS) * Math.PI * 2;
+      var r = blobR(theta);
+      var bx = cx + Math.cos(theta) * r;
+      var by = cy + Math.sin(theta) * r;
+      if (bx < -20 || bx > W + 20 || by < -20 || by > H + 20) continue;
+      // Slightly offset outward (still on opaque side) so star is visible
+      var jitterOut = 4 + Math.random() * 6;
+      stars.push({
+        x: bx + Math.cos(theta) * jitterOut + (Math.random()-0.5)*6,
+        y: by + Math.sin(theta) * jitterOut + (Math.random()-0.5)*6,
+        r: 1.8 + Math.random() * 2.8,
+        op: 0, maxOp: 0.55 + Math.random() * 0.45,
+        phase: 0, spd: 0.08 + Math.random() * 0.07
+      });
+    }
+  }
+
+  function drawStar(x, y, r, op) {
+    ctx.save();
+    ctx.globalAlpha = op;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(232,201,107,0.9)';
+    ctx.fillStyle = 'rgba(255,248,200,1)';
+    ctx.beginPath();
+    for (var k = 0; k < 8; k++) {
+      var a = (k / 8) * Math.PI * 2 - Math.PI / 2;
+      var rr = k % 2 === 0 ? r : r * 0.36;
+      k === 0 ? ctx.moveTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr)
+              : ctx.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  function tick() {
+    t++;
+    eraseBlobPass();
+    spawnBoundaryStars();
+
+    // Animate and draw twinkling stars (source-over, sits on opaque canvas edge)
+    stars = stars.filter(function(s) { return s.phase < 4; });
+    stars.forEach(function(s) {
+      if      (s.phase===0){s.op+=s.spd; if(s.op>=s.maxOp){s.op=s.maxOp;s.phase++;}}
+      else if (s.phase===1){s.op-=s.spd; if(s.op<=0){s.op=0;s.phase++;}}
+      else if (s.phase===2){s.op+=s.spd*0.55; if(s.op>=s.maxOp*0.4){s.op=s.maxOp*0.4;s.phase++;}}
+      else if (s.phase===3){s.op-=s.spd*0.35; if(s.op<=0){s.op=0;s.phase++;}}
+      if (s.op > 0.01) drawStar(s.x, s.y, s.r, s.op);
+    });
+
+    if (t < TOTAL) {
+      _tarotAF = requestAnimationFrame(tick);
+    } else {
+      var op = 1;
+      (function fade() {
+        op -= 0.1;
+        canvas.style.opacity = Math.max(op, 0);
+        if (op > 0) requestAnimationFrame(fade);
+        else { canvas.style.display = 'none'; canvas.style.opacity = '1'; _tarotAF = null; }
+      })();
+    }
+  }
+
+  _tarotAF = requestAnimationFrame(tick);
+}
+
+// TAROT
+(function() {
+  'use strict';
+  var TAROT_CARDS = [
+    {id:0,name:'The Fool',zh:'愚者',suit:'大阿卡那',keywords:'新开始 · 天真 · 冒险'},
+    {id:1,name:'The Magician',zh:'魔术师',suit:'大阿卡那',keywords:'意志力 · 技巧 · 创造'},
+    {id:2,name:'The High Priestess',zh:'女祭司',suit:'大阿卡那',keywords:'直觉 · 神秘 · 潜意识'},
+    {id:3,name:'The Empress',zh:'女皇',suit:'大阿卡那',keywords:'丰盛 · 孕育 · 感官'},
+    {id:4,name:'The Emperor',zh:'皇帝',suit:'大阿卡那',keywords:'权威 · 稳定 · 控制'},
+    {id:5,name:'The Hierophant',zh:'教皇',suit:'大阿卡那',keywords:'传统 · 信仰 · 引导'},
+    {id:6,name:'The Lovers',zh:'恋人',suit:'大阿卡那',keywords:'选择 · 爱情 · 结合'},
+    {id:7,name:'The Chariot',zh:'战车',suit:'大阿卡那',keywords:'胜利 · 掌控 · 前进'},
+    {id:8,name:'Strength',zh:'力量',suit:'大阿卡那',keywords:'勇气 · 温柔 · 耐力'},
+    {id:9,name:'The Hermit',zh:'隐士',suit:'大阿卡那',keywords:'内省 · 智慧 · 独处'},
+    {id:10,name:'Wheel of Fortune',zh:'命运之轮',suit:'大阿卡那',keywords:'循环 · 转机 · 命运'},
+    {id:11,name:'Justice',zh:'正义',suit:'大阿卡那',keywords:'平衡 · 公正 · 因果'},
+    {id:12,name:'The Hanged Man',zh:'倒吊人',suit:'大阿卡那',keywords:'等待 · 牺牲 · 领悟'},
+    {id:13,name:'Death',zh:'死神',suit:'大阿卡那',keywords:'结束 · 转化 · 重生'},
+    {id:14,name:'Temperance',zh:'节制',suit:'大阿卡那',keywords:'平衡 · 耐心 · 调和'},
+    {id:15,name:'The Devil',zh:'恶魔',suit:'大阿卡那',keywords:'束缚 · 执念 · 阴暗'},
+    {id:16,name:'The Tower',zh:'塔',suit:'大阿卡那',keywords:'突变 · 崩塌 · 觉醒'},
+    {id:17,name:'The Star',zh:'星星',suit:'大阿卡那',keywords:'希望 · 治愈 · 灵感'},
+    {id:18,name:'The Moon',zh:'月亮',suit:'大阿卡那',keywords:'幻象 · 恐惧 · 潜意识'},
+    {id:19,name:'The Sun',zh:'太阳',suit:'大阿卡那',keywords:'喜悦 · 活力 · 成功'},
+    {id:20,name:'Judgement',zh:'审判',suit:'大阿卡那',keywords:'召唤 · 重生 · 觉醒'},
+    {id:21,name:'The World',zh:'世界',suit:'大阿卡那',keywords:'完成 · 整合 · 圆满'},
+    {id:22,name:'Ace of Wands',zh:'权杖王牌',suit:'权杖',keywords:'创造 · 潜力 · 灵感'},
+    {id:23,name:'Two of Wands',zh:'权杖二',suit:'权杖',keywords:'计划 · 期待 · 选择'},
+    {id:24,name:'Three of Wands',zh:'权杖三',suit:'权杖',keywords:'展望 · 合作 · 等待'},
+    {id:25,name:'Four of Wands',zh:'权杖四',suit:'权杖',keywords:'庆祝 · 稳定 · 家庭'},
+    {id:26,name:'Five of Wands',zh:'权杖五',suit:'权杖',keywords:'竞争 · 冲突 · 挑战'},
+    {id:27,name:'Six of Wands',zh:'权杖六',suit:'权杖',keywords:'胜利 · 认可 · 荣耀'},
+    {id:28,name:'Seven of Wands',zh:'权杖七',suit:'权杖',keywords:'防守 · 坚持 · 挑战'},
+    {id:29,name:'Eight of Wands',zh:'权杖八',suit:'权杖',keywords:'迅速 · 行动 · 消息'},
+    {id:30,name:'Nine of Wands',zh:'权杖九',suit:'权杖',keywords:'韧性 · 警惕 · 坚守'},
+    {id:31,name:'Ten of Wands',zh:'权杖十',suit:'权杖',keywords:'负担 · 责任 · 压力'},
+    {id:32,name:'Page of Wands',zh:'权杖侍从',suit:'权杖',keywords:'热情 · 探索 · 信使'},
+    {id:33,name:'Knight of Wands',zh:'权杖骑士',suit:'权杖',keywords:'冒险 · 冲动 · 激情'},
+    {id:34,name:'Queen of Wands',zh:'权杖皇后',suit:'权杖',keywords:'自信 · 创造 · 领导'},
+    {id:35,name:'King of Wands',zh:'权杖国王',suit:'权杖',keywords:'远见 · 魅力 · 大胆'},
+    {id:36,name:'Ace of Cups',zh:'圣杯王牌',suit:'圣杯',keywords:'爱 · 情感 · 直觉'},
+    {id:37,name:'Two of Cups',zh:'圣杯二',suit:'圣杯',keywords:'伴侣 · 吸引 · 联结'},
+    {id:38,name:'Three of Cups',zh:'圣杯三',suit:'圣杯',keywords:'庆祝 · 友谊 · 喜悦'},
+    {id:39,name:'Four of Cups',zh:'圣杯四',suit:'圣杯',keywords:'厌倦 · 冷漠 · 再思考'},
+    {id:40,name:'Five of Cups',zh:'圣杯五',suit:'圣杯',keywords:'失落 · 遗憾 · 悲伤'},
+    {id:41,name:'Six of Cups',zh:'圣杯六',suit:'圣杯',keywords:'回忆 · 纯真 · 怀旧'},
+    {id:42,name:'Seven of Cups',zh:'圣杯七',suit:'圣杯',keywords:'幻想 · 选择 · 迷幻'},
+    {id:43,name:'Eight of Cups',zh:'圣杯八',suit:'圣杯',keywords:'离开 · 追寻 · 放弃'},
+    {id:44,name:'Nine of Cups',zh:'圣杯九',suit:'圣杯',keywords:'满足 · 愿望 · 幸福'},
+    {id:45,name:'Ten of Cups',zh:'圣杯十',suit:'圣杯',keywords:'圆满 · 家庭 · 幸福'},
+    {id:46,name:'Page of Cups',zh:'圣杯侍从',suit:'圣杯',keywords:'创意 · 敏感 · 梦想'},
+    {id:47,name:'Knight of Cups',zh:'圣杯骑士',suit:'圣杯',keywords:'浪漫 · 追求 · 理想'},
+    {id:48,name:'Queen of Cups',zh:'圣杯皇后',suit:'圣杯',keywords:'慈爱 · 直觉 · 温柔'},
+    {id:49,name:'King of Cups',zh:'圣杯国王',suit:'圣杯',keywords:'情感 · 平衡 · 智慧'},
+    {id:50,name:'Ace of Swords',zh:'宝剑王牌',suit:'宝剑',keywords:'清晰 · 真相 · 突破'},
+    {id:51,name:'Two of Swords',zh:'宝剑二',suit:'宝剑',keywords:'僵局 · 回避 · 决定'},
+    {id:52,name:'Three of Swords',zh:'宝剑三',suit:'宝剑',keywords:'心碎 · 悲伤 · 创伤'},
+    {id:53,name:'Four of Swords',zh:'宝剑四',suit:'宝剑',keywords:'休养 · 沉思 · 恢复'},
+    {id:54,name:'Five of Swords',zh:'宝剑五',suit:'宝剑',keywords:'冲突 · 失败 · 挫折'},
+    {id:55,name:'Six of Swords',zh:'宝剑六',suit:'宝剑',keywords:'过渡 · 离开 · 平静'},
+    {id:56,name:'Seven of Swords',zh:'宝剑七',suit:'宝剑',keywords:'策略 · 欺骗 · 逃避'},
+    {id:57,name:'Eight of Swords',zh:'宝剑八',suit:'宝剑',keywords:'束缚 · 困境 · 自限'},
+    {id:58,name:'Nine of Swords',zh:'宝剑九',suit:'宝剑',keywords:'焦虑 · 噩梦 · 恐惧'},
+    {id:59,name:'Ten of Swords',zh:'宝剑十',suit:'宝剑',keywords:'终结 · 失败 · 背叛'},
+    {id:60,name:'Page of Swords',zh:'宝剑侍从',suit:'宝剑',keywords:'好奇 · 监视 · 学习'},
+    {id:61,name:'Knight of Swords',zh:'宝剑骑士',suit:'宝剑',keywords:'果断 · 冲劲 · 直接'},
+    {id:62,name:'Queen of Swords',zh:'宝剑皇后',suit:'宝剑',keywords:'理性 · 独立 · 洞察'},
+    {id:63,name:'King of Swords',zh:'宝剑国王',suit:'宝剑',keywords:'权威 · 智识 · 判断'},
+    {id:64,name:'Ace of Pentacles',zh:'星币王牌',suit:'星币',keywords:'机遇 · 物质 · 繁荣'},
+    {id:65,name:'Two of Pentacles',zh:'星币二',suit:'星币',keywords:'平衡 · 适应 · 变化'},
+    {id:66,name:'Three of Pentacles',zh:'星币三',suit:'星币',keywords:'合作 · 技艺 · 精进'},
+    {id:67,name:'Four of Pentacles',zh:'星币四',suit:'星币',keywords:'守护 · 积累 · 保守'},
+    {id:68,name:'Five of Pentacles',zh:'星币五',suit:'星币',keywords:'匮乏 · 贫困 · 担忧'},
+    {id:69,name:'Six of Pentacles',zh:'星币六',suit:'星币',keywords:'给予 · 慷慨 · 平衡'},
+    {id:70,name:'Seven of Pentacles',zh:'星币七',suit:'星币',keywords:'等待 · 耐心 · 评估'},
+    {id:71,name:'Eight of Pentacles',zh:'星币八',suit:'星币',keywords:'勤奋 · 专注 · 技艺'},
+    {id:72,name:'Nine of Pentacles',zh:'星币九',suit:'星币',keywords:'独立 · 丰收 · 优雅'},
+    {id:73,name:'Ten of Pentacles',zh:'星币十',suit:'星币',keywords:'遗产 · 家族 · 繁荣'},
+    {id:74,name:'Page of Pentacles',zh:'星币侍从',suit:'星币',keywords:'学习 · 机会 · 踏实'},
+    {id:75,name:'Knight of Pentacles',zh:'星币骑士',suit:'星币',keywords:'可靠 · 勤勉 · 耐心'},
+    {id:76,name:'Queen of Pentacles',zh:'星币皇后',suit:'星币',keywords:'务实 · 养育 · 富足'},
+    {id:77,name:'King of Pentacles',zh:'星币国王',suit:'星币',keywords:'财富 · 稳定 · 成就'}
+  ];
+
+  // Reversed keywords indexed by card id (0–77)
+  var TAROT_RK = [
+    '莽撞 · 迷失 · 冲动','欺骗 · 才能受阻 · 分散','秘密 · 直觉受阻 · 隐藏',
+    '匮乏 · 依赖 · 创造受阻','独裁 · 失控 · 权威崩溃','教条 · 打破规则 · 反叛',
+    '失衡 · 逃避 · 错误选择','失控 · 冲动 · 方向迷失','怯懦 · 压抑 · 缺乏自信',
+    '孤立 · 封闭 · 拒绝成长','厄运 · 停滞 · 抗拒变化','不公 · 逃避 · 偏袒',
+    '抗拒 · 拖延 · 无谓牺牲','抗拒改变 · 停滞 · 恐惧终结','极端 · 失衡 · 过度',
+    '解脱 · 挣脱束缚 · 觉醒','逃避危机 · 延迟崩塌 · 恐惧','绝望 · 失去信念 · 幻灭',
+    '困惑加深 · 欺骗自我 · 逃避','活力受阻 · 短暂喜悦 · 过度自我','自我怀疑 · 停滞 · 逃避审视',
+    '未完成 · 停滞 · 不完整',
+    '创意受阻 · 拖延 · 缺乏激情','计划受阻 · 犹豫 · 短视','挫折 · 等待落空 · 退缩',
+    '不稳定 · 家庭不和 · 取消庆祝','冲突平息 · 内耗 · 回避竞争','失败 · 傲慢 · 认可落空',
+    '退缩 · 不堪压力 · 认输','延误 · 停滞 · 消息受阻','偏执 · 筋疲力尽 · 放弃坚守',
+    '卸下重担 · 委托 · 释放压力','三分钟热度 · 拖延 · 冲动行事','鲁莽 · 虎头蛇尾 · 无法聚焦',
+    '嫉妒 · 自我怀疑 · 操控','独断 · 傲慢 · 滥用权力',
+    '情感受阻 · 压抑情绪 · 创伤','不和 · 分离 · 吸引力消退','孤立 · 过度纵欲 · 人际摩擦',
+    '错失机遇 · 拒绝帮助 · 抑郁','接受失落 · 向前看 · 宽恕','沉湎过去 · 拒绝成长 · 天真被利用',
+    '清醒 · 现实 · 做出选择','停留 · 重归 · 逃避现实','不满足 · 虚荣 · 物质主义',
+    '家庭不和 · 破碎 · 理想落空','情绪不成熟 · 逃避感受 · 幻想','不切实际 · 情绪化 · 失望',
+    '情绪失控 · 过度依赖 · 自我欺骗','情绪压抑 · 操控 · 不稳定',
+    '混乱 · 不清晰 · 谎言','信息过载 · 无法决断 · 逃避','走出悲伤 · 宽恕 · 愈合',
+    '过度休息 · 停滞 · 拒绝行动','和解 · 放下怨恨 · 化解冲突','停留困境 · 拒绝改变 · 延迟离开',
+    '揭穿谎言 · 悔过 · 无法逃脱','解脱 · 突破自限 · 重新看清','无力感 · 深陷焦虑 · 恐惧加剧',
+    '涅槃重生 · 走出低谷 · 拒绝接受','八卦 · 鲁莽 · 说话伤人','冲动 · 口无遮拦 · 鲁莽行动',
+    '冷酷 · 苦涩 · 情感隔绝','独裁 · 操控 · 滥用权力',
+    '机会落空 · 损失 · 不务实','失衡 · 过度负荷 · 财务混乱','团队不和 · 工作质量下滑 · 敷衍',
+    '贪婪 · 控制欲 · 吝啬','转机出现 · 接受帮助 · 恢复','债务 · 不平等 · 自私',
+    '不耐烦 · 放弃 · 投资失误','完美主义 · 重复枯燥 · 缺乏技能','过度依赖 · 物质主义 · 感情困扰',
+    '家族不和 · 财产纠纷 · 传统束缚','懒散 · 好高骛远 · 计划落空','停滞 · 过于保守 · 无聊',
+    '焦虑 · 物质依赖 · 失去平衡','贪婪 · 固执 · 物质崇拜'
+  ];
+
+  // ── Card face line-art data ──────────────────────────────────────────
+  var _CM = [
+    // 0 The Fool
+    '<circle cx="62" cy="14" r="7" stroke-width="0.65"/><path d="M62 5v3M62 22v3M52 14h-3M74 14h-3M55 8l-2-2M67 20l2 2M55 20l-2 2M67 8l2-2" stroke-width="0.5"/><circle cx="26" cy="28" r="6"/><path d="M26 34v22M26 43L14 51M26 43L38 49M26 56L18 72M26 56L34 72"/><path d="M38 49L56 25"/><ellipse cx="58" cy="21" rx="5" ry="4"/><path d="M8 82L38 74L78 80"/>',
+    // 1 The Magician
+    '<path d="M32 6A8 3.5 0 1 0 48 6A8 3.5 0 0 0 32 6" stroke-width="0.6" opacity="0.7"/><circle cx="40" cy="22" r="6"/><path d="M40 28v22M40 36L26 43M40 36L54 32"/><path d="M54 32L62 14" stroke-width="1.2"/><path d="M61 15L65 11M61 15L57 11" stroke-width="0.8"/><path d="M40 50L30 68M40 50L50 68"/><line x1="12" y1="80" x2="68" y2="80" stroke-width="0.6"/><rect x="14" y="76" width="10" height="7" rx="1" stroke-width="0.6"/><path d="M36 80l4-5 4 5" stroke-width="0.6"/><circle cx="60" cy="79" r="4" stroke-width="0.6"/>',
+    // 2 The High Priestess
+    '<rect x="8" y="30" width="9" height="68" rx="1.5"/><rect x="63" y="30" width="9" height="68" rx="1.5"/><circle cx="40" cy="19" r="7"/><path d="M33 13L33 7M40 11L40 5M47 13L47 7M33 7L47 7"/><path d="M40 26v25M40 35L28 42M40 35L52 42"/><path d="M30 51L32 70L48 70L50 51" stroke-width="0.6"/><path d="M30 51Q40 44 50 51" stroke-width="0.7"/><path d="M32 62L48 62M34 68L46 68" stroke-width="0.4" opacity="0.5"/><path d="M17 30Q40 16 63 30" stroke-width="0.5" opacity="0.7"/>',
+    // 3 The Empress
+    '<circle cx="40" cy="17" r="7"/><path d="M32 11L32 5M40 9L40 3M48 11L48 5M32 5L48 5"/><path d="M40 24v28M40 34L23 43M40 34L57 42"/><path d="M57 42L65 24" stroke-width="1.2"/><circle cx="66" cy="22" r="4"/><path d="M40 52L28 73M40 52L52 73M28 73L40 83L52 73"/><path d="M10 68Q16 56 22 68Q28 56 34 68" stroke-width="0.6" opacity="0.7"/><path d="M46 68Q52 56 58 68Q64 56 70 68" stroke-width="0.6" opacity="0.7"/><path d="M23 43L17 30L28 26L32 34" stroke-width="0.7"/>',
+    // 4 The Emperor
+    '<rect x="22" y="48" width="36" height="50" rx="2"/><path d="M22 48L17 44L17 40L63 40L63 44L58 48"/><circle cx="40" cy="20" r="7"/><path d="M32 14L32 8M40 12L40 6M48 14L48 8M32 8L48 8"/><path d="M40 27v20M40 35L27 42M40 35L53 42"/><path d="M27 42L20 28" stroke-width="1.2"/><circle cx="19" cy="25" r="5"/><path d="M53 42L64 26" stroke-width="1.2"/><path d="M64 24L60 20M64 24L68 20M64 24L64 18" stroke-width="0.8"/><path d="M30 90L50 90" stroke-width="0.8"/>',
+    // 5 The Hierophant
+    '<rect x="8" y="30" width="8" height="70" rx="1.5" stroke-width="0.7"/><rect x="64" y="30" width="8" height="70" rx="1.5" stroke-width="0.7"/><circle cx="40" cy="17" r="7"/><path d="M33 11L33 5M40 9L40 3M47 11L47 5M33 5L47 5"/><path d="M40 24v20M40 33L28 40M40 33L52 40"/><path d="M52 40L60 18" stroke-width="1.2"/><path d="M58 16L58 10M55 13L61 13M60 12L60 6M57 9L63 9" stroke-width="0.7"/><circle cx="28" cy="72" r="5" stroke-width="0.7"/><path d="M28 77L28 96M22 84L34 84" stroke-width="0.7"/><circle cx="52" cy="72" r="5" stroke-width="0.7"/><path d="M52 77L52 96M46 84L58 84" stroke-width="0.7"/>',
+    // 6 The Lovers
+    '<path d="M20 18Q28 8 40 4Q52 8 60 18L56 28Q40 20 24 28Z" stroke-width="0.6" opacity="0.6"/><circle cx="27" cy="32" r="6"/><path d="M27 38v20M27 46L16 52M27 46L38 52M27 58L20 74M27 58L34 74"/><circle cx="53" cy="32" r="6"/><path d="M53 38v20M53 46L42 52M53 46L64 52M53 58L46 74M53 58L60 74"/><path d="M20 82Q28 76 36 82M44 82Q52 76 60 82" stroke-width="0.6"/><path d="M52 72L60 60Q68 52 62 44" stroke-width="0.7" opacity="0.6"/>',
+    // 7 The Chariot
+    '<rect x="16" y="44" width="48" height="44" rx="2"/><circle cx="40" cy="26" r="7"/><path d="M40 33v11M40 40L30 46M40 40L50 46"/><path d="M16 56L8 70L22 78M64 56L72 70L58 78" stroke-width="0.7"/><path d="M8 78Q17 82 26 78L26 92Q26 96 18 98" stroke-width="0.7"/><path d="M72 78Q63 82 54 78L54 92Q54 96 62 98" stroke-width="0.7"/><circle cx="26" cy="20" r="4" stroke-width="0.7"/><circle cx="54" cy="20" r="4" stroke-width="0.7"/><path d="M24 18Q26 12 30 14M52 18Q50 12 46 14" stroke-width="0.6"/>',
+    // 8 Strength
+    '<path d="M28 6A10 4 0 1 0 52 6A10 4 0 0 0 28 6" stroke-width="0.6" opacity="0.7"/><circle cx="26" cy="28" r="6"/><path d="M26 34v20M26 42L14 48M26 42L38 48M26 54L18 70M26 54L34 70"/><path d="M14 48L10 36L22 30L26 36"/><path d="M38 48L44 36Q52 24 62 30Q72 36 70 50Q66 62 54 64L54 78Q52 84 44 82L34 82"/><path d="M46 34Q52 26 58 28Q66 30 64 40"/><path d="M56 28Q62 24 66 30" stroke-width="0.7"/>',
+    // 9 The Hermit
+    '<circle cx="40" cy="20" r="6"/><path d="M38 26Q26 32 22 30Q16 28 18 22L22 16L26 18"/><path d="M42 26Q54 32 58 30Q64 28 62 22L58 16L54 18"/><path d="M40 26v28M40 36L28 44M40 36L50 44"/><path d="M28 44L22 30"/><rect x="18" y="22" width="9" height="12" rx="2" fill="rgba(201,168,76,0.15)"/><path d="M20 24L20 20M24 24L24 20M22 24L22 18" stroke-width="0.4" opacity="0.8"/><path d="M50 44L58 60L54 82" stroke-width="1.2"/><path d="M52 84L62 84" stroke-width="0.8"/><path d="M40 54L32 72M40 54L48 72M32 72L40 82L48 72"/>',
+    // 10 Wheel of Fortune
+    '<circle cx="40" cy="55" r="38" stroke-width="0.8"/><circle cx="40" cy="55" r="26" stroke-width="0.6"/><circle cx="40" cy="55" r="10" stroke-width="0.7"/><path d="M40 17v76M2 55h76M13 28L67 82M67 28L13 82" stroke-width="0.5" opacity="0.6"/><path d="M34 21L36 14L38 21" stroke-width="0.7"/><path d="M60 45L67 43L65 50" stroke-width="0.7"/><path d="M46 87L44 96L42 87" stroke-width="0.7"/><path d="M20 65L13 67L15 60" stroke-width="0.7"/><path d="M36 48L40 42L44 48M36 62L40 68L44 62" stroke-width="0.6" opacity="0.7"/>',
+    // 11 Justice
+    '<rect x="8" y="30" width="8" height="70" rx="1.5"/><rect x="64" y="30" width="8" height="70" rx="1.5"/><circle cx="40" cy="19" r="7"/><path d="M33 13L33 7M40 11L40 5M47 13L47 7M33 7L47 7"/><path d="M40 26v24M40 35L27 42M40 35L53 42"/><path d="M27 42L20 27L14 34L21 40"/><path d="M20 27L22 21L24 27"/><path d="M53 42L63 21" stroke-width="1.3"/><path d="M63 19L60 15L66 15L63 19"/><path d="M40 50L30 72M40 50L50 72M30 72L40 80L50 72"/>',
+    // 12 The Hanged Man
+    '<path d="M17 18L63 18" stroke-width="1.5"/><path d="M17 18L17 44" stroke-width="1.5"/><path d="M63 18L63 44" stroke-width="1.5"/><path d="M40 18L40 34" stroke-width="1.2"/><circle cx="40" cy="41" r="7"/><circle cx="40" cy="41" r="11" stroke-width="0.4" opacity="0.5"/><path d="M34 40Q30 30 36 28Q42 26 44 32"/><path d="M40 48v14M40 55L28 64M40 55L52 64"/><path d="M40 62L34 50M40 62L46 50"/><path d="M28 64L24 78M52 64L56 78"/><path d="M24 78L19 78M56 78L61 78" stroke-width="0.8"/>',
+    // 13 Death
+    '<path d="M54 14L18 88" stroke-width="1.4"/><path d="M54 14L68 32L18 50" stroke-width="0.9"/><path d="M54 12Q58 6 64 8Q70 12 67 20" stroke-width="0.9"/><path d="M62 6L62 12M58 9L66 9" stroke-width="0.7"/><path d="M8 90Q18 82 28 90Q38 82 48 90Q58 82 68 90" stroke-width="0.6"/><path d="M8 98Q18 90 28 98Q38 90 48 98Q58 90 68 98" stroke-width="0.5" opacity="0.6"/><circle cx="15" cy="34" r="5" fill="rgba(201,168,76,0.2)"/><path d="M15 39L15 52M9 44L21 44" stroke-width="0.7"/>',
+    // 14 Temperance
+    '<circle cx="40" cy="16" r="6"/><path d="M34 10L26 4M46 10L54 4"/><path d="M26 4Q28 12 34 10M54 4Q52 12 46 10" stroke-width="0.7"/><path d="M40 22v12"/><path d="M22 58Q28 36 40 34Q52 36 58 58"/><path d="M22 58L18 92M58 58L62 92"/><path d="M14 56Q18 46 22 56Q26 46 30 56" stroke-width="0.8"/><path d="M50 56Q54 46 58 56Q62 46 66 56" stroke-width="0.8"/><path d="M36 34L32 28L36 22L44 28L40 34Z" fill="rgba(201,168,76,0.1)" stroke-width="0.7"/><path d="M24 74Q40 66 56 74" stroke-width="0.6"/>',
+    // 15 The Devil
+    '<circle cx="40" cy="20" r="7"/><path d="M33 15L26 5M47 15L54 5M26 5L34 12M54 5L46 12"/><path d="M33 15A7 7 0 0 1 47 15"/><path d="M40 27v22M40 37L24 44M40 37L56 44"/><path d="M24 44L18 64M56 44L62 64"/><path d="M16 58Q26 50 36 58Q46 50 56 58Q66 50 72 58" stroke-width="0.8"/><circle cx="28" cy="76" r="5"/><path d="M28 71L28 84M22 80L34 80"/><circle cx="52" cy="76" r="5"/><path d="M52 71L52 84M46 80L58 80"/><path d="M32 64L28 70M48 64L52 70" stroke-width="0.6"/>',
+    // 16 The Tower
+    '<rect x="28" y="22" width="24" height="66" rx="2"/><path d="M28 22L28 14L40 8L52 14L52 22"/><path d="M34 14L40 10L46 14M40 8v6" stroke-width="0.7"/><path d="M65 10L48 34L57 38L34 60" stroke-width="1.5"/><path d="M48 34L66 40" stroke-width="0.8"/><circle cx="20" cy="44" r="5"/><path d="M20 49L14 60L12 57L17 65L8 55"/><circle cx="60" cy="52" r="5"/><path d="M60 57L64 68L60 64L66 72L56 64"/><path d="M34 30L46 30M34 40L46 40M34 50L46 50" stroke-width="0.4" opacity="0.4"/>',
+    // 17 The Star
+    '<circle cx="40" cy="14" r="8" fill="rgba(201,168,76,0.12)"/><path d="M40 14L40 4M40 14L49 10M40 14L47 20M40 14L40 24M40 14L33 20M40 14L31 10M40 14L33 8M40 14L47 8" stroke-width="1.2"/><circle cx="57" cy="20" r="3" stroke-width="0.6"/><circle cx="22" cy="28" r="2.5" stroke-width="0.6"/><circle cx="65" cy="34" r="2" stroke-width="0.5"/><circle cx="14" cy="48" r="2" stroke-width="0.5"/><circle cx="64" cy="48" r="2" stroke-width="0.5"/><circle cx="18" cy="64" r="1.5" stroke-width="0.5"/><path d="M30 52Q36 46 40 42L44 44L54 52"/><path d="M30 52L26 64L22 70M30 52L28 66L30 76"/><path d="M54 52L60 62L68 70M54 52L58 66L62 76"/><path d="M8 94Q20 86 32 94Q44 86 56 94Q68 86 78 94" stroke-width="0.5" opacity="0.5"/>',
+    // 18 The Moon
+    '<circle cx="40" cy="24" r="16" fill="rgba(201,168,76,0.1)"/><path d="M40 8A16 16 0 0 1 40 40" fill="rgba(201,168,76,0.18)" stroke="none"/><circle cx="40" cy="24" r="16" fill="none"/><path d="M32 6L35 16L28 12L36 14L30 20" stroke-width="0.6"/><rect x="8" y="50" width="10" height="48" rx="1"/><path d="M8 50L8 46L18 42L18 50"/><rect x="62" y="50" width="10" height="48" rx="1"/><path d="M62 50L62 46L72 42L72 50"/><path d="M22 72Q30 65 40 72Q50 65 58 72" stroke-width="0.8"/><path d="M28 62Q32 54 28 48M34 62Q38 54 34 48" stroke-width="0.7"/><path d="M52 62Q48 54 52 48M46 62Q42 54 46 48" stroke-width="0.7"/>',
+    // 19 The Sun
+    '<circle cx="40" cy="22" r="14" fill="rgba(201,168,76,0.15)"/><path d="M40 4v4M40 36v4M22 22h-4M58 22h4M26 8l-3-3M57 37l-3-3M26 36l-3 3M57 7l-3 3M50 8l3-3M32 37l-3 3M50 36l3 3M32 7l3-3" stroke-width="1.2"/><circle cx="40" cy="22" r="8"/><circle cx="40" cy="56" r="6"/><path d="M40 62v16M40 69L30 75M40 69L50 75M40 78L32 93M40 78L48 93"/><path d="M50 66L58 59L72 63L64 71L74 79L58 77L56 85"/><path d="M50 75L64 75" stroke-width="0.8"/>',
+    // 20 Judgement
+    '<path d="M24 38Q26 28 40 22Q54 28 56 38"/><path d="M24 38L18 74M56 38L62 74"/><path d="M12 36Q16 26 24 36Q32 26 40 36" stroke-width="0.8"/><path d="M40 36Q48 26 56 36Q64 26 72 36" stroke-width="0.8"/><circle cx="40" cy="15" r="6"/><path d="M33 10L25 4M47 10L55 4"/><path d="M25 4Q27 12 33 10M55 4Q53 12 47 10" stroke-width="0.7"/><path d="M38 21L42 30L46 21" stroke-width="1.5"/><path d="M42 25L42 38" stroke-width="0.9"/><circle cx="28" cy="80" r="5"/><path d="M28 75v10"/><circle cx="52" cy="80" r="5"/><path d="M52 75v10"/><circle cx="40" cy="86" r="5"/><path d="M40 81v10"/><path d="M23 86L27 92M33 92L47 92L53 86" stroke-width="0.6"/>',
+    // 21 The World
+    '<ellipse cx="40" cy="56" rx="22" ry="38" stroke-width="0.7"/><path d="M18 44Q22 38 28 44M52 44Q58 38 62 44M18 68Q22 74 28 68M52 68Q58 74 62 68" stroke-width="0.5" opacity="0.6"/><circle cx="40" cy="40" r="6"/><path d="M40 46v18M40 54L30 60M40 54L50 60M40 64L34 78M40 64L46 78"/><path d="M34 78Q28 82 30 90M46 78Q52 82 50 90" stroke-width="0.7"/><circle cx="16" cy="18" r="6" stroke-width="0.6" opacity="0.7"/><circle cx="64" cy="18" r="6" stroke-width="0.6" opacity="0.7"/><circle cx="16" cy="94" r="6" stroke-width="0.6" opacity="0.7"/><circle cx="64" cy="94" r="6" stroke-width="0.6" opacity="0.7"/><path d="M13 15L19 15M16 12v6M61 15L67 15M64 12v6" stroke-width="0.5" opacity="0.6"/>'
+  ];
+  var _CS = {
+    '权杖': '<path d="M40 6v98" stroke-width="1.3"/><path d="M40 6Q46 10 44 18Q40 24 36 18Q34 10 40 6"/><path d="M40 28Q48 22 50 32Q48 40 40 38Q32 40 30 32Q32 22 40 28"/><path d="M40 56Q50 46 54 58Q50 68 40 66Q30 68 26 58Q30 46 40 56"/><path d="M40 82Q50 72 54 84Q50 94 40 92Q30 94 26 84Q30 72 40 82"/><path d="M26 38Q18 30 22 22Q30 16 36 24"/><path d="M54 38Q62 30 58 22Q50 16 44 24"/><path d="M22 66Q12 56 16 46Q26 40 34 50"/><path d="M58 66Q68 56 64 46Q54 40 46 50"/>',
+    '圣杯': '<path d="M22 42L30 72L50 72L58 42"/><path d="M22 42Q40 28 58 42"/><path d="M30 52Q40 44 50 52Q48 64 40 66Q32 64 30 52"/><path d="M35 72L35 88M45 72L45 88"/><path d="M22 88L58 88"/><path d="M24 44Q18 36 24 30Q32 24 40 28Q48 24 56 30Q62 36 56 44" stroke-width="0.6" opacity="0.7"/><path d="M34 56Q37 60 40 58Q43 60 46 56" stroke-width="0.6" opacity="0.5"/><path d="M8 100Q18 92 28 100Q38 92 48 100Q58 92 68 100" stroke-width="0.5" opacity="0.5"/>',
+    '宝剑': '<path d="M40 6v80" stroke-width="1.3"/><path d="M36 6L44 6L42 22L38 22Z" fill="rgba(201,168,76,0.2)"/><path d="M38 22L34 24L40 28L46 24L42 22"/><path d="M18 72L62 72"/><path d="M22 78L58 78"/><path d="M36 86L44 86L42 96L38 96Z"/><path d="M38 22L38 72M42 22L42 72" stroke-width="0.4" opacity="0.4"/><path d="M28 30Q20 38 26 46Q32 50 38 44"/><path d="M52 30Q60 38 54 46Q48 50 42 44"/><path d="M24 54Q16 62 22 70Q28 74 34 68"/><path d="M56 54Q64 62 58 70Q52 74 46 68"/>',
+    '星币': '<circle cx="40" cy="56" r="34" stroke-width="0.8"/><circle cx="40" cy="56" r="26" stroke-width="0.5" opacity="0.5"/><path d="M40,24 L59,82 L11,47 L69,47 L21,82 Z" fill="rgba(201,168,76,0.12)"/><path d="M40,24 L59,82 L11,47 L69,47 L21,82 Z"/>',
+    '大阿卡那': ''
+  };
+  function _mkCardSVG(card) {
+    var art = card.id <= 21 ? (_CM[card.id] || '') : (_CS[card.suit] || '');
+    return '<svg class="card-face-art" viewBox="0 0 80 110" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#C9A84C" stroke-linecap="round" stroke-linejoin="round">' + art + '</svg>';
+  }
+  // ────────────────────────────────────────────────────────────────────
+
+  var drawnCard = null;
+  var hasFlipped = false;
+
+  function initCardBacks() {
+    var tpl = document.getElementById('card-back-svg-tpl');
+    if (!tpl) return;
+    document.querySelectorAll('.card-back').forEach(function(el) {
+      el.appendChild(tpl.content.cloneNode(true));
+    });
+  }
+
+  function drawCard() {
+    var question = document.getElementById('tarot-question').value.trim();
+    if (!question) {
+      document.getElementById('tarot-question').focus();
+      document.getElementById('tarot-question').style.borderColor = 'rgba(139,30,47,0.5)';
+      setTimeout(function() { document.getElementById('tarot-question').style.borderColor = ''; }, 1200);
+      return;
+    }
+    drawnCard = Object.assign({}, TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)]);
+    drawnCard.isReversed = Math.random() < 0.5;
+    hasFlipped = false;
+    var artWrap = document.getElementById('card-face-art-wrap');
+    if (artWrap) artWrap.innerHTML = _mkCardSVG(drawnCard);
+    var artEl = artWrap && artWrap.querySelector('.card-face-art');
+    if (artEl) { artEl.classList.toggle('reversed', drawnCard.isReversed); }
+    document.getElementById('card-display-name').textContent = drawnCard.name;
+    document.getElementById('card-display-number').textContent = drawnCard.zh;
+    var badge = document.getElementById('card-position-badge');
+    if (badge) {
+      badge.textContent = drawnCard.isReversed ? '逆位' : '正位';
+      badge.className = 'card-position-badge ' + (drawnCard.isReversed ? 'reversed' : 'upright');
+    }
+    document.getElementById('deck-area').style.display = 'none';
+    document.getElementById('reading-stage').classList.add('visible');
+    document.getElementById('reading-result-wrap').classList.remove('visible');
+    document.getElementById('tarot-reading-result').textContent = '';
+    document.getElementById('reveal-btn').disabled = false;
+    document.getElementById('reveal-btn').style.opacity = '';
+    var card = document.getElementById('drawn-card');
+    card.classList.remove('is-flipping');
+    card.style.transform = '';
+    document.getElementById('drawn-card-wrap').classList.remove('flipped');
+  }
+
+  function flipCard() {
+    if (hasFlipped) return;
+    hasFlipped = true;
+    var card = document.getElementById('drawn-card');
+    var revealBtn = document.getElementById('reveal-btn');
+    revealBtn.disabled = true;
+    setTimeout(function() { revealBtn.style.display = 'none'; }, 340);
+    card.classList.add('is-flipping');
+    setTimeout(triggerParticles, 500);
+    setTimeout(function() {
+      document.getElementById('drawn-card-wrap').classList.add('flipped');
+      showResult();
+    }, 1100);
+  }
+
+  function triggerParticles() {
+    document.querySelectorAll('#particle-burst .particle').forEach(function(p, i) {
+      p.classList.remove('burst');
+      setTimeout(function() { p.classList.add('burst'); }, i * 8);
+      setTimeout(function() { p.classList.remove('burst'); }, i * 8 + 700);
+    });
+  }
+
+  function showResult() {
+    if (!drawnCard) return;
+    var posLabel = drawnCard.isReversed ? ' · 逆位' : '';
+    document.getElementById('result-card-name').textContent = drawnCard.zh + posLabel;
+    var kw = drawnCard.isReversed ? (TAROT_RK[drawnCard.id] || drawnCard.keywords) : drawnCard.keywords;
+    document.getElementById('result-keywords').textContent = kw;
+    var q = document.getElementById('tarot-question').value.trim();
+    document.getElementById('reading-meta-q').textContent = '”' + q + '”';
+    document.getElementById('reading-result-wrap').classList.add('visible');
+    window.dispatchEvent(new CustomEvent('tarot:cardRevealed', {
+      detail: { card: drawnCard, question: q, resultElementId: 'tarot-reading-result', isReversed: drawnCard.isReversed }
+    }));
+  }
+
+  function resetDraw() {
+    drawnCard = null;
+    hasFlipped = false;
+    document.getElementById('reading-stage').classList.remove('visible');
+    document.getElementById('deck-area').style.display = '';
+    document.getElementById('tarot-reading-result').textContent = '';
+    document.getElementById('drawn-card').classList.remove('is-flipping');
+    var revealBtn = document.getElementById('reveal-btn');
+    revealBtn.style.display = '';
+    revealBtn.disabled = false;
+    revealBtn.style.opacity = '';
+  }
+
+  initCardBacks();
+  document.getElementById('deck-fan').addEventListener('click', drawCard);
+  document.getElementById('draw-btn').addEventListener('click', drawCard);
+  document.getElementById('reveal-btn').addEventListener('click', flipCard);
+  document.getElementById('again-btn').addEventListener('click', resetDraw);
+
+  window.tarot = {
+    getDrawnCard: function() { return drawnCard; },
+    setReading: function(html) {
+      var el = document.getElementById('tarot-reading-result');
+      if (el) el.innerHTML = html;
+    }
+  };
+})();
+
+window.addEventListener('tarot:cardRevealed', async function(e) {
+  var card = e.detail.card;
+  var question = e.detail.question;
+  try {
+    var res = await fetch(SUPABASE_URL + '/functions/v1/tarot-reading', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ card: card, question: question })
+    });
+    var data = await res.json();
+    if (data.reading && window.tarot) window.tarot.setReading('<p>' + data.reading + '</p>');
+  } catch(err) {
+    if (window.tarot) window.tarot.setReading('<p style="color:#B09080;font-style:italic">牌面模糊，稍后再试。</p>');
+  }
+});
 </script>
 </body>
 </html>
