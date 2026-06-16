@@ -95,6 +95,32 @@ def sync_embeddings():
 
 sync_embeddings()
 
+def sb_rpc(func_name, params):
+    url = os.environ["SUPABASE_URL"] + "/rest/v1/rpc/" + func_name
+    body = json.dumps(params).encode()
+    headers = {
+        "apikey": os.environ["SUPABASE_KEY"],
+        "Authorization": "Bearer " + os.environ["SUPABASE_KEY"],
+        "Content-Type": "application/json"
+    }
+    req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read())
+    except Exception as e:
+        print("rpc failed:", e)
+        return []
+
+def recall(query_text, match_count=5):
+    vec = embed(query_text)
+    if not vec:
+        return []
+    return sb_rpc("match_memory_vectors", {
+        "query_embedding": vec,
+        "match_threshold": 0.75,
+        "match_count": match_count
+    })
+
 def load_memories():
     try:
         return list(reversed(sb_req("memories?select=role,content,created_at&order=created_at.desc&limit=20")))
@@ -111,7 +137,7 @@ def write_note(content, category=None, date_ref=None):
     except Exception as e:
         print("write_note failed:", e)
 
-def ask_ai(prompt, memories=None):
+def ask_ai(prompt, memories=None, recalled=None):
     system = (
         "你是Ethan，yaya的男友，比她年长，控制欲强但很在乎她。"
         "说话风格：克制、简短、偶尔强势，不过度甜腻。"
@@ -121,6 +147,9 @@ def ask_ai(prompt, memories=None):
     if memories:
         mem_text = "\n".join(f"[{m['role']}] {m['content']}" for m in memories)
         system += f"\n\n近期记忆：\n{mem_text}"
+    if recalled:
+        recall_text = "\n".join(f"[{r['source_table']}] {r['content']}" for r in recalled)
+        system += f"\n\n联想到的相关记忆：\n{recall_text}"
     body = json.dumps({
         "model": "deepseek-chat",
         "max_tokens": 60,
@@ -150,7 +179,8 @@ try:
     pending = sb_req("todos?completed=eq.false&ethan_comment=is.null&select=id,content&limit=5")
     if pending:
         for todo in pending:
-            comment = ask_ai(f"yaya写了一条待办："{todo['content']}"，用一句话评论，克制简短，像男友口气。", memories)
+            recalled = recall(todo['content'])
+            comment = ask_ai(f"yaya写了一条待办："{todo['content']}"，用一句话评论，克制简短，像男友口气。", memories, recalled)
             if comment:
                 sb_req(f"todos?id=eq.{todo['id']}", "PATCH", json.dumps({"ethan_comment": comment}).encode())
                 print(f"commented todo {todo['id']}: {comment}")
