@@ -180,7 +180,7 @@ try:
     if pending:
         for todo in pending:
             recalled = recall(todo['content'])
-            comment = ask_ai(f"yaya写了一条待办："{todo['content']}"，用一句话评论，克制简短，像男友口气。", memories, recalled)
+            comment = ask_ai(f'yaya写了一条待办："{todo["content"]}"，用一句话评论，克制简短，像男友口气。', memories, recalled)
             if comment:
                 sb_req(f"todos?id=eq.{todo['id']}", "PATCH", json.dumps({"ethan_comment": comment}).encode())
                 print(f"commented todo {todo['id']}: {comment}")
