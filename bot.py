@@ -61,6 +61,7 @@ def sync_embeddings():
         ("feed", "feed?select=id,content&order=created_at.desc&limit=50"),
         ("yaya_notes", "yaya_notes?select=id,content&order=created_at.desc&limit=50"),
         ("ethan_memory", "ethan_memory?select=id,content&order=created_at.desc&limit=50"),
+        ("diary", "diary?select=id,content&order=created_at.desc&limit=50"),
     ]
     try:
         existing = sb_req("memory_vectors?select=source_table,source_id")
@@ -92,7 +93,7 @@ def sync_embeddings():
 
 sync_embeddings()
 
-if hour < 8:
+if hour < 8 and not os.environ.get("FORCE_RUN"):
     exit()
 
 def sb_rpc(func_name, params):
