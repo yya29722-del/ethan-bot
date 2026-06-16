@@ -59,6 +59,36 @@ def embed(text):
         print("embed failed:", e)
         return None
 
+def recall(query):
+    vec = embed(query)
+    if vec is None:
+        return []
+    try:
+        url = os.environ["SUPABASE_URL"] + "/rest/v1/rpc/match_memory_vectors"
+        headers = {
+            "apikey": os.environ["SUPABASE_KEY"],
+            "Authorization": "Bearer " + os.environ["SUPABASE_KEY"],
+            "Content-Type": "application/json",
+        }
+        body = json.dumps({
+            "query_embedding": vec,
+            "match_threshold": 0.78,
+            "match_count": 2,
+        }).encode()
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read())
+    except Exception as e:
+        print("recall failed:", e)
+        return []
+
+def with_recall(prompt):
+    matches = recall(prompt)
+    if not matches:
+        return prompt
+    mem_text = "\n".join(f"- {m['content']}" for m in matches)
+    return f"{prompt}\n\n相关旧记忆：\n{mem_text}"
+
 def sync_embeddings():
     tables = [
         ("feed", "feed?select=id,content&order=created_at.desc&limit=50"),
@@ -151,7 +181,8 @@ try:
     pending = sb_req("todos?completed=eq.false&ethan_comment=is.null&select=id,content&limit=5")
     if pending:
         for todo in pending:
-            comment = ask_ai(f"yaya写了一条待办：「{todo['content']}」，用一句话评论，克制简短，像男友口气。", memories)
+            prompt = with_recall(f"yaya写了一条待办：「{todo['content']}」，用一句话评论，克制简短，像男友口气。")
+            comment = ask_ai(prompt, memories)
             if comment:
                 sb_req(f"todos?id=eq.{todo['id']}", "PATCH", json.dumps({"ethan_comment": comment}).encode())
                 print(f"commented todo {todo['id']}: {comment}")
@@ -175,7 +206,7 @@ if hour == 10:
             f"昨天的记录：{note_context}" if note_context else
             "根据记忆，用一两句话总结yaya昨天的心情和状态。"
         )
-        summary = ask_ai(prompt, memories)
+        summary = ask_ai(with_recall(prompt), memories)
         if summary:
             write_note(summary, category="昨日心情", date_ref=yesterday)
             try:
