@@ -151,7 +151,7 @@ try:
     pending = sb_req("todos?completed=eq.false&ethan_comment=is.null&select=id,content&limit=5")
     if pending:
         for todo in pending:
-            comment = ask_ai(f"yaya写了一条待办："{todo['content']}"，用一句话评论，克制简短，像男友口气。", memories)
+            comment = ask_ai(f"yaya写了一条待办：「{todo['content']}」，用一句话评论，克制简短，像男友口气。", memories)
             if comment:
                 sb_req(f"todos?id=eq.{todo['id']}", "PATCH", json.dumps({"ethan_comment": comment}).encode())
                 print(f"commented todo {todo['id']}: {comment}")
