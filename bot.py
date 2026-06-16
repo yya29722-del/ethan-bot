@@ -39,7 +39,7 @@ try:
 except Exception as e:
     print("pending_bark check failed:", e)
 
-if hour < 8:
+if hour < 8 and not os.environ.get("FORCE_RUN"):
     exit()
 
 def embed(text):
