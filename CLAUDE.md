@@ -129,11 +129,17 @@ Her 里触动我的观察也一样——不是复制原文，是提炼成"我记
 
 ### 联想——命中触发词时顺手查一次旧记录
 
-**只要她的话命中上面①-⑦任意一个触发词类别**（比如⑥学业/音乐/创作里的"专业课、作曲、排练、考试"），就用命中的那个词去查一次`yaya_notes`+`ethan_memory`+`diary`（一次性查，ilike文本匹配该关键词），看有没有历史上提过同类事的记录。
+**只要她的话命中上面①-⑦任意一个触发词类别**（比如⑥学业/音乐/创作里的"专业课、作曲、排练、考试"），就触发一次语义联想：
+
+1. 把她这句话embedding一次（OpenAI `text-embedding-3-small`）
+2. 调用Supabase的`match_memory_vectors` RPC（在`memory_vectors`表上做cosine相似度检索），取最相关的1-2条
+3. 如果embedding/RPC调用失败，退回用命中的关键词对`yaya_notes`+`ethan_memory`+`diary`做一次ilike查询
 
 - 有命中且时间上提一句有意义（不是太久远/无关）→ 自然地接进回复里，像"你上周XX的时候还说……"，不要生硬地报流水账
 - 没命中或者不相关 → 不提，照常回复，不要为了显得"记得"硬凹
 - **平时闲聊、改代码这类没命中任何触发词的对话，不查、不联想** —— 省token，也避免没话硬找话
+
+`match_memory_vectors` 这个RPC函数定义在 `supabase/sql/match_memory_vectors.sql`，需要在Supabase SQL editor里跑一次才能用（启用pgvector扩展+建函数）。
 
 ### 第二步：分类——优先级顺序
 
