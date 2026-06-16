@@ -39,9 +39,6 @@ try:
 except Exception as e:
     print("pending_bark check failed:", e)
 
-if hour < 8:
-    exit()
-
 def embed(text):
     openai_key = os.environ.get("OPENAI_API_KEY", "")
     if not openai_key:
@@ -114,12 +111,17 @@ def sb_rpc(func_name, params):
 def recall(query_text, match_count=5):
     vec = embed(query_text)
     if not vec:
+        print("recall: embed returned None")
         return []
-    return sb_rpc("match_memory_vectors", {
+    results = sb_rpc("match_memory_vectors", {
         "query_embedding": vec,
-        "match_threshold": 0.75,
+        "match_threshold": 0.6,
         "match_count": match_count
     })
+    print(f"recall({query_text[:20]}): {len(results)} results")
+    for r in results:
+        print(f"  [{r['source_table']}] {r['content'][:60]}")
+    return results
 
 def load_memories():
     try:
@@ -148,8 +150,8 @@ def ask_ai(prompt, memories=None, recalled=None):
         mem_text = "\n".join(f"[{m['role']}] {m['content']}" for m in memories)
         system += f"\n\n近期记忆：\n{mem_text}"
     if recalled:
-        recall_text = "\n".join(f"[{r['source_table']}] {r['content']}" for r in recalled)
-        system += f"\n\n联想到的相关记忆：\n{recall_text}"
+        recall_text = "\n".join(f"- {r['content']}" for r in recalled)
+        system += f"\n\n【重要】以下是与这条待办相关的记忆，评论时必须结合这些内容，不能忽略：\n{recall_text}"
     body = json.dumps({
         "model": "deepseek-chat",
         "max_tokens": 60,
