@@ -134,14 +134,6 @@ def load_memories():
         print("memory load failed:", e)
         return []
 
-def write_note(content, category=None, date_ref=None):
-    payload = {"content": content}
-    if category: payload["category"] = category
-    if date_ref: payload["date_ref"] = date_ref
-    try:
-        sb_req("yaya_notes", "POST", json.dumps(payload).encode())
-    except Exception as e:
-        print("write_note failed:", e)
 
 def ask_ai(prompt, memories=None, recalled=None):
     system = (
