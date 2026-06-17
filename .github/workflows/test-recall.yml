@@ -21,3 +21,16 @@ jobs:
             -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             -H "Content-Type: application/json" \
             -d "{\"query\": \"${{ github.event.inputs.query }}\"}"
+
+      - name: Debug memory_vectors table
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          echo "row count:"
+          curl -s "$SUPABASE_URL/rest/v1/memory_vectors?select=id" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
+            -H "Prefer: count=exact" -H "Range: 0-0" -I | grep -i content-range
+          echo "sample rows:"
+          curl -s "$SUPABASE_URL/rest/v1/memory_vectors?select=source_table,source_id,content&limit=10" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
