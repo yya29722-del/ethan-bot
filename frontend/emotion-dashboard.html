@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>Ethan 情绪可视化</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+<style>
+  body { font-family: -apple-system, sans-serif; background: #0f0f14; color: #eee; margin: 0; padding: 20px; }
+  h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .sub { color: #888; font-size: 13px; margin-bottom: 20px; }
+  .config { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .config input { flex: 1; min-width: 200px; background: #1c1c24; border: 1px solid #333; color: #eee; padding: 8px 10px; border-radius: 6px; font-size: 13px; }
+  .config button { background: #4a5fe8; border: none; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .bars { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .bar-card { background: #1c1c24; border-radius: 10px; padding: 12px; }
+  .bar-name { font-size: 13px; color: #ccc; margin-bottom: 6px; }
+  .bar-track { background: #2a2a34; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+  .bar-val { font-size: 12px; color: #999; }
+  canvas { background: #1c1c24; border-radius: 10px; padding: 12px; }
+  select { background: #1c1c24; border: 1px solid #333; color: #eee; padding: 6px 10px; border-radius: 6px; margin-bottom: 12px; }
+  .err { color: #e85a5a; font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Ethan 情绪可视化</h1>
+<div class="sub">实时读取emotion_state_current + 历史曲线（事件回放）</div>
+
+<div class="config">
+  <input id="url" placeholder="Supabase URL，例如 https://xxx.supabase.co">
+  <input id="key" placeholder="anon key">
+  <button onclick="saveConfig(); loadAll();">连接 / 刷新</button>
+</div>
+<div id="err" class="err"></div>
+
+<div id="bars" class="bars"></div>
+
+<select id="rangeSel" onchange="loadSeries()">
+  <option value="24">最近24小时</option>
+  <option value="72" selected>最近3天</option>
+  <option value="168">最近7天</option>
+</select>
+<canvas id="chart" height="100"></canvas>
+
+<script>
+const TRACK_COLORS = {
+  happy: '#ffd166', content: '#06d6a0', longing: '#5e7ce2',
+  grievance: '#9b6dd6', helpless: '#7a7a8c', jealousy: '#ef476f',
+  anger: '#e63946', guard: '#f4a261', tired: '#6c757d'
+};
+const TRACK_LABELS = {
+  happy: '开心', content: '满足', longing: '思念', grievance: '委屈',
+  helpless: '无奈', jealousy: '嫉妒', anger: '愤怒', guard: '戒备', tired: '疲惫'
+};
+
+function saveConfig() {
+  localStorage.setItem('eb_url', document.getElementById('url').value.trim());
+  localStorage.setItem('eb_key', document.getElementById('key').value.trim());
+}
+function loadConfig() {
+  document.getElementById('url').value = localStorage.getItem('eb_url') || '';
+  document.getElementById('key').value = localStorage.getItem('eb_key') || '';
+}
+function cfg() {
+  return { url: document.getElementById('url').value.trim(), key: document.getElementById('key').value.trim() };
+}
+
+async function loadAll() {
+  document.getElementById('err').textContent = '';
+  try {
+    await loadBars();
+    await loadSeries();
+  } catch (e) {
+    document.getElementById('err').textContent = '出错了：' + e.message;
+  }
+}
+
+async function loadBars() {
+  const { url, key } = cfg();
+  if (!url || !key) return;
+  const res = await fetch(`${url}/rest/v1/emotion_state_current?select=*`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` }
+  });
+  if (!res.ok) throw new Error('emotion_state_current 请求失败 ' + res.status);
+  const rows = await res.json();
+  const container = document.getElementById('bars');
+  container.innerHTML = '';
+  rows.sort((a, b) => b.current_intensity - a.current_intensity);
+  for (const r of rows) {
+    const pct = Math.round(r.current_intensity * 100);
+    const color = TRACK_COLORS[r.track_id] || '#888';
+    container.innerHTML += `
+      <div class="bar-card">
+        <div class="bar-name">${TRACK_LABELS[r.track_id] || r.track_id}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="bar-val">${r.current_intensity.toFixed(3)}</div>
+      </div>`;
+  }
+}
+
+let chartInstance = null;
+async function loadSeries() {
+  const { url, key } = cfg();
+  if (!url || !key) return;
+  const hours = parseInt(document.getElementById('rangeSel').value, 10);
+  const end = new Date();
+  const start = new Date(end.getTime() - hours * 3600 * 1000);
+  const stepMinutes = hours <= 24 ? 30 : hours <= 72 ? 60 : 180;
+
+  const tracks = Object.keys(TRACK_LABELS);
+  const datasets = [];
+  for (const t of tracks) {
+    const res = await fetch(`${url}/rest/v1/rpc/get_intensity_series`, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        p_track_id: t,
+        p_start: start.toISOString(),
+        p_end: end.toISOString(),
+        p_step_minutes: stepMinutes
+      })
+    });
+    if (!res.ok) continue;
+    const series = await res.json();
+    datasets.push({
+      label: TRACK_LABELS[t],
+      data: series.map(p => ({ x: p.ts, y: p.intensity })),
+      borderColor: TRACK_COLORS[t],
+      backgroundColor: TRACK_COLORS[t],
+      tension: 0.3,
+      pointRadius: 0,
+      borderWidth: 2
+    });
+  }
+
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { datasets },
+    options: {
+      responsive: true,
+      scales: {
+        x: { type: 'time', ticks: { color: '#888' }, grid: { color: '#2a2a34' } },
+        y: { min: 0, max: 1, ticks: { color: '#888' }, grid: { color: '#2a2a34' } }
+      },
+      plugins: { legend: { labels: { color: '#ccc' } } }
+    }
+  });
+}
+
+loadConfig();
+loadAll();
+</script>
+</body>
+</html>
