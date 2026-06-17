@@ -66,3 +66,13 @@ jobs:
             -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
             -H "Content-Type: application/json" \
             -d "{\"p_track_id\":\"happy\",\"p_start\":\"$START\",\"p_end\":\"$END\",\"p_step_minutes\":60}"
+
+      - name: Debug get_track_events via publishable key (same path the frontend uses)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          curl -s -i -X POST "$SUPABASE_URL/rest/v1/rpc/get_track_events" \
+            -H "apikey: sb_publishable_Y3OWUTQI8siWWAtnl-tWsw_PCnqFSmh" \
+            -H "Authorization: Bearer sb_publishable_Y3OWUTQI8siWWAtnl-tWsw_PCnqFSmh" \
+            -H "Content-Type: application/json" \
+            -d '{"p_track_id":"happy","p_limit":20}'
