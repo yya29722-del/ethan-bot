@@ -34,3 +34,12 @@ jobs:
           echo "sample rows:"
           curl -s "$SUPABASE_URL/rest/v1/memory_vectors?select=source_table,source_id,content&limit=10" \
             -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+
+      - name: Debug emotion_state_current view
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          echo "emotion_state_current rows:"
+          curl -s "$SUPABASE_URL/rest/v1/emotion_state_current?select=*" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
