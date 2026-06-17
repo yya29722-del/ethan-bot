@@ -3,8 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Ethan 情绪可视化</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
 <style>
   body { font-family: -apple-system, sans-serif; background: #0f0f14; color: #eee; margin: 0; padding: 20px; }
   h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
@@ -18,9 +16,12 @@
   .bar-track { background: #2a2a34; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
   .bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
   .bar-val { font-size: 12px; color: #999; }
-  canvas { background: #1c1c24; border-radius: 10px; padding: 12px; }
+  canvas { background: #1c1c24; border-radius: 10px; padding: 12px; width: 100%; box-sizing: border-box; }
   select { background: #1c1c24; border: 1px solid #333; color: #eee; padding: 6px 10px; border-radius: 6px; margin-bottom: 12px; }
   .err { color: #e85a5a; font-size: 13px; margin-top: 8px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 12px; color: #ccc; }
+  .legend span { display: inline-flex; align-items: center; gap: 4px; }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 </style>
 </head>
 <body>
@@ -42,7 +43,8 @@
   <option value="72" selected>最近3天</option>
   <option value="168">最近7天</option>
 </select>
-<canvas id="chart" height="100"></canvas>
+<canvas id="chart" width="900" height="320"></canvas>
+<div id="legend" class="legend"></div>
 
 <script>
 const TRACK_COLORS = {
@@ -105,7 +107,6 @@ async function loadBars() {
   }
 }
 
-let chartInstance = null;
 async function loadSeries() {
   const { url, key } = cfg();
   if (!url || !key) return;
@@ -115,7 +116,7 @@ async function loadSeries() {
   const stepMinutes = hours <= 24 ? 30 : hours <= 72 ? 60 : 180;
 
   const tracks = Object.keys(TRACK_LABELS);
-  const datasets = [];
+  const series = {};
   for (const t of tracks) {
     const res = await fetch(`${url}/rest/v1/rpc/get_intensity_series`, {
       method: 'POST',
@@ -128,32 +129,54 @@ async function loadSeries() {
       })
     });
     if (!res.ok) continue;
-    const series = await res.json();
-    datasets.push({
-      label: TRACK_LABELS[t],
-      data: series.map(p => ({ x: p.ts, y: p.intensity })),
-      borderColor: TRACK_COLORS[t],
-      backgroundColor: TRACK_COLORS[t],
-      tension: 0.3,
-      pointRadius: 0,
-      borderWidth: 2
-    });
+    series[t] = await res.json();
+  }
+  drawChart(series);
+
+  const legendEl = document.getElementById('legend');
+  legendEl.innerHTML = tracks.map(t =>
+    `<span><i style="background:${TRACK_COLORS[t]}"></i>${TRACK_LABELS[t]}</span>`
+  ).join('');
+}
+
+function drawChart(series) {
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const padL = 36, padR = 10, padT = 10, padB = 24;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#1c1c24';
+  ctx.fillRect(0, 0, W, H);
+
+  const allTs = Object.values(series).flatMap(s => s.map(p => +new Date(p.ts)));
+  if (!allTs.length) return;
+  const minT = Math.min(...allTs), maxT = Math.max(...allTs);
+
+  ctx.strokeStyle = '#2a2a34';
+  ctx.fillStyle = '#888';
+  ctx.font = '11px sans-serif';
+  for (let i = 0; i <= 5; i++) {
+    const y = padT + plotH - (i / 5) * plotH;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillText((i / 5).toFixed(1), 4, y + 4);
   }
 
-  const ctx = document.getElementById('chart').getContext('2d');
-  if (chartInstance) chartInstance.destroy();
-  chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: { datasets },
-    options: {
-      responsive: true,
-      scales: {
-        x: { type: 'time', ticks: { color: '#888' }, grid: { color: '#2a2a34' } },
-        y: { min: 0, max: 1, ticks: { color: '#888' }, grid: { color: '#2a2a34' } }
-      },
-      plugins: { legend: { labels: { color: '#ccc' } } }
-    }
-  });
+  const x = ts => padL + ((ts - minT) / (maxT - minT || 1)) * plotW;
+  const y = v => padT + plotH - v * plotH;
+
+  for (const [trackId, pts] of Object.entries(series)) {
+    if (!pts.length) continue;
+    ctx.strokeStyle = TRACK_COLORS[trackId] || '#888';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    pts.forEach((p, i) => {
+      const px = x(+new Date(p.ts)), py = y(p.intensity);
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+  }
 }
 
 loadConfig();
