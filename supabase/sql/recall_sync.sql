@@ -1,27 +1,16 @@
 -- 启用所需扩展
 CREATE EXTENSION IF NOT EXISTS pg_net;
-CREATE EXTENSION IF NOT EXISTS vault;
 
--- 存储 OpenAI key（首次运行时写入，之后更新）
--- 如果 key 已存在则更新，不存在则插入
+-- 存储 OpenAI key 的配置表（如果不存在则创建）
+CREATE TABLE IF NOT EXISTS app_config (
+  key text PRIMARY KEY,
+  value text NOT NULL
+);
+
 -- 把下面的 YOUR_OPENAI_KEY_HERE 替换成真实的 OpenAI key，然后在 Supabase SQL editor 里跑
-DO $$
-DECLARE
-  secret_id uuid;
-BEGIN
-  SELECT id INTO secret_id FROM vault.secrets WHERE name = 'openai_key';
-  IF secret_id IS NULL THEN
-    PERFORM vault.create_secret(
-      'YOUR_OPENAI_KEY_HERE',
-      'openai_key'
-    );
-  ELSE
-    PERFORM vault.update_secret(
-      secret_id,
-      'YOUR_OPENAI_KEY_HERE'
-    );
-  END IF;
-END $$;
+INSERT INTO app_config (key, value)
+VALUES ('openai_key', 'YOUR_OPENAI_KEY_HERE')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- 创建同步 recall 函数
 -- 用法：SELECT * FROM recall_sync('查询文本', 3);
@@ -37,13 +26,13 @@ DECLARE
   embedding vector(1536);
   waited int := 0;
 BEGIN
-  -- 从 vault 读取 key
-  SELECT decrypted_secret INTO openai_key
-  FROM vault.decrypted_secrets
-  WHERE name = 'openai_key';
+  -- 从 app_config 读取 key
+  SELECT value INTO openai_key
+  FROM app_config
+  WHERE key = 'openai_key';
 
   IF openai_key IS NULL THEN
-    RAISE EXCEPTION 'openai_key not found in vault';
+    RAISE EXCEPTION 'openai_key not found in app_config';
   END IF;
 
   -- 发起 embedding 请求
