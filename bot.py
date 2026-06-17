@@ -192,28 +192,3 @@ try:
                 print(f"commented todo {todo['id']}: {comment}")
 except Exception as e:
     print("todo comment failed:", e)
-
-# 每天10点：总结昨天的心情状态
-if hour == 10:
-    yesterday = (beijing_now - timedelta(days=1)).strftime("%Y-%m-%d")
-    existing = sb_req(f"yaya_notes?category=eq.昨日心情&date_ref=eq.{yesterday}&select=id&limit=1")
-    already = bool(existing)
-    if not already:
-        try:
-            yesterday_notes = sb_req(f"yaya_notes?date_ref=eq.{yesterday}&select=content&order=created_at.desc&limit=5")
-        except Exception:
-            yesterday_notes = []
-        note_context = "\n".join(n["content"] for n in yesterday_notes) if yesterday_notes else ""
-        prompt = (
-            f"根据记忆和昨天的记录，用一两句话总结yaya昨天的心情和状态。"
-            f"昨天的记录：{note_context}" if note_context else
-            "根据记忆，用一两句话总结yaya昨天的心情和状态。"
-        )
-        summary = ask_ai(prompt, memories)
-        if summary:
-            write_note(summary, category="昨日心情", date_ref=yesterday)
-            try:
-                sb_req("memories", "POST", json.dumps({"content": f"昨日总结：{summary}", "role": "bot"}).encode())
-            except Exception:
-                pass
-    exit()
