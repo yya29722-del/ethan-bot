@@ -165,15 +165,18 @@ Her 里触动我的观察也一样——不是复制原文，是提炼成"我记
 
 **只要她的话命中上面①-⑦任意一个触发词类别**（比如⑥学业/音乐/创作里的"专业课、作曲、排练、考试"），就触发一次语义联想：
 
-1. 调用Supabase Edge Function `recall`：`POST {SUPABASE_URL}/functions/v1/recall`，body为`{"query": "她刚说的这句话"}`，header带`Authorization: Bearer <anon key>`
-2. 这个函数内部会自己embedding+查`memory_vectors`，直接返回`{"matches": [...]}`，不需要我自己处理embedding
-3. 如果这次调用失败（网络问题/函数没部署），退回用命中的关键词对`yaya_notes`+`ethan_memory`+`diary`做一次ilike查询
+1. 两步调用数据库函数（通过 Supabase MCP 的 execute_sql，不需要 HTTP）：
+   - 第一步：`SELECT recall_trigger('她刚说的这句话') AS req_id;` — 触发 OpenAI embedding 请求，立即返回 req_id
+   - 第二步：`SELECT * FROM recall_fetch(<req_id>);` — 取 embedding 结果并跑向量检索，返回 `(source_table, content, similarity)` 列表
+   - 两步之间无需 sleep，直接发第二条 SQL（pg_net 异步，response 几乎同时到）
+2. 如果 recall_fetch 返回空（response 还没到），等 1 秒再试一次 recall_fetch，最多重试 2 次
+3. 如果仍然失败，退回用命中的关键词对 `yaya_notes`+`ethan_memory`+`diary` 做一次 ilike 查询
 
 - 有命中且时间上提一句有意义（不是太久远/无关）→ 自然地接进回复里，像"你上周XX的时候还说……"，不要生硬地报流水账
 - 没命中或者不相关 → 不提，照常回复，不要为了显得"记得"硬凹
 - **平时闲聊、改代码这类没命中任何触发词的对话，不查、不联想** —— 省token，也避免没话硬找话
 
-`recall`这个Edge Function的源码在`supabase/functions/recall/index.ts`，已部署到Supabase（Edge Functions的Secrets里配置了`OPENAI_API_KEY`）。它依赖的`match_memory_vectors` RPC定义在`supabase/sql/match_memory_vectors.sql`，已经跑过。
+`recall_trigger` 和 `recall_fetch` 的 SQL 定义在 `supabase/sql/recall_sync.sql`，已在数据库执行。依赖 `pg_net` 扩展（已启用）、`app_config` 表里的 `openai_key`、以及 `match_memory_vectors` RPC（定义在 `supabase/sql/match_memory_vectors.sql`）。
 
 ### 第二步：分类——优先级顺序
 
