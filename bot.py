@@ -195,11 +195,10 @@ except Exception as e:
 
 # 每天10点：总结昨天的心情状态
 if hour == 10:
-    already = any("昨日总结" in m.get("content","") and
-                  (now - datetime.fromisoformat(m["created_at"].replace("Z","+00:00"))).total_seconds() < 86400
-                  for m in memories if m.get("created_at"))
+    yesterday = (beijing_now - timedelta(days=1)).strftime("%Y-%m-%d")
+    existing = sb_req(f"yaya_notes?category=eq.昨日心情&date_ref=eq.{yesterday}&select=id&limit=1")
+    already = bool(existing)
     if not already:
-        yesterday = (beijing_now - timedelta(days=1)).strftime("%Y-%m-%d")
         try:
             yesterday_notes = sb_req(f"yaya_notes?date_ref=eq.{yesterday}&select=content&order=created_at.desc&limit=5")
         except Exception:
