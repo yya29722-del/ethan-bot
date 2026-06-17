@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const MATCH_THRESHOLD = 0.78
+const MATCH_THRESHOLD = 0.3
 const MATCH_COUNT = 2
 
 Deno.serve(async (req) => {
