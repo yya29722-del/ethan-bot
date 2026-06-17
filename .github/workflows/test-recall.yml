@@ -44,35 +44,20 @@ jobs:
           curl -s "$SUPABASE_URL/rest/v1/emotion_state_current?select=*" \
             -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
 
-      - name: Verify apply_emotion_event + get_intensity_series
+      - name: Cleanup debug pollution on happy track
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
-          echo "apply a +0.4 trigger event to happy:"
+          CUR=$(curl -s "$SUPABASE_URL/rest/v1/emotion_state_current?select=current_intensity&track_id=eq.happy" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['current_intensity'])")
+          echo "current happy intensity before cleanup: $CUR"
+          DELTA=$(python3 -c "print(-float('$CUR'))")
           curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/apply_emotion_event" \
             -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
             -H "Content-Type: application/json" \
-            -d '{"p_track_id":"happy","p_delta":0.4,"p_event_type":"trigger","p_note":"workflow smoke test"}'
+            -d "{\"p_track_id\":\"happy\",\"p_delta\":$DELTA,\"p_event_type\":\"resolution\",\"p_note\":\"清除workflow debug测试污染\"}"
           echo ""
-          echo "current state after event:"
+          echo "current state after cleanup:"
           curl -s "$SUPABASE_URL/rest/v1/emotion_state_current?select=*&track_id=eq.happy" \
             -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
-          echo ""
-          echo "intensity series for happy, last 6 hours, 1h step:"
-          START=$(date -u -d '6 hours ago' +%Y-%m-%dT%H:%M:%SZ)
-          END=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/get_intensity_series" \
-            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
-            -H "Content-Type: application/json" \
-            -d "{\"p_track_id\":\"happy\",\"p_start\":\"$START\",\"p_end\":\"$END\",\"p_step_minutes\":60}"
-
-      - name: Debug get_track_events via publishable key (same path the frontend uses)
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        run: |
-          curl -s -i -X POST "$SUPABASE_URL/rest/v1/rpc/get_track_events" \
-            -H "apikey: sb_publishable_Y3OWUTQI8siWWAtnl-tWsw_PCnqFSmh" \
-            -H "Authorization: Bearer sb_publishable_Y3OWUTQI8siWWAtnl-tWsw_PCnqFSmh" \
-            -H "Content-Type: application/json" \
-            -d '{"p_track_id":"happy","p_limit":20}'
