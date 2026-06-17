@@ -9,6 +9,8 @@ create or replace function apply_emotion_event(
 )
 returns float
 language plpgsql
+security definer
+set search_path = public
 as $$
 declare
   v_current float;
@@ -39,6 +41,8 @@ create or replace function get_intensity_at(p_track_id text, p_at timestamptz)
 returns float
 language plpgsql
 stable
+security definer
+set search_path = public
 as $$
 declare
   v_track emotion_tracks;

@@ -48,6 +48,8 @@ create or replace function get_current_intensity(p_track_id text)
 returns float
 language plpgsql
 stable
+security definer
+set search_path = public
 as $$
 declare
   v_track emotion_tracks;
