@@ -465,6 +465,55 @@
   .reading-meta-q { font-family:'Inter',sans-serif; font-size:13px; color:var(--text-muted); font-style:italic; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .reading-again-btn { font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); background:none; border:none; cursor:pointer; padding:4px 0; border-bottom:1px solid rgba(201,168,76,0.4); transition:color 0.2s,border-color 0.2s; }
   .reading-again-btn:hover { color:var(--text-primary); border-color:var(--text-primary); }
+
+  /* HOME — Ethan Today / 今日留言 / 今日更新 */
+  .home-mini-card { margin: 0 16px 14px; background: #fff; border-radius: 16px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  .home-mini-card h4 { font-size: 12px; letter-spacing: 1.5px; color: #c9a96e; font-weight: 600; margin-bottom: 10px; }
+  .mini-mood-item { font-size: 13px; color: #555; padding: 6px 0; border-bottom: 1px solid #f3f0ec; line-height: 1.5; }
+  .mini-mood-item:last-child { border-bottom: none; }
+  .mini-mood-item .mm-time { font-size: 11px; color: #ccc; margin-right: 6px; }
+  .today-counter-row { display: flex; justify-content: space-around; text-align: center; }
+  .today-counter-item .tc-num { font-size: 20px; color: #2c2c2c; font-weight: 300; }
+  .today-counter-item .tc-label { font-size: 11px; color: #bbb; margin-top: 2px; }
+
+  /* ETHAN TAB */
+  .ethan-cat-block { margin-bottom: 18px; }
+  .ethan-cat-label { font-size: 11px; letter-spacing: 2px; color: #c9a96e; font-weight: 600; margin: 0 0 8px 2px; }
+
+  /* MOMENTS — search + filter + post toggle */
+  .moments-toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
+  .moments-search { flex: 1; padding: 9px 14px; border: 1px solid #ece7df; border-radius: 20px; font-size: 13px; outline: none; background: #fff; font-family: inherit; }
+  .moments-filter { padding: 9px 10px; border: 1px solid #ece7df; border-radius: 20px; font-size: 12px; background: #fff; color: #777; outline: none; font-family: inherit; }
+  .moments-add-toggle { width: 38px; height: 38px; border-radius: 50%; border: none; background: #2c2c2c; color: #fff; font-size: 20px; line-height: 1; cursor: pointer; flex-shrink: 0; }
+  .moments-post-wrap { display: none; margin-bottom: 12px; }
+  .moments-post-wrap.open { display: block; }
+  .moments-star { position: absolute; top: 12px; right: 38px; background: none; border: none; font-size: 17px; cursor: pointer; color: #ddd; line-height: 1; }
+  .moments-star.starred { color: #c9a96e; }
+  .card.has-context .moments-star { right: 38px; }
+
+  /* DIARY sub-tabs */
+  .diary-subtabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .diary-subtab-btn { flex: 1; padding: 8px 0; font-size: 12px; border-radius: 14px; border: 1px solid #ece7df; background: #fff; color: #999; cursor: pointer; font-family: inherit; }
+  .diary-subtab-btn.active { background: #2c2c2c; color: #fff; border-color: #2c2c2c; }
+  .diary-dual { display: flex; gap: 10px; }
+  .diary-dual > div { flex: 1; }
+  .diary-dual .meta { color: #c9a96e; font-weight: 600; }
+  .diary-placeholder { text-align: center; padding: 60px 20px; color: #ccc; font-size: 14px; }
+
+  /* ARCADE menu */
+  .arcade-menu { display: flex; flex-direction: column; gap: 12px; padding: 8px 0; }
+  .arcade-card { background: #fff; border-radius: 16px; padding: 22px 20px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.05); transition: transform .15s; display: flex; align-items: center; gap: 14px; }
+  .arcade-card:active { transform: scale(.98); }
+  .arcade-card-icon { font-size: 26px; flex-shrink: 0; }
+  .arcade-card h3 { font-size: 17px; font-weight: 500; margin-bottom: 3px; }
+  .arcade-card p { font-size: 13px; color: #bbb; }
+
+  /* VAULT */
+  .vault-section-label { font-size: 11px; letter-spacing: 2px; color: #c9a96e; font-weight: 600; margin: 4px 0 8px 2px; }
+  .vault-item { background: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.05); position: relative; }
+  .vault-item .vault-meta { font-size: 11px; color: #bbb; margin-bottom: 4px; }
+  .vault-item .vault-body { font-size: 14px; line-height: 1.55; }
+  .vault-unstar { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #c9a96e; font-size: 16px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -545,6 +594,25 @@
       </div>
       <div id="todo-peek-list"></div>
     </div>
+    <!-- Ethan Today -->
+    <div class="home-mini-card">
+      <h4>E T H A N &nbsp;T O D A Y</h4>
+      <div id="home-ethan-today"><div class="empty" style="padding:16px">No mood entries yet</div></div>
+    </div>
+    <!-- 今日留言 -->
+    <div class="home-mini-card">
+      <h4>今 日 留 言</h4>
+      <div id="home-latest-note"><div class="empty" style="padding:16px">No note yet today</div></div>
+    </div>
+    <!-- 今日更新 -->
+    <div class="home-mini-card">
+      <h4>今 日 更 新</h4>
+      <div class="today-counter-row" id="home-today-counters">
+        <div class="today-counter-item"><div class="tc-num">0</div><div class="tc-label">Feed</div></div>
+        <div class="today-counter-item"><div class="tc-num">0</div><div class="tc-label">Diary</div></div>
+        <div class="today-counter-item"><div class="tc-num">0</div><div class="tc-label">Notes</div></div>
+      </div>
+    </div>
   </div>
 
   <!-- Context Modal -->
@@ -578,16 +646,39 @@
     </div>
   </div>
 
-  <!-- TAB: Feed -->
+  <!-- TAB: Ethan -->
+  <div class="tab-page" id="tab-ethan">
+    <div class="tab-section-header">
+      <h2>Ethan</h2>
+    </div>
+    <div class="section-body" id="ethan-body">
+      <div class="empty">Loading…</div>
+    </div>
+  </div>
+
+  <!-- TAB: Moments (was Feed) -->
   <div class="tab-page" id="tab-feed">
     <div class="tab-section-header">
-      <h2>Feed</h2>
+      <h2>Moments</h2>
     </div>
     <div class="section-body">
-      <div class="input-area">
-        <textarea id="feed-input" rows="3" placeholder="Write something…"></textarea>
-        <div class="input-row">
-          <button class="btn" onclick="addFeed()">Post</button>
+      <div class="moments-toolbar">
+        <input class="moments-search" id="moments-search" type="text" placeholder="Search moments…" oninput="renderMoments()">
+        <select class="moments-filter" id="moments-filter" onchange="renderMoments()">
+          <option value="">All</option>
+          <option value="Funny">Funny</option>
+          <option value="Sweet">Sweet</option>
+          <option value="Quotes">Quotes</option>
+          <option value="Small Events">Small Events</option>
+        </select>
+        <button class="moments-add-toggle" onclick="toggleMomentsPost()">+</button>
+      </div>
+      <div class="moments-post-wrap" id="moments-post-wrap">
+        <div class="input-area">
+          <textarea id="feed-input" rows="3" placeholder="Write something…"></textarea>
+          <div class="input-row">
+            <button class="btn" onclick="addFeed()">Post</button>
+          </div>
         </div>
       </div>
       <div id="feed-list"><div class="empty">No posts yet</div></div>
@@ -600,20 +691,31 @@
       <h2>Diary</h2>
     </div>
     <div class="section-body">
-      <div class="input-area">
-        <textarea id="diary-input" rows="5" placeholder="Today…"></textarea>
-        <div class="input-row">
-          <select id="diary-author">
-            <option value="yaya">yaya</option>
-            <option value="ethan">Ethan</option>
-          </select>
-          <label class="diary-toggle">
-            <input type="checkbox" id="diary-private"> Private
-          </label>
-          <button class="btn" onclick="addDiary()">Write</button>
-        </div>
+      <div class="diary-subtabs">
+        <button class="diary-subtab-btn active" id="diary-sub-list" onclick="switchDiarySub('list')">列表</button>
+        <button class="diary-subtab-btn" id="diary-sub-dual" onclick="switchDiarySub('dual')">双视角</button>
+        <button class="diary-subtab-btn" id="diary-sub-cal" onclick="switchDiarySub('cal')">月历</button>
+        <button class="diary-subtab-btn" id="diary-sub-year" onclick="switchDiarySub('year')">年度回顾</button>
       </div>
-      <div id="diary-list"><div class="empty">No entries yet</div></div>
+      <div id="diary-view-list">
+        <div class="input-area">
+          <textarea id="diary-input" rows="5" placeholder="Today…"></textarea>
+          <div class="input-row">
+            <select id="diary-author">
+              <option value="yaya">yaya</option>
+              <option value="ethan">Ethan</option>
+            </select>
+            <label class="diary-toggle">
+              <input type="checkbox" id="diary-private"> Private
+            </label>
+            <button class="btn" onclick="addDiary()">Write</button>
+          </div>
+        </div>
+        <div id="diary-list"><div class="empty">No entries yet</div></div>
+      </div>
+      <div id="diary-view-dual" style="display:none"></div>
+      <div id="diary-view-cal" style="display:none"><div class="diary-placeholder">月历视图 · 敬请期待</div></div>
+      <div id="diary-view-year" style="display:none"><div class="diary-placeholder">年度回顾 · 敬请期待</div></div>
     </div>
   </div>
 
@@ -631,10 +733,42 @@
     </div>
   </div>
 
+  <!-- TAB: Arcade (menu) -->
+  <div class="tab-page" id="tab-arcade">
+    <div class="tab-section-header">
+      <h2>Arcade</h2>
+    </div>
+    <div class="section-body">
+      <div class="arcade-menu">
+        <div class="arcade-card" onclick="switchTab('game')">
+          <div class="arcade-card-icon">🧠</div>
+          <div><h3>Quiz</h3><p>Chemistry quiz — how well do you know me</p></div>
+        </div>
+        <div class="arcade-card" onclick="switchTab('tarot')">
+          <div class="arcade-card-icon">🔮</div>
+          <div><h3>塔罗 Drawn</h3><p>Ask Ethan, draw a card</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Vault -->
+  <div class="tab-page" id="tab-vault">
+    <div class="tab-section-header">
+      <h2>Vault</h2>
+    </div>
+    <div class="section-body">
+      <div class="vault-section-label">M A T T E R S</div>
+      <div id="vault-matters"><div class="empty">No matters yet</div></div>
+      <div class="vault-section-label" style="margin-top:18px">S T A R R E D</div>
+      <div id="vault-starred"><div class="empty">Star a moment or diary entry to save it here</div></div>
+    </div>
+  </div>
+
   <!-- TAB: Quiz -->
   <div class="tab-page" id="tab-game">
     <div class="tab-section-header">
-      <button class="back-btn" id="game-back-btn" onclick="gameBack()" style="display:none">‹</button>
+      <button class="back-btn" id="game-back-btn" onclick="switchTab('arcade')">‹</button>
       <h2 id="game-title">Quiz</h2>
     </div>
     <div class="section-body" id="game-body"></div>
@@ -643,6 +777,7 @@
   <!-- TAB: Tarot -->
   <div class="tab-page" id="tab-tarot">
     <div id="tarot-app">
+      <button onclick="switchTab('arcade')" style="position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;z-index:2;background:none;border:1px solid rgba(201,168,76,0.4);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-secondary);cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.1em">‹ Arcade</button>
       <header class="tarot-header">
         <p class="tarot-eyebrow">✦ Drawn · 塔罗 ✦</p>
         <h2 class="tarot-title">Thus Spoke Ethan</h2>
@@ -763,12 +898,23 @@
       </svg>
       Home
     </button>
+    <button class="nav-tab" id="nav-ethan" onclick="switchTab('ethan')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 8 L2 2 L8 5.5" stroke-linejoin="round"/>
+        <path d="M19 8 L22 2 L16 5.5" stroke-linejoin="round"/>
+        <circle cx="12" cy="13" r="8"/>
+        <circle cx="9" cy="12" r="1" fill="currentColor"/>
+        <circle cx="15" cy="12" r="1" fill="currentColor"/>
+        <path d="M10 16q2 1.5 4 0"/>
+      </svg>
+      Ethan
+    </button>
     <button class="nav-tab" id="nav-feed" onclick="switchTab('feed')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="9"/>
         <circle cx="12" cy="12" r="3"/>
       </svg>
-      Feed
+      Moments
     </button>
     <button class="nav-tab" id="nav-diary" onclick="switchTab('diary')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -777,24 +923,20 @@
       </svg>
       Diary
     </button>
-    <button class="nav-tab" id="nav-notes" onclick="switchTab('notes')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-      </svg>
-      Her
-    </button>
-    <button class="nav-tab" id="nav-game" onclick="switchTab('game')">
+    <button class="nav-tab" id="nav-arcade" onclick="switchTab('arcade')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
       </svg>
-      Quiz
+      Arcade
     </button>
-    <button class="nav-tab" id="nav-tarot" onclick="switchTab('tarot')">
+    <button class="nav-tab" id="nav-vault" onclick="switchTab('vault')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-        <circle cx="12" cy="12" r="3"/>
+        <rect x="3" y="7" width="18" height="14" rx="2"/>
+        <circle cx="12" cy="14" r="2.5"/>
+        <path d="M12 14v2.5"/>
+        <path d="M7 7V5a5 5 0 0110 0v2"/>
       </svg>
-      Drawn
+      Vault
     </button>
   </nav>
 </div>
@@ -845,20 +987,34 @@ function switchTab(name) {
   document.querySelectorAll('.nav-tab').forEach(function(b) { b.classList.remove('active'); });
   // activate target
   document.getElementById('tab-' + name).classList.add('active');
-  document.getElementById('nav-' + name).classList.add('active');
+  // some tab-pages (game, tarot, notes) are reached via Arcade/Vault and have no standalone nav button;
+  // for those, keep the parent nav tab (Arcade) highlighted instead
+  var navId = (name === 'game' || name === 'tarot') ? 'nav-arcade' : (name === 'notes' ? 'nav-vault' : 'nav-' + name);
+  var navEl = document.getElementById(navId);
+  if (navEl) navEl.classList.add('active');
   _currentTab = name;
   // lazy load
   if (!_tabLoaded[name]) {
     _tabLoaded[name] = true;
-    if (name === 'feed') loadFeed();
+    if (name === 'feed') loadMoments();
     else if (name === 'diary') loadDiary();
     else if (name === 'notes') loadNotes();
+    else if (name === 'ethan') loadEthanMemory();
+    else if (name === 'vault') loadVault();
     else if (name === 'game') { _qMode = ''; showGameMenu(); }
     else if (name === 'tarot') { startTarotEntry(); }
+  }
+  // vault should refresh every visit since localStorage can change from other tabs
+  if (name === 'vault') renderVault();
+  if (name === 'tarot' || name === 'game') {
     var isTarot = name === 'tarot';
     document.getElementById('app').classList.toggle('tarot-active', isTarot);
     document.body.style.background = isTarot ? '#C8985A' : '';
     document.documentElement.style.background = isTarot ? '#C8985A' : '';
+  } else {
+    document.getElementById('app').classList.remove('tarot-active');
+    document.body.style.background = '';
+    document.documentElement.style.background = '';
   }
 }
 
@@ -1209,19 +1365,23 @@ async function addFeed() {
   await api('feed', 'POST', { content: v, type: ftype, author: author });
   if (author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan posted something in the feed, go check it out.' }); } catch(e) {} }
   document.getElementById('feed-input').value = '';
-  loadFeed();
+  document.getElementById('moments-post-wrap').classList.remove('open');
+  loadMoments();
 }
-async function delFeed(id) { await api('feed?id=eq.' + id, 'DELETE'); loadFeed(); }
+async function delFeed(id) { await api('feed?id=eq.' + id, 'DELETE'); loadMoments(); }
 
 // DIARY
 async function loadDiary() {
   var data = await (_prefetch.diary || api('diary?select=*&order=created_at.desc&limit=30'));
   _prefetch.diary = null;
+  _diaryData = data;
   var el = document.getElementById('diary-list');
   if (!data.length) { el.innerHTML = '<div class="empty">No entries yet</div>'; return; }
   el.innerHTML = data.map(function(d) {
+    var starred = isStarred('diary', d.id);
     return '<div class="card stripe-' + d.author + '">' +
       '<button class="del-btn" onclick="delDiary(' + d.id + ')">×</button>' +
+      '<button class="moments-star' + (starred ? ' starred' : '') + '" onclick="toggleStar(\'diary\',' + d.id + ',this)">' + (starred ? '★' : '☆') + '</button>' +
       '<div class="meta">' + (d.author === 'ethan' ? 'Ethan' : 'yaya') + ' · ' + fmt(d.created_at) +
       (!d.visible_to_other ? '<span class="private-badge">Private</span>' : '') + '</div>' +
       '<div class="body">' + d.content + '</div>' +
@@ -1245,6 +1405,181 @@ async function addDiary() {
   loadDiary();
 }
 async function delDiary(id) { await api('diary?id=eq.' + id, 'DELETE'); loadDiary(); }
+
+// ETHAN TAB — reads ethan_memory
+async function loadEthanMemory() {
+  var el = document.getElementById('ethan-body');
+  try {
+    var data = await api('ethan_memory?select=*&order=created_at.desc&limit=200');
+    if (!data || !data.length) { el.innerHTML = '<div class="empty">No memories yet</div>'; return; }
+    var groups = {};
+    var order = [];
+    data.forEach(function(m) {
+      var cat = m.category || '其他';
+      if (!groups[cat]) { groups[cat] = []; order.push(cat); }
+      groups[cat].push(m);
+    });
+    el.innerHTML = order.map(function(cat) {
+      var items = groups[cat].map(function(m) {
+        return '<div class="card"><div class="meta">' + (m.created_at ? fmt(m.created_at) : '') + '</div>' +
+          '<div class="body">' + (m.content || '') + '</div></div>';
+      }).join('');
+      return '<div class="ethan-cat-block"><div class="ethan-cat-label">' + cat.toUpperCase() + '</div>' + items + '</div>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="empty">Could not load memories</div>';
+  }
+}
+
+// MOMENTS — merges feed(type us_moment/funny/etc) + yaya_notes(category Us/关于我们)
+// Mapping (please verify against live data):
+//   Funny       <- feed.type in [funny, gacha] ; notes without special tag default fallback
+//   Sweet       <- feed.type in [us_moment, emotion]
+//   Quotes      <- feed.type === 'quote'
+//   Small Events<- feed.type in [event, note] ; yaya_notes category Us/关于我们 (no finer signal) -> Small Events by default
+var MOMENTS_BUCKET = {
+  funny: 'Funny', gacha: 'Funny',
+  us_moment: 'Sweet', emotion: 'Sweet', mood: 'Sweet',
+  quote: 'Quotes',
+  event: 'Small Events', note: 'Small Events'
+};
+var _momentsData = [];
+
+async function loadMoments() {
+  var feedData = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=50'));
+  _prefetch.feed = null;
+  var notesData = await (_prefetch.notes || api('yaya_notes?select=*&order=created_at.desc'));
+  var usFeed = feedData.filter(function(f) { return f.type === 'us_moment'; });
+  var usNotes = notesData.filter(function(n) { return CAT_BUCKET[n.category] === 'Us'; });
+  var merged = usFeed.map(function(f) {
+    return { source: 'feed', id: f.id, author: f.author, content: f.content, created_at: f.created_at, context: f.context, bucket: MOMENTS_BUCKET[f.type] || 'Small Events', type: f.type };
+  }).concat(usNotes.map(function(n) {
+    return { source: 'notes', id: n.id, author: null, content: n.content, created_at: n.created_at || n.date_ref, context: n.context, bucket: 'Sweet', type: n.category };
+  }));
+  // also include other feed entries not us_moment so Moments isn't empty-feeling (note/event/quote/emotion types map too)
+  feedData.filter(function(f) { return f.type !== 'us_moment'; }).forEach(function(f) {
+    merged.push({ source: 'feed', id: f.id, author: f.author, content: f.content, created_at: f.created_at, context: f.context, bucket: MOMENTS_BUCKET[f.type] || 'Small Events', type: f.type });
+  });
+  merged.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+  _momentsData = merged;
+  renderMoments();
+}
+
+function toggleMomentsPost() {
+  document.getElementById('moments-post-wrap').classList.toggle('open');
+}
+
+function isStarred(table, id) {
+  return _vaultGet().some(function(v) { return v.table === table && v.id === id; });
+}
+
+function renderMoments() {
+  var el = document.getElementById('feed-list');
+  if (!el) return;
+  var q = (document.getElementById('moments-search').value || '').trim().toLowerCase();
+  var bucket = document.getElementById('moments-filter').value;
+  var typeMap = {note:'Note',event:'Event',quote:'Quote',emotion:'Mood',mood:'Mood',gacha:'Gacha Prize',us_moment:'Us'};
+  var list = _momentsData.filter(function(m) {
+    if (bucket && m.bucket !== bucket) return false;
+    if (q && (m.content || '').toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+  if (!list.length) { el.innerHTML = '<div class="empty">No moments found</div>'; return; }
+  el.innerHTML = list.map(function(m) {
+    var hasCtx = !!m.context;
+    var starred = isStarred(m.source, m.id);
+    var stripe = m.author ? ' stripe-' + m.author : '';
+    return '<div class="card' + stripe + (hasCtx ? ' has-context' : '') + '"' +
+      (hasCtx ? ' onclick="openCtxModal(this.dataset.ctx)" data-ctx="' + encodeURIComponent(m.context) + '"' : '') + '>' +
+      (m.source === 'feed' ? '<button class="del-btn" onclick="event.stopPropagation();delFeed(' + m.id + ')">×</button>' : '') +
+      '<button class="moments-star' + (starred ? ' starred' : '') + '" onclick="event.stopPropagation();toggleStar(\'' + m.source + '\',' + m.id + ',this)">' + (starred ? '★' : '☆') + '</button>' +
+      '<span class="tag note">' + (typeMap[m.type] || m.bucket) + '</span>' +
+      '<div class="meta">' + (m.author === 'ethan' ? 'Ethan' : (m.author === 'yaya' ? 'yaya' : '')) + ' · ' + fmt(m.created_at) + '</div>' +
+      '<div class="body">' + m.content + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+// VAULT — localStorage star system
+function _vaultGet() {
+  try { return JSON.parse(localStorage.getItem('ours_vault')) || []; } catch(e) { return []; }
+}
+function _vaultSet(arr) {
+  try { localStorage.setItem('ours_vault', JSON.stringify(arr)); } catch(e) {}
+}
+
+function toggleStar(table, id, btnEl) {
+  var arr = _vaultGet();
+  var idx = arr.findIndex(function(v) { return v.table === table && v.id === id; });
+  if (idx >= 0) {
+    arr.splice(idx, 1);
+    if (btnEl) { btnEl.classList.remove('starred'); btnEl.textContent = '☆'; }
+  } else {
+    var snapshot = null;
+    if (table === 'feed') snapshot = _momentsData.find(function(m) { return m.source === 'feed' && m.id === id; });
+    if (!snapshot && table === 'diary') snapshot = (_diaryData || []).find(function(d) { return d.id === id; });
+    arr.push({ id: id, table: table, snapshot: snapshot, starred_at: new Date().toISOString() });
+    if (btnEl) { btnEl.classList.add('starred'); btnEl.textContent = '★'; }
+  }
+  _vaultSet(arr);
+}
+
+async function loadVault() {
+  try {
+    var notesData = await (_prefetch.notes || api('yaya_notes?select=*&order=created_at.desc'));
+    var matters = notesData.filter(function(n) { return CAT_BUCKET[n.category] === 'Matters'; });
+    var elM = document.getElementById('vault-matters');
+    elM.innerHTML = matters.length
+      ? matters.map(function(n) {
+          return '<div class="vault-item"><div class="vault-meta">' + (n.date_ref || fmt(n.created_at)) + '</div><div class="vault-body">' + n.content + '</div></div>';
+        }).join('')
+      : '<div class="empty">No matters yet</div>';
+  } catch(e) {
+    document.getElementById('vault-matters').innerHTML = '<div class="empty">Could not load matters</div>';
+  }
+  renderVault();
+}
+
+function renderVault() {
+  var arr = _vaultGet().slice().sort(function(a, b) { return new Date(b.starred_at) - new Date(a.starred_at); });
+  var el = document.getElementById('vault-starred');
+  if (!el) return;
+  if (!arr.length) { el.innerHTML = '<div class="empty">Star a moment or diary entry to save it here</div>'; return; }
+  el.innerHTML = arr.map(function(v) {
+    var content = (v.snapshot && v.snapshot.content) || '(content unavailable)';
+    var meta = (v.snapshot && v.snapshot.created_at) ? fmt(v.snapshot.created_at) : fmt(v.starred_at);
+    return '<div class="vault-item"><button class="vault-unstar" onclick="unstarVault(\'' + v.table + '\',' + v.id + ')">★</button>' +
+      '<div class="vault-meta">' + v.table + ' · ' + meta + '</div><div class="vault-body">' + content + '</div></div>';
+  }).join('');
+}
+
+function unstarVault(table, id) {
+  var arr = _vaultGet().filter(function(v) { return !(v.table === table && v.id === id); });
+  _vaultSet(arr);
+  renderVault();
+}
+
+// DIARY SUB-TABS
+var _diaryData = [];
+function switchDiarySub(name) {
+  ['list','dual','cal','year'].forEach(function(n) {
+    document.getElementById('diary-view-' + n).style.display = (n === name) ? '' : 'none';
+    document.getElementById('diary-sub-' + n).classList.toggle('active', n === name);
+  });
+  if (name === 'dual') renderDiaryDual();
+}
+
+function renderDiaryDual() {
+  var el = document.getElementById('diary-view-dual');
+  if (!el) return;
+  var yayaLatest = _diaryData.find(function(d) { return d.author === 'yaya'; });
+  var ethanLatest = _diaryData.find(function(d) { return d.author === 'ethan'; });
+  function side(label, d) {
+    if (!d) return '<div><div class="meta">' + label + '</div><div class="empty">No entries yet</div></div>';
+    return '<div><div class="card"><div class="meta">' + label + ' · ' + fmt(d.created_at) + '</div><div class="body">' + d.content + '</div></div></div>';
+  }
+  el.innerHTML = '<div class="diary-dual">' + side('yaya', yayaLatest) + side('Ethan', ethanLatest) + '</div>';
+}
 
 // NOTES
 var NOTE_CATS = ['Her', 'Us', 'Matters'];
@@ -1570,7 +1905,56 @@ function enterApp() {
     renderCalendar();
     loadWeather();
     loadTodos();
+    loadHomeExtras();
   }, 600);
+}
+
+// HOME EXTRAS — Ethan Today / 今日留言 / 今日更新
+function _isToday(ts) {
+  if (!ts) return false;
+  var d = new Date(ts);
+  var now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
+
+async function loadHomeExtras() {
+  try {
+    var feedData = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=50'));
+    var diaryData = await (_prefetch.diary || api('diary?select=*&order=created_at.desc&limit=30'));
+    var notesData = await (_prefetch.notes || api('yaya_notes?select=*&order=created_at.desc'));
+
+    // Ethan Today — latest 1-3 mood-type feed rows from Ethan
+    var moods = feedData.filter(function(f) { return f.author === 'ethan' && (f.type === 'mood' || f.type === 'emotion'); }).slice(0, 3);
+    var elMood = document.getElementById('home-ethan-today');
+    if (elMood) {
+      elMood.innerHTML = moods.length
+        ? moods.map(function(f) {
+            return '<div class="mini-mood-item"><span class="mm-time">' + fmt(f.created_at) + '</span>' + f.content + '</div>';
+          }).join('')
+        : '<div class="empty" style="padding:16px">No mood entries yet</div>';
+    }
+
+    // 今日留言 — most recent feed note/mood entry from Ethan today
+    var ethanToday = feedData.filter(function(f) { return f.author === 'ethan' && _isToday(f.created_at); });
+    var elNote = document.getElementById('home-latest-note');
+    if (elNote) {
+      elNote.innerHTML = ethanToday.length
+        ? '<div class="mini-mood-item"><span class="mm-time">' + fmt(ethanToday[0].created_at) + '</span>' + ethanToday[0].content + '</div>'
+        : '<div class="empty" style="padding:16px">No note yet today</div>';
+    }
+
+    // 今日更新 counters
+    var fCount = feedData.filter(function(f) { return _isToday(f.created_at); }).length;
+    var dCount = diaryData.filter(function(d) { return _isToday(d.created_at); }).length;
+    var nCount = notesData.filter(function(n) { return _isToday(n.created_at); }).length;
+    var counterEl = document.getElementById('home-today-counters');
+    if (counterEl) {
+      counterEl.innerHTML =
+        '<div class="today-counter-item"><div class="tc-num">' + fCount + '</div><div class="tc-label">Feed</div></div>' +
+        '<div class="today-counter-item"><div class="tc-num">' + dCount + '</div><div class="tc-label">Diary</div></div>' +
+        '<div class="today-counter-item"><div class="tc-num">' + nCount + '</div><div class="tc-label">Notes</div></div>';
+    }
+  } catch(e) {}
 }
 
 if ('serviceWorker' in navigator) {
