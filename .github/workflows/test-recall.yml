@@ -1,0 +1,23 @@
+name: Test Recall Function
+
+on:
+  workflow_dispatch:
+    inputs:
+      query:
+        description: '测试用的query文本'
+        required: false
+        default: '专业课 作曲'
+
+jobs:
+  test-recall:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call recall edge function
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          curl -s -X POST "$SUPABASE_URL/functions/v1/recall" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"${{ github.event.inputs.query }}\"}"
