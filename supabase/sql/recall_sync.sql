@@ -45,7 +45,7 @@ BEGIN
     body := jsonb_build_object(
       'input', left(query_text, 2000),
       'model', 'text-embedding-3-small'
-    )::text
+    )
   ) INTO req_id;
 
   -- 等待响应（最多 5 秒，每 0.5 秒检查一次）
