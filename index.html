@@ -1313,7 +1313,7 @@ function openNotesCat(cat) {
         return '<div class="card' + (hasCtx ? ' has-context' : '') + '"' +
           (hasCtx ? ' onclick="openCtxModal(this.dataset.ctx)" data-ctx="' + encodeURIComponent(n.context) + '"' : '') + '>' +
           '<span class="note-tag ' + tagClass + '">' + tag + '</span>' +
-          '<div class="meta">' + (n.date_ref || fmt(n.created_at)) + '</div>' +
+          '<div class="meta">' + fmt(n.created_at) + '</div>' +
           '<div class="body">' + n.content + '</div>' +
           '</div>';
       }).join('')
