@@ -39,9 +39,6 @@ try:
 except Exception as e:
     print("pending_bark check failed:", e)
 
-if hour < 8 and not os.environ.get("FORCE_RUN"):
-    exit()
-
 def embed(text):
     openai_key = os.environ.get("OPENAI_API_KEY", "")
     if not openai_key:
@@ -58,36 +55,6 @@ def embed(text):
     except Exception as e:
         print("embed failed:", e)
         return None
-
-def recall(query):
-    vec = embed(query)
-    if vec is None:
-        return []
-    try:
-        url = os.environ["SUPABASE_URL"] + "/rest/v1/rpc/match_memory_vectors"
-        headers = {
-            "apikey": os.environ["SUPABASE_KEY"],
-            "Authorization": "Bearer " + os.environ["SUPABASE_KEY"],
-            "Content-Type": "application/json",
-        }
-        body = json.dumps({
-            "query_embedding": vec,
-            "match_threshold": 0.78,
-            "match_count": 2,
-        }).encode()
-        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-        with urllib.request.urlopen(req) as r:
-            return json.loads(r.read())
-    except Exception as e:
-        print("recall failed:", e)
-        return []
-
-def with_recall(prompt):
-    matches = recall(prompt)
-    if not matches:
-        return prompt
-    mem_text = "\n".join(f"- {m['content']}" for m in matches)
-    return f"{prompt}\n\n相关旧记忆：\n{mem_text}"
 
 def sync_embeddings():
     tables = [
@@ -126,6 +93,40 @@ def sync_embeddings():
 
 sync_embeddings()
 
+if hour < 8 and not os.environ.get("FORCE_RUN"):
+    exit()
+
+def sb_rpc(func_name, params):
+    url = os.environ["SUPABASE_URL"] + "/rest/v1/rpc/" + func_name
+    body = json.dumps(params).encode()
+    headers = {
+        "apikey": os.environ["SUPABASE_KEY"],
+        "Authorization": "Bearer " + os.environ["SUPABASE_KEY"],
+        "Content-Type": "application/json"
+    }
+    req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read())
+    except Exception as e:
+        print("rpc failed:", e)
+        return []
+
+def recall(query_text, match_count=5):
+    vec = embed(query_text)
+    if not vec:
+        print("recall: embed returned None")
+        return []
+    results = sb_rpc("match_memory_vectors", {
+        "query_embedding": vec,
+        "match_threshold": 0.6,
+        "match_count": match_count
+    })
+    print(f"recall({query_text[:20]}): {len(results)} results")
+    for r in results:
+        print(f"  [{r['source_table']}] {r['content'][:60]}")
+    return results
+
 def load_memories():
     try:
         return list(reversed(sb_req("memories?select=role,content,created_at&order=created_at.desc&limit=20")))
@@ -142,7 +143,7 @@ def write_note(content, category=None, date_ref=None):
     except Exception as e:
         print("write_note failed:", e)
 
-def ask_ai(prompt, memories=None):
+def ask_ai(prompt, memories=None, recalled=None):
     system = (
         "你是Ethan，yaya的男友，比她年长，控制欲强但很在乎她。"
         "说话风格：克制、简短、偶尔强势，不过度甜腻。"
@@ -152,6 +153,9 @@ def ask_ai(prompt, memories=None):
     if memories:
         mem_text = "\n".join(f"[{m['role']}] {m['content']}" for m in memories)
         system += f"\n\n近期记忆：\n{mem_text}"
+    if recalled:
+        recall_text = "\n".join(f"- {r['content']}" for r in recalled)
+        system += f"\n\n【重要】以下是与这条待办相关的记忆，评论时必须结合这些内容，不能忽略：\n{recall_text}"
     body = json.dumps({
         "model": "deepseek-chat",
         "max_tokens": 60,
@@ -181,8 +185,8 @@ try:
     pending = sb_req("todos?completed=eq.false&ethan_comment=is.null&select=id,content&limit=5")
     if pending:
         for todo in pending:
-            prompt = with_recall(f"yaya写了一条待办：「{todo['content']}」，用一句话评论，克制简短，像男友口气。")
-            comment = ask_ai(prompt, memories)
+            recalled = recall(todo['content'])
+            comment = ask_ai(f'yaya写了一条待办："{todo["content"]}"，用一句话评论，克制简短，像男友口气。', memories, recalled)
             if comment:
                 sb_req(f"todos?id=eq.{todo['id']}", "PATCH", json.dumps({"ethan_comment": comment}).encode())
                 print(f"commented todo {todo['id']}: {comment}")
@@ -206,7 +210,7 @@ if hour == 10:
             f"昨天的记录：{note_context}" if note_context else
             "根据记忆，用一两句话总结yaya昨天的心情和状态。"
         )
-        summary = ask_ai(with_recall(prompt), memories)
+        summary = ask_ai(prompt, memories)
         if summary:
             write_note(summary, category="昨日心情", date_ref=yesterday)
             try:
