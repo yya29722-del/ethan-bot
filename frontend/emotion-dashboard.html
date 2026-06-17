@@ -60,8 +60,13 @@ function saveConfig() {
   localStorage.setItem('eb_key', document.getElementById('key').value.trim());
 }
 function loadConfig() {
-  document.getElementById('url').value = localStorage.getItem('eb_url') || '';
-  document.getElementById('key').value = localStorage.getItem('eb_key') || '';
+  const qs = new URLSearchParams(location.search);
+  const qUrl = qs.get('url');
+  const qKey = qs.get('key');
+  if (qUrl) localStorage.setItem('eb_url', qUrl);
+  if (qKey) localStorage.setItem('eb_key', qKey);
+  document.getElementById('url').value = qUrl || localStorage.getItem('eb_url') || '';
+  document.getElementById('key').value = qKey || localStorage.getItem('eb_key') || '';
 }
 function cfg() {
   return { url: document.getElementById('url').value.trim(), key: document.getElementById('key').value.trim() };
