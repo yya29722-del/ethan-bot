@@ -133,10 +133,11 @@ async function showEvents(trackId) {
   list.innerHTML = '加载中…';
   panel.style.display = 'block';
 
-  const res = await fetch(
-    `${url}/rest/v1/emotion_events?track_id=eq.${trackId}&select=delta,event_type,note,resolved,created_at&order=created_at.desc&limit=20`,
-    { headers: { apikey: key, Authorization: `Bearer ${key}` } }
-  );
+  const res = await fetch(`${url}/rest/v1/rpc/get_track_events`, {
+    method: 'POST',
+    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_track_id: trackId, p_limit: 20 })
+  });
   if (!res.ok) { list.innerHTML = '<div class="ev-empty">查不到事件</div>'; return; }
   const rows = await res.json();
   if (!rows.length) { list.innerHTML = '<div class="ev-empty">还没有事件记录，当前值是自然衰减/增长出来的</div>'; return; }

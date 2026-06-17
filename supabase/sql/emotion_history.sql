@@ -109,3 +109,24 @@ as $$
   select gs.ts, get_intensity_at(p_track_id, gs.ts)
   from generate_series(p_start, p_end, (p_step_minutes || ' minutes')::interval) as gs(ts);
 $$;
+
+-- 给前端"为什么会XX"面板用：绕开RLS读某条轨道的事件历史
+create or replace function get_track_events(p_track_id text, p_limit int default 20)
+returns table (
+  delta float,
+  event_type text,
+  note text,
+  resolved boolean,
+  created_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select delta, event_type, note, resolved, created_at
+  from emotion_events
+  where track_id = p_track_id
+  order by created_at desc
+  limit p_limit;
+$$;
