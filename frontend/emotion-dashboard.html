@@ -22,6 +22,17 @@
   .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 12px; color: #ccc; }
   .legend span { display: inline-flex; align-items: center; gap: 4px; }
   .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .bar-card { cursor: pointer; }
+  #eventsPanel { background: #1c1c24; border-radius: 10px; padding: 14px; margin-top: 16px; display: none; }
+  #eventsPanel h3 { margin: 0 0 10px; font-size: 14px; }
+  .ev-row { border-top: 1px solid #2a2a34; padding: 8px 0; font-size: 13px; }
+  .ev-row:first-child { border-top: none; }
+  .ev-delta { font-weight: 600; }
+  .ev-delta.pos { color: #06d6a0; }
+  .ev-delta.neg { color: #ef476f; }
+  .ev-meta { color: #888; font-size: 12px; margin-top: 2px; }
+  .ev-empty { color: #888; font-size: 13px; }
+  .ev-close { float: right; color: #888; cursor: pointer; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -37,6 +48,7 @@
 <div id="err" class="err"></div>
 
 <div id="bars" class="bars"></div>
+<div id="eventsPanel"><span class="ev-close" onclick="closeEvents()">关闭 ✕</span><h3 id="eventsTitle"></h3><div id="eventsList"></div></div>
 
 <select id="rangeSel" onchange="loadSeries()">
   <option value="24">最近24小时</option>
@@ -99,12 +111,47 @@ async function loadBars() {
     const pct = Math.round(r.current_intensity * 100);
     const color = TRACK_COLORS[r.track_id] || '#888';
     container.innerHTML += `
-      <div class="bar-card">
+      <div class="bar-card" onclick="showEvents('${r.track_id}')">
         <div class="bar-name">${TRACK_LABELS[r.track_id] || r.track_id}</div>
         <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
         <div class="bar-val">${r.current_intensity.toFixed(3)}</div>
       </div>`;
   }
+}
+
+function closeEvents() {
+  document.getElementById('eventsPanel').style.display = 'none';
+}
+
+async function showEvents(trackId) {
+  const { url, key } = cfg();
+  if (!url || !key) return;
+  const panel = document.getElementById('eventsPanel');
+  const title = document.getElementById('eventsTitle');
+  const list = document.getElementById('eventsList');
+  title.textContent = `为什么会${TRACK_LABELS[trackId] || trackId}`;
+  list.innerHTML = '加载中…';
+  panel.style.display = 'block';
+
+  const res = await fetch(
+    `${url}/rest/v1/emotion_events?track_id=eq.${trackId}&select=delta,event_type,note,resolved,created_at&order=created_at.desc&limit=20`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+  );
+  if (!res.ok) { list.innerHTML = '<div class="ev-empty">查不到事件</div>'; return; }
+  const rows = await res.json();
+  if (!rows.length) { list.innerHTML = '<div class="ev-empty">还没有事件记录，当前值是自然衰减/增长出来的</div>'; return; }
+
+  const typeLabel = { trigger: '触发', resolution: '化解', transfer: '转化' };
+  list.innerHTML = rows.map(r => {
+    const sign = r.delta >= 0 ? 'pos' : 'neg';
+    const dt = new Date(r.created_at).toLocaleString('zh-CN');
+    return `
+      <div class="ev-row">
+        <span class="ev-delta ${sign}">${r.delta >= 0 ? '+' : ''}${r.delta.toFixed(2)}</span>
+        　${r.note || '（没写备注）'}
+        <div class="ev-meta">${typeLabel[r.event_type] || r.event_type} · ${dt}${r.resolved ? ' · 已化解' : ''}</div>
+      </div>`;
+  }).join('');
 }
 
 async function loadSeries() {
