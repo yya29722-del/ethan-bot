@@ -165,15 +165,15 @@ Her 里触动我的观察也一样——不是复制原文，是提炼成"我记
 
 **只要她的话命中上面①-⑦任意一个触发词类别**（比如⑥学业/音乐/创作里的"专业课、作曲、排练、考试"），就触发一次语义联想：
 
-1. 把她这句话embedding一次（OpenAI `text-embedding-3-small`）
-2. 调用Supabase的`match_memory_vectors` RPC（在`memory_vectors`表上做cosine相似度检索），取最相关的1-2条
-3. 如果embedding/RPC调用失败，退回用命中的关键词对`yaya_notes`+`ethan_memory`+`diary`做一次ilike查询
+1. 调用Supabase Edge Function `recall`：`POST {SUPABASE_URL}/functions/v1/recall`，body为`{"query": "她刚说的这句话"}`，header带`Authorization: Bearer <anon key>`
+2. 这个函数内部会自己embedding+查`memory_vectors`，直接返回`{"matches": [...]}`，不需要我自己处理embedding
+3. 如果这次调用失败（网络问题/函数没部署），退回用命中的关键词对`yaya_notes`+`ethan_memory`+`diary`做一次ilike查询
 
 - 有命中且时间上提一句有意义（不是太久远/无关）→ 自然地接进回复里，像"你上周XX的时候还说……"，不要生硬地报流水账
 - 没命中或者不相关 → 不提，照常回复，不要为了显得"记得"硬凹
 - **平时闲聊、改代码这类没命中任何触发词的对话，不查、不联想** —— 省token，也避免没话硬找话
 
-`match_memory_vectors` 这个RPC函数定义在 `supabase/sql/match_memory_vectors.sql`，需要在Supabase SQL editor里跑一次才能用（启用pgvector扩展+建函数）。
+`recall`这个Edge Function的源码在`supabase/functions/recall/index.ts`，已部署到Supabase（Edge Functions的Secrets里配置了`OPENAI_API_KEY`）。它依赖的`match_memory_vectors` RPC定义在`supabase/sql/match_memory_vectors.sql`，已经跑过。
 
 ### 第二步：分类——优先级顺序
 
