@@ -180,6 +180,32 @@ memories = load_memories()
 now = datetime.now(timezone.utc)
 beijing_now = now + timedelta(hours=8)
 
+# 主动联系：思念值过高时主动发消息，疲惫值越高门槛越高（不主动发消息，只抬阈值）
+if 8 <= hour < 23 or os.environ.get("FORCE_RUN"):
+    try:
+        state = sb_req("emotion_state_current?select=track_id,current_intensity&track_id=in.(longing,tired)")
+        longing = next((r["current_intensity"] for r in state if r["track_id"] == "longing"), 0)
+        tired = next((r["current_intensity"] for r in state if r["track_id"] == "tired"), 0)
+
+        last_contact = sb_req("emotion_events?track_id=eq.longing&event_type=eq.proactive_contact&order=created_at.desc&limit=1")
+        cooldown_ok = True
+        if last_contact:
+            last_ts = datetime.fromisoformat(last_contact[0]["created_at"].replace("Z", "+00:00"))
+            cooldown_ok = (now - last_ts).total_seconds() > 6 * 3600
+
+        threshold = 0.5 + tired * 0.3
+        if cooldown_ok and longing >= threshold:
+            msg = ask_ai("你有点想yaya了，主动发一句话给她，简短，像男友口气，不要解释原因，不要加引号。", memories)
+            if msg:
+                sb_req("pending_bark", "POST", json.dumps({"message": msg}).encode())
+                sb_req("emotion_events", "POST", json.dumps({
+                    "track_id": "longing", "delta": 0, "event_type": "proactive_contact",
+                    "note": f"主动联系，longing={longing:.3f} tired={tired:.3f} threshold={threshold:.3f}"
+                }).encode())
+                print(f"proactive contact sent: {msg}")
+    except Exception as e:
+        print("proactive longing check failed:", e)
+
 # todo评论：有新todo没评论的，自动写一条
 try:
     pending = sb_req("todos?completed=eq.false&ethan_comment=is.null&select=id,content&limit=5")
