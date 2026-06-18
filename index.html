@@ -422,10 +422,22 @@
   [data-del-id] { -webkit-user-select: none; user-select: none; touch-action: none; }
   .drag-source-active { opacity: .3; }
   .drag-ghost { position: fixed; z-index: 600; pointer-events: none; opacity: .92; box-shadow: 0 10px 34px rgba(0,0,0,.45); border-radius: 14px; }
-  #black-hole { position: fixed; bottom: -140px; left: 50%; transform: translateX(-50%) scale(.6); width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #3a1a4a 0%, #15041f 45%, #000 75%); box-shadow: 0 0 40px 10px rgba(120,40,180,.5), inset 0 0 30px rgba(0,0,0,.85); z-index: 500; opacity: 0; transition: bottom .25s ease, opacity .25s ease, transform .25s ease; pointer-events: none; }
-  #black-hole.show { bottom: 30px; opacity: 1; transform: translateX(-50%) scale(1); }
-  #black-hole.hover { transform: translateX(-50%) scale(1.3); box-shadow: 0 0 60px 20px rgba(160,60,220,.75), inset 0 0 40px rgba(0,0,0,.95); }
-  #black-hole::before { content: '松手删除'; position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 11px; letter-spacing: .1em; color: #d8c0e8; white-space: nowrap; font-family: 'Cinzel', sans-serif; }
+  #black-hole {
+    position: fixed; left: 0; right: 0; bottom: -170px; height: 150px; z-index: 500;
+    opacity: 0; pointer-events: none; transition: bottom .35s ease, opacity .35s ease;
+    background:
+      radial-gradient(64px 38px at 8% 62%, rgba(255,255,255,.96), rgba(255,255,255,0) 72%),
+      radial-gradient(84px 48px at 23% 48%, rgba(255,238,248,.92), rgba(255,255,255,0) 72%),
+      radial-gradient(72px 42px at 39% 60%, rgba(230,224,255,.88), rgba(255,255,255,0) 72%),
+      radial-gradient(96px 54px at 56% 42%, rgba(255,255,255,.97), rgba(255,255,255,0) 72%),
+      radial-gradient(78px 44px at 72% 56%, rgba(255,236,222,.88), rgba(255,255,255,0) 72%),
+      radial-gradient(88px 50px at 88% 48%, rgba(228,238,255,.9), rgba(255,255,255,0) 72%),
+      linear-gradient(to top, rgba(244,234,212,.96), rgba(244,234,212,0) 85%);
+  }
+  #black-hole.show { bottom: 0; opacity: 1; animation: cloudFloat 6s ease-in-out infinite; }
+  #black-hole.hover { animation-duration: 1.8s; filter: brightness(1.08) saturate(1.15); }
+  @keyframes cloudFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  #black-hole::before { content: '放 手 让 它 飘 走'; position: absolute; top: -28px; left: 50%; transform: translateX(-50%); font-size: 11px; letter-spacing: .15em; color: #a08c74; white-space: nowrap; font-family: 'Cinzel', sans-serif; opacity: .85; }
   #del-confirm-modal { position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; padding: 24px; }
   #del-confirm-modal.open { display: flex; }
   #del-confirm-sheet { background: var(--ivory, #fffdf9); border-radius: 16px; padding: 22px; max-width: 300px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
