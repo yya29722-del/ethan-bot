@@ -404,6 +404,14 @@
   .vault-item { background: rgba(255,253,249,.92); border: 1px solid rgba(201,168,76,.28); border-radius: 14px; padding: 14px 70px 14px 16px; margin-bottom: 8px; box-shadow: 0 2px 12px rgba(139,80,40,.08); position: relative; }
   .vault-item .vault-meta { font-size: 11px; color: var(--text-muted, #B09080); margin-bottom: 4px; }
   .vault-item .vault-body { font-size: 14px; line-height: 1.55; color: var(--text-primary, #2C1810); white-space: pre-wrap; }
+  .vault-item-collapsed { cursor: pointer; }
+  .vault-item-collapsed:active { background: rgba(201,168,76,.1); }
+  .vault-preview { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #vault-detail-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; padding: 24px 16px; }
+  #vault-detail-modal.open { display: flex; }
+  #vault-detail-sheet { width: 100%; max-width: 380px; background: #ece5dd; border-radius: 18px; overflow: hidden; max-height: 78vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.25); animation: fadeScale .2s ease; }
+  #vault-detail-header { background: #075e54; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  #vault-detail-body { flex: 1; overflow-y: auto; padding: 18px 16px; font-size: 14px; line-height: 1.6; color: var(--text-primary, #2C1810); white-space: pre-wrap; background: #fff; }
   .vault-unstar { position: absolute; top: 12px; right: 12px; background: none; border: none; color: #c9a96e; font-size: 16px; cursor: pointer; }
   .vault-featured { background: linear-gradient(160deg,#1c1408 0%,#2a1c0c 100%); border: 1px solid rgba(201,168,76,.4); border-radius: 16px; padding: 22px 20px; margin-bottom: 16px; text-align: center; }
   .vault-featured .vf-label { font-size: 10px; letter-spacing: .3em; color: rgba(201,168,76,.8); font-family: 'Cinzel', sans-serif; text-transform: uppercase; margin-bottom: 12px; }
@@ -643,6 +651,17 @@
         <button class="ctx-modal-close" onclick="closeTodayModal()">×</button>
       </div>
       <div id="today-modal-list"></div>
+    </div>
+  </div>
+
+  <!-- Vault item detail -->
+  <div id="vault-detail-modal" onclick="closeVaultDetail()">
+    <div id="vault-detail-sheet" onclick="event.stopPropagation()">
+      <div id="vault-detail-header">
+        <span class="ctx-modal-title" id="vault-detail-meta"></span>
+        <button class="ctx-modal-close" onclick="closeVaultDetail()">×</button>
+      </div>
+      <div id="vault-detail-body"></div>
     </div>
   </div>
 
@@ -1403,8 +1422,22 @@ function renderMoments() {
 function vaultItemHtml(table, item) {
   var content = item.content || '';
   var meta = fmt(item.created_at || item.date_ref);
-  return '<div class="vault-item">' + toggleRowHtml(table, item.id, item.is_top, item.is_favorite) +
-    '<div class="vault-meta">' + meta + '</div><div class="vault-body">' + content + '</div></div>';
+  var preview = content.length > 60 ? content.slice(0, 60) + '…' : content;
+  return '<div class="vault-item vault-item-collapsed" onclick="openVaultDetail(this)" data-content="' + encodeURIComponent(content) + '" data-meta="' + encodeURIComponent(meta) + '">' +
+    toggleRowHtml(table, item.id, item.is_top, item.is_favorite) +
+    '<div class="vault-meta">' + meta + '</div><div class="vault-body vault-preview">' + preview + '</div></div>';
+}
+
+function openVaultDetail(el) {
+  var content = decodeURIComponent(el.dataset.content || '');
+  var meta = decodeURIComponent(el.dataset.meta || '');
+  document.getElementById('vault-detail-meta').textContent = meta;
+  document.getElementById('vault-detail-body').textContent = content;
+  document.getElementById('vault-detail-modal').classList.add('open');
+}
+
+function closeVaultDetail() {
+  document.getElementById('vault-detail-modal').classList.remove('open');
 }
 
 async function loadVault() {
@@ -1442,7 +1475,7 @@ async function loadVault() {
 
   var elL = document.getElementById('vault-letters');
   elL.innerHTML = lettersData.length
-    ? lettersData.map(function(d) { return '<div class="vault-item"><div class="vault-meta">' + fmt(d.created_at) + '</div><div class="vault-body">' + d.content + '</div></div>'; }).join('')
+    ? lettersData.map(function(d) { return vaultItemHtml('diary', d); }).join('')
     : '<div class="empty">No letters yet</div>';
 
   var elF = document.getElementById('vault-favorites');
@@ -1466,7 +1499,7 @@ async function runVaultSearch() {
   var diaryData = await api('diary?select=*&content=ilike.' + enc + '&order=created_at.desc&limit=30').catch(function() { return []; });
   var html = feedData.map(function(f) { return vaultItemHtml('feed', f); }).join('')
     + notesData.map(function(n) { return vaultItemHtml('yaya_notes', n); }).join('')
-    + diaryData.map(function(d) { return '<div class="vault-item"><div class="vault-meta">' + fmt(d.created_at) + '</div><div class="vault-body">' + d.content + '</div></div>'; }).join('');
+    + diaryData.map(function(d) { return vaultItemHtml('diary', d); }).join('');
   el.innerHTML = html || '<div class="empty">No matches</div>';
 }
 
