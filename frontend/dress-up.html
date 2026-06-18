@@ -145,7 +145,8 @@
   .wp-card.selected { border-color: #ddb96a; box-shadow: 0 0 0 2px rgba(221,185,106,.35), 0 8px 20px rgba(0,0,0,.4); }
   .wp-card .wp-icon { width: 38%; opacity: .8; margin-bottom: 6px; }
   .wp-card .wp-stars { position: absolute; top: 6px; left: 6px; font-size: 8px; color: #ddb96a; letter-spacing: 1px; }
-  .wp-card .wp-name { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 11px; color: rgba(240,232,212,.85); font-family: 'Cinzel', serif; letter-spacing: .02em; }
+  .wp-card .wp-name { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 11px; color: rgba(240,232,212,.85); font-family: 'Cinzel', serif; letter-spacing: .02em; text-shadow: 0 1px 4px rgba(0,0,0,.9); z-index: 1; }
+  .wp-card[style*="background-image"]::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.05) 40%, rgba(0,0,0,.65) 100%); }
   .wp-card.selected::before { content: '✓'; position: absolute; top: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; background: #ddb96a; color: #1a1612; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
   .wp-card.none-card { color: rgba(240,232,212,.3); font-size: 22px; }
 
@@ -291,6 +292,11 @@ const NAME_POOL = {
 };
 const COLOR_POOL = ['#3a3228','#46392c','#2c3a46','#46303a','#3a4630','#352a46'];
 
+// 目前唯一一张真图是这对情侣的黑色系合照，先把它接到对应槎位的第一张卡上做演示
+const PHOTO_SRC = 'assets/portrait-default.webp';
+const PHOTO_SLOT = { ethan: 'suit', yaya: 'onepiece' };
+const PHOTO_POS = { ethan: '20% 15%', yaya: '78% 15%' };
+
 function buildItems(charId) {
   const items = {};
   TABS.forEach(t => {
@@ -300,6 +306,7 @@ function buildItems(charId) {
       name: n,
       stars: 3 + (i % 3),
       color: COLOR_POOL[i % COLOR_POOL.length],
+      img: (i === 0 && PHOTO_SLOT[charId] === t.id) ? PHOTO_SRC : null,
     }));
   });
   return items;
@@ -360,11 +367,16 @@ function renderGrid() {
   const current = outfit[state.tab];
 
   let html = `<div class="wp-card none-card ${!current ? 'selected' : ''}" onclick="pickItem(null)">✕</div>`;
-  html += items.map(item => `
-    <div class="wp-card ${current === item.id ? 'selected' : ''}" onclick="pickItem('${item.id}')" style="background:linear-gradient(160deg, ${item.color}, #14110d)">
+  html += items.map(item => {
+    const bg = item.img
+      ? `background-image:url('${item.img}');background-size:cover;background-position:${PHOTO_POS[state.char]}`
+      : `background:linear-gradient(160deg, ${item.color}, #14110d)`;
+    return `
+    <div class="wp-card ${current === item.id ? 'selected' : ''}" onclick="pickItem('${item.id}')" style="${bg}">
       <span class="wp-stars">${'★'.repeat(item.stars)}${'☆'.repeat(5 - item.stars)}</span>
       <span class="wp-name">${item.name}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   grid.innerHTML = html;
 
   document.getElementById('owned-count').textContent = items.length;
