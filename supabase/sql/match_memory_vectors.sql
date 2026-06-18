@@ -2,7 +2,7 @@ create extension if not exists vector;
 
 create or replace function match_memory_vectors(
   query_embedding vector(1536),
-  match_threshold float default 0.78,
+  match_threshold float default 0.3,
   match_count int default 2
 )
 returns table (

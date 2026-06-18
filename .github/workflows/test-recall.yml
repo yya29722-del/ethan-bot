@@ -1,0 +1,63 @@
+name: Test Recall Function
+
+on:
+  workflow_dispatch:
+    inputs:
+      query:
+        description: '测试用的query文本'
+        required: false
+        default: '专业课 作曲'
+
+jobs:
+  test-recall:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call recall edge function
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          curl -s -X POST "$SUPABASE_URL/functions/v1/recall" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"${{ github.event.inputs.query }}\"}"
+
+      - name: Debug memory_vectors table
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          echo "row count:"
+          curl -s "$SUPABASE_URL/rest/v1/memory_vectors?select=id" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
+            -H "Prefer: count=exact" -H "Range: 0-0" -I | grep -i content-range
+          echo "sample rows:"
+          curl -s "$SUPABASE_URL/rest/v1/memory_vectors?select=source_table,source_id,content&limit=10" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+
+      - name: Debug emotion_state_current view
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          echo "emotion_state_current rows:"
+          curl -s "$SUPABASE_URL/rest/v1/emotion_state_current?select=*" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+
+      - name: Cleanup debug pollution on happy track
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          CUR=$(curl -s "$SUPABASE_URL/rest/v1/emotion_state_current?select=current_intensity&track_id=eq.happy" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['current_intensity'])")
+          echo "current happy intensity before cleanup: $CUR"
+          DELTA=$(python3 -c "print(-float('$CUR'))")
+          curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/apply_emotion_event" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"p_track_id\":\"happy\",\"p_delta\":$DELTA,\"p_event_type\":\"resolution\",\"p_note\":\"清除workflow debug测试污染\"}"
+          echo ""
+          echo "current state after cleanup:"
+          curl -s "$SUPABASE_URL/rest/v1/emotion_state_current?select=*&track_id=eq.happy" \
+            -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
