@@ -135,6 +135,12 @@
   .ctx-modal-close { background: none; border: none; color: rgba(255,255,255,.7); font-size: 20px; cursor: pointer; padding: 0 2px; line-height: 1; }
   .ctx-modal-close:active { color: #fff; }
   #ctx-modal-bubbles { flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; }
+  #today-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; padding: 24px 16px; }
+  #today-modal.open { display: flex; }
+  #today-modal-sheet { width: 100%; max-width: 380px; background: var(--ivory, #fffdf9); border-radius: 18px; overflow: hidden; max-height: 78vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.25); animation: fadeScale .2s ease; }
+  #today-modal-header { background: var(--text-primary, #2C1810); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  #today-modal-list { flex: 1; overflow-y: auto; padding: 18px 18px 18px 26px; }
+  #today-modal-list .tl-item:last-child { margin-bottom: 0; }
   .ctx-row { display: flex; }
   .ctx-row.from-yaya { justify-content: flex-start; }
   .ctx-row.from-ethan { justify-content: flex-end; }
@@ -594,6 +600,17 @@
     </div>
   </div>
 
+  <!-- Today Counter Modal -->
+  <div id="today-modal" onclick="closeTodayModal()">
+    <div id="today-modal-sheet" onclick="event.stopPropagation()">
+      <div id="today-modal-header">
+        <span class="ctx-modal-title" id="today-modal-title"></span>
+        <button class="ctx-modal-close" onclick="closeTodayModal()">×</button>
+      </div>
+      <div id="today-modal-list"></div>
+    </div>
+  </div>
+
   <!-- TAB: Ethan -->
   <div class="tab-page" id="tab-ethan">
     <div class="tab-section-header">
@@ -607,12 +624,13 @@
       </div>
       <div class="ethan-section-label">今 日 更 新</div>
       <div class="today-counter-row" id="ethan-today-counters">
-        <div class="today-counter-item clickable" onclick="toggleTodayExpand('us_moment')"><div class="tc-num">0</div><div class="tc-label">Us Moment</div></div>
-        <div class="today-counter-item clickable" onclick="toggleTodayExpand('mood')"><div class="tc-num">0</div><div class="tc-label">Mood</div></div>
-        <div class="today-counter-item clickable" onclick="toggleTodayExpand('her')"><div class="tc-num">0</div><div class="tc-label">Her</div></div>
-        <div class="today-counter-item clickable" onclick="toggleTodayExpand('us')"><div class="tc-num">0</div><div class="tc-label">Us</div></div>
+        <div class="today-counter-item clickable" onclick="openTodayModal('us_moment')"><div class="tc-num">0</div><div class="tc-label">Us Moment</div></div>
+        <div class="today-counter-item clickable" onclick="openTodayModal('mood')"><div class="tc-num">0</div><div class="tc-label">Mood</div></div>
+        <div class="today-counter-item clickable" onclick="openTodayModal('her')"><div class="tc-num">0</div><div class="tc-label">Her</div></div>
+        <div class="today-counter-item clickable" onclick="openTodayModal('us')"><div class="tc-num">0</div><div class="tc-label">Us</div></div>
       </div>
-      <div class="tc-expand" id="ethan-today-expand"></div>
+      <div class="ethan-section-label">M O O D</div>
+      <div id="ethan-mood-list"><div class="empty">No moods yet</div></div>
 
       <div class="ethan-section-label" id="ethan-her-title">Her</div>
       <button class="back-btn" id="ethan-her-back-btn" onclick="notesBack()" style="display:none">‹</button>
@@ -718,7 +736,11 @@
       </div>
       <div id="vault-search-results"></div>
 
-      <div class="vault-section-label">T O P &nbsp;Q U O T E S</div>
+      <div class="vault-section-label">U S</div>
+      <div id="vault-us"><div class="empty">No entries yet</div></div>
+      <div class="vault-section-label" style="margin-top:18px">M A T T E R S</div>
+      <div id="vault-matters"><div class="empty">No entries yet</div></div>
+      <div class="vault-section-label" style="margin-top:18px">T O P &nbsp;Q U O T E S</div>
       <div id="vault-top-quotes"><div class="empty">No top quotes yet</div></div>
       <div class="vault-section-label" style="margin-top:18px">T O P &nbsp;M O M E N T S</div>
       <div id="vault-top-moments"><div class="empty">No top moments yet</div></div>
@@ -1194,15 +1216,10 @@ async function addDiary() {
 }
 async function delDiary(id) { await api('diary?id=eq.' + id, 'DELETE'); loadDiary(); }
 
-// MOMENTS — merges feed(type us_moment/funny/etc) + yaya_notes(category Us/关于我们)
-// Mapping (please verify against live data):
-//   Funny       <- feed.type in [funny, gacha] ; notes without special tag default fallback
-//   Sweet       <- feed.type in [us_moment, emotion]
-//   Quotes      <- feed.type === 'quote'
-//   Small Events<- feed.type in [event, note] ; yaya_notes category Us/关于我们 (no finer signal) -> Small Events by default
+// MOMENTS — feed entries only (mood/emotion live in Ethan tab; Us/Matters notes live in Vault)
 var MOMENTS_BUCKET = {
   funny: 'Funny', gacha: 'Funny',
-  us_moment: 'Sweet', emotion: 'Sweet', mood: 'Sweet',
+  us_moment: 'Sweet',
   quote: 'Quotes',
   event: 'Small Events', note: 'Small Events'
 };
@@ -1211,17 +1228,8 @@ var _momentsData = [];
 async function loadMoments() {
   var feedData = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=50'));
   _prefetch.feed = null;
-  var notesData = await (_prefetch.notes || api('yaya_notes?select=*&order=created_at.desc'));
-  var usFeed = feedData.filter(function(f) { return f.type === 'us_moment'; });
-  var usNotes = notesData.filter(function(n) { return CAT_BUCKET[n.category] === 'Us'; });
-  var merged = usFeed.map(function(f) {
+  var merged = feedData.filter(function(f) { return f.type !== 'mood' && f.type !== 'emotion'; }).map(function(f) {
     return { source: 'feed', id: f.id, author: f.author, content: f.content, created_at: f.created_at, context: f.context, bucket: MOMENTS_BUCKET[f.type] || 'Small Events', type: f.type, is_top: f.is_top, is_favorite: f.is_favorite };
-  }).concat(usNotes.map(function(n) {
-    return { source: 'notes', id: n.id, author: null, content: n.content, created_at: n.created_at || n.date_ref, context: n.context, bucket: 'Sweet', type: n.category, is_top: n.is_top, is_favorite: n.is_favorite };
-  }));
-  // also include other feed entries not us_moment so Moments isn't empty-feeling (note/event/quote/emotion types map too)
-  feedData.filter(function(f) { return f.type !== 'us_moment'; }).forEach(function(f) {
-    merged.push({ source: 'feed', id: f.id, author: f.author, content: f.content, created_at: f.created_at, context: f.context, bucket: MOMENTS_BUCKET[f.type] || 'Small Events', type: f.type, is_top: f.is_top, is_favorite: f.is_favorite });
   });
   merged.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
   _momentsData = merged;
@@ -1237,33 +1245,26 @@ function renderMoments() {
   if (!el) return;
   var q = (document.getElementById('moments-search').value || '').trim().toLowerCase();
   var bucket = document.getElementById('moments-filter').value;
-  var typeMap = {note:'Note',event:'Event',quote:'Quote',emotion:'Mood',mood:'Mood',gacha:'Gacha Prize',us_moment:'Us'};
+  var typeMap = {note:'Note',event:'Event',quote:'Quote',gacha:'Gacha Prize',us_moment:'Us'};
   var list = _momentsData.filter(function(m) {
     if (bucket && m.bucket !== bucket) return false;
     if (q && (m.content || '').toLowerCase().indexOf(q) < 0) return false;
     return true;
   });
   if (!list.length) { el.innerHTML = '<div class="empty">No moments found</div>'; return; }
-  var milestones = list.filter(function(m) { return m.source === 'notes' && (CAT_BUCKET[m.type] === 'Matters' || CAT_BUCKET[m.type] === 'Us'); });
-  var rest = list.filter(function(m) { return milestones.indexOf(m) < 0; });
   function itemHtml(m) {
     var hasCtx = !!m.context;
-    var table = m.source === 'feed' ? 'feed' : 'yaya_notes';
     var who = m.author === 'ethan' ? 'Ethan' : (m.author === 'yaya' ? 'yaya' : '');
     return '<div class="tl-item' + (hasCtx ? ' has-context' : '') + '"' +
       (hasCtx ? ' onclick="openCtxModal(this.dataset.ctx)" data-ctx="' + encodeURIComponent(m.context) + '"' : '') + '>' +
-      (m.source === 'feed' ? '<button class="del-btn" onclick="event.stopPropagation();delFeed(' + m.id + ')">×</button>' : '') +
-      toggleRowHtml(table, m.id, m.is_top, m.is_favorite) +
+      '<button class="del-btn" onclick="event.stopPropagation();delFeed(' + m.id + ')">×</button>' +
+      toggleRowHtml('feed', m.id, m.is_top, m.is_favorite) +
       '<span class="tl-tag">' + (typeMap[m.type] || m.bucket) + '</span>' +
       '<div class="tl-time">' + (who ? who + ' · ' : '') + fmt(m.created_at) + '</div>' +
       '<div class="tl-text">' + m.content + '</div>' +
       '</div>';
   }
-  var html = rest.map(itemHtml).join('');
-  if (milestones.length) {
-    html += '<div class="tl-divider">里 程 碑</div>' + milestones.map(itemHtml).join('');
-  }
-  el.innerHTML = html;
+  el.innerHTML = list.map(itemHtml).join('');
 }
 
 // VAULT — backed by feed.is_top/is_favorite + yaya_notes.is_top/is_favorite + ethan diary letters
@@ -1286,6 +1287,15 @@ async function loadVault() {
   var favorites = feedData.filter(function(f) { return f.is_favorite; })
     .concat(notesData.filter(function(n) { return n.is_favorite; }))
     .sort(function(a, b) { return new Date(b.created_at || b.date_ref) - new Date(a.created_at || a.date_ref); });
+
+  var usNotes = notesData.filter(function(n) { return CAT_BUCKET[n.category] === 'Us'; });
+  var mattersNotes = notesData.filter(function(n) { return CAT_BUCKET[n.category] === 'Matters'; });
+
+  var elUs = document.getElementById('vault-us');
+  if (elUs) elUs.innerHTML = usNotes.length ? usNotes.map(function(n) { return vaultItemHtml('yaya_notes', n); }).join('') : '<div class="empty">No entries yet</div>';
+
+  var elMatters = document.getElementById('vault-matters');
+  if (elMatters) elMatters.innerHTML = mattersNotes.length ? mattersNotes.map(function(n) { return vaultItemHtml('yaya_notes', n); }).join('') : '<div class="empty">No entries yet</div>';
 
   var elQ = document.getElementById('vault-top-quotes');
   elQ.innerHTML = topQuotes.length ? topQuotes.map(function(f) { return vaultItemHtml('feed', f); }).join('') : '<div class="empty">No top quotes yet</div>';
@@ -1346,7 +1356,7 @@ function renderDiaryDual() {
 }
 
 // NOTES
-var NOTE_CATS = ['Her', 'Us', 'Matters'];
+var NOTE_CATS = ['Her'];
 var _notesData = [];
 var _notesInDetail = false;
 
@@ -1401,22 +1411,38 @@ async function loadEthanTab() {
     var row = document.getElementById('ethan-today-counters');
     var labels = { us_moment: 'Us Moment', mood: 'Mood', her: 'Her', us: 'Us' };
     row.innerHTML = Object.keys(labels).map(function(k) {
-      return '<div class="today-counter-item clickable" onclick="toggleTodayExpand(\'' + k + '\')"><div class="tc-num">' + _ethanTodayBuckets[k].length + '</div><div class="tc-label">' + labels[k] + '</div></div>';
+      return '<div class="today-counter-item clickable" onclick="openTodayModal(\'' + k + '\')"><div class="tc-num">' + _ethanTodayBuckets[k].length + '</div><div class="tc-label">' + labels[k] + '</div></div>';
     }).join('');
+
+    var allMoods = await api('feed?select=*&author=eq.ethan&type=in.(mood,emotion)&order=created_at.desc&limit=500').catch(function() { return []; });
+    var moodEl = document.getElementById('ethan-mood-list');
+    if (moodEl) {
+      moodEl.innerHTML = allMoods.length
+        ? allMoods.map(function(m) {
+            return '<div class="tl-item"><div class="tl-time">' + fmt(m.created_at) + '</div><div class="tl-text">' + m.content + '</div></div>';
+          }).join('')
+        : '<div class="empty">No moods yet</div>';
+    }
   } catch(e) {}
   loadNotes();
 }
 
-function toggleTodayExpand(kind) {
-  var el = document.getElementById('ethan-today-expand');
-  if (_ethanExpandOpen === kind) { _ethanExpandOpen = ''; el.innerHTML = ''; return; }
-  _ethanExpandOpen = kind;
-  var items = _ethanTodayBuckets[kind] || [];
-  el.innerHTML = items.length
+function openTodayModal(kind) {
+  var items = (_ethanTodayBuckets[kind] || []).slice().sort(function(a, b) {
+    return new Date(a.created_at || a.date_ref) - new Date(b.created_at || b.date_ref);
+  });
+  var labels = { us_moment: 'Us Moment', mood: 'Mood', her: 'Her', us: 'Us' };
+  document.getElementById('today-modal-title').textContent = (labels[kind] || kind) + ' · Today';
+  document.getElementById('today-modal-list').innerHTML = items.length
     ? items.map(function(it) {
-        return '<div class="card"><div class="meta">' + fmt(it.created_at || it.date_ref) + '</div><div class="body">' + it.content + '</div></div>';
+        return '<div class="tl-item"><div class="tl-time">' + fmt(it.created_at || it.date_ref) + '</div><div class="tl-text">' + it.content + '</div></div>';
       }).join('')
     : '<div class="empty">Nothing yet today</div>';
+  document.getElementById('today-modal').classList.add('open');
+}
+
+function closeTodayModal() {
+  document.getElementById('today-modal').classList.remove('open');
 }
 
 function renderNotesCats() {
