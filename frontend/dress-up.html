@@ -291,6 +291,7 @@ const TABS = [
   { id: 'top',   zh: '上衣', en: 'TOP' },
   { id: 'bottom',zh: '下装', en: 'BOTTOM' },
   { id: 'onepiece', zh: '连体', en: 'ONE-PIECE' },
+  { id: 'home',  zh: '居家', en: 'HOMEWEAR' },
   { id: 'socks', zh: '袜子', en: 'SOCKS' },
 ];
 
@@ -298,29 +299,34 @@ const CAT_RAIL = ['👔','🎩','👖','👗','🧦','👞','💍'];
 
 // 占位单品库：名字按截图风格命名，星级随机给个范围，没有真图，用渐变色块代替
 const NAME_POOL = {
-  suit: ['暗夜猎手','白衬诱惑','致命温柔','晨光秘恋','学长风范','禁欲系带','西装暴徒','圣诞限定'],
+  suit: ['学院燕尾','晚宴女仆','致命温柔','晨光秘恋','学长风范','禁欲系带','西装暴徒','圣诞限定'],
   top: ['奶油草莓','休闲时光','冷冽风暴','温柔陷阱','针织暖阳','薄荷微风'],
   bottom: ['深夜漫步','灰调假日','复古纹理','简约直筒'],
-  onepiece: ['女仆装','JK制服','运动少年','吸血鬼','晚宴红裙','花园仙子'],
+  onepiece: ['暮色绸裙','丝绊晚裙','运动少年','吸血鬼','花园仙子'],
+  home: ['简约黑居家','奶白居家','暮羊毛衣家居','黑绸睡袍','雾蓝家居','香槟晨褛'],
   socks: ['纯白基础','格纹学院','蕾丝边','丝绒暗纹'],
 };
 const COLOR_POOL = ['#3a3228','#46392c','#2c3a46','#46303a','#3a4630','#352a46'];
 
-// 目前唯一一张真图是这对情侣的黑色系合照，先把它接到对应槎位的第一张卡上做演示
-const PHOTO_SRC = 'assets/portrait-default.webp';
-const PHOTO_SLOT = { ethan: 'suit', yaya: 'onepiece' };
-const PHOTO_POS = { ethan: '20% 15%', yaya: '78% 15%' };
+// 情侣合照真图：每张图男左女右，按tab分配真图（两人同款穿搭），裁剪出各自的人像
+const PHOTO_POOL = {
+  suit: ['67232.PNG', '67235.PNG'],
+  onepiece: ['67226.PNG', '67233.PNG'],
+  home: ['67227.PNG', '67228.PNG', '67229.PNG', '67230.PNG', '67231.PNG', '67234.PNG'],
+};
+const PHOTO_POS = { ethan: '15% 8%', yaya: '82% 8%' };
 
 function buildItems(charId) {
   const items = {};
   TABS.forEach(t => {
     const names = NAME_POOL[t.id] || ['默认'];
+    const photos = PHOTO_POOL[t.id] || [];
     items[t.id] = names.map((n, i) => ({
       id: `${charId}_${t.id}_${i}`,
       name: n,
       stars: 3 + (i % 3),
       color: COLOR_POOL[i % COLOR_POOL.length],
-      img: (i === 0 && PHOTO_SLOT[charId] === t.id) ? PHOTO_SRC : null,
+      img: photos[i] ? `assets/${photos[i]}` : null,
     }));
   });
   return items;
@@ -408,12 +414,18 @@ function renderPortrait() {
     const id = outfit[t.id];
     if (!id) return null;
     const item = ITEMS[state.char][t.id].find(i => i.id === id);
-    return item ? `${t.zh}：${item.name}` : null;
+    return item ? { tab: t, item } : null;
   }).filter(Boolean);
 
   document.getElementById('outfit-caption').textContent = picked.length
-    ? `当前搭配：${picked.join(' / ')}`
+    ? `当前搭配：${picked.map(p => `${p.tab.zh}：${p.item.name}`).join(' / ')}`
     : '默认搭配';
+
+  // 用最近选中、带真图的单品换掉主立绘；都没有就用默认合照
+  const withPhoto = [...picked].reverse().find(p => p.item.img);
+  const img = document.getElementById('portrait-img');
+  img.src = withPhoto ? withPhoto.item.img : 'assets/portrait-default.webp';
+  img.style.objectPosition = withPhoto ? PHOTO_POS[state.char] : 'top center';
 }
 
 function selectTab(tab) {
