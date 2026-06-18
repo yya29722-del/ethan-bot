@@ -189,19 +189,25 @@ const PHOTO_POOL = {
   onepiece: ['67226.PNG', '67233.PNG'],
   home: ['67227.PNG', '67228.PNG', '67229.PNG', '67230.PNG', '67231.PNG', '67234.PNG'],
 };
+// 目前只有这10张真图，剩下没分到主题图的格子循环复用这些图，不留空色块
+const ALL_PHOTOS = ['67226.PNG','67227.PNG','67228.PNG','67229.PNG','67230.PNG','67231.PNG','67232.PNG','67233.PNG','67234.PNG','67235.PNG'];
 const PHOTO_POS = { ethan: '15% 8%', yaya: '82% 8%' };
 
 function buildItems(charId) {
   const items = {};
+  let cycle = 0;
   TABS.forEach(t => {
     const names = NAME_POOL[t.id] || ['默认'];
     const photos = PHOTO_POOL[t.id] || [];
-    items[t.id] = names.map((n, i) => ({
-      id: `${charId}_${t.id}_${i}`,
-      name: n,
-      color: COLOR_POOL[i % COLOR_POOL.length],
-      img: photos[i] ? `assets/${photos[i]}` : null,
-    }));
+    items[t.id] = names.map((n, i) => {
+      const file = photos[i] || ALL_PHOTOS[cycle++ % ALL_PHOTOS.length];
+      return {
+        id: `${charId}_${t.id}_${i}`,
+        name: n,
+        color: COLOR_POOL[i % COLOR_POOL.length],
+        img: `assets/${file}`,
+      };
+    });
   });
   return items;
 }
