@@ -5,274 +5,153 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Ethan · Dress Up</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; }
   body {
-    font-family: 'Cormorant Garamond', -apple-system, sans-serif;
-    background: #0a0908;
+    font-family: 'Cinzel', -apple-system, sans-serif;
+    background: #050404;
     color: #f0e8d4;
     overflow: hidden;
   }
 
-  #app { position: relative; width: 100%; height: 100vh; display: flex; }
+  #app { position: fixed; inset: 0; }
 
-  /* ============ LEFT: PORTRAIT STAGE ============ */
-  .portrait-stage {
-    position: relative;
-    flex: 1;
-    min-width: 0;
-    background:
-      radial-gradient(ellipse at 30% 0%, rgba(80,60,40,.35) 0%, transparent 55%),
-      linear-gradient(180deg, #1a1410 0%, #0c0a08 70%, #050404 100%);
+  /* ============ FULL-BLEED STAGE ============ */
+  .stage {
+    position: absolute; inset: 0;
+    background: #050404;
     overflow: hidden;
   }
   .portrait-img {
     position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center;
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1);
   }
-  .portrait-placeholder {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 14px; color: rgba(240,232,212,.22);
-    background:
-      repeating-linear-gradient(45deg, rgba(255,255,255,.015) 0 2px, transparent 2px 14px);
-  }
-  .portrait-placeholder svg { width: 120px; height: 120px; opacity: .5; }
-  .portrait-placeholder .ph-label { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; }
-  .portrait-placeholder .ph-sub { font-size: 13px; color: rgba(240,232,212,.3); font-style: italic; max-width: 240px; text-align: center; line-height: 1.6; }
-  .portrait-fade {
+  .stage-fade {
     position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(180deg, rgba(10,9,8,.55) 0%, rgba(10,9,8,0) 22%, rgba(10,9,8,0) 60%, rgba(10,9,8,.85) 100%);
-  }
-  .outfit-caption {
-    position: absolute; left: 30px; bottom: 132px; z-index: 5; max-width: 70%;
-    font-size: 13px; color: rgba(240,232,212,.75); font-style: italic; line-height: 1.6;
-    text-shadow: 0 2px 8px rgba(0,0,0,.8);
+    background: linear-gradient(180deg, rgba(5,4,4,.5) 0%, rgba(5,4,4,0) 20%, rgba(5,4,4,0) 70%, rgba(5,4,4,.6) 100%);
   }
 
-  /* top bar */
-  .top-bar { position: absolute; top: 22px; left: 24px; right: 24px; display: flex; justify-content: space-between; z-index: 5; }
-  .icon-btn {
-    width: 38px; height: 38px; border-radius: 50%; background: rgba(0,0,0,.35);
+  .back-btn {
+    position: absolute; top: 24px; left: 24px; z-index: 5;
+    width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,.35);
     border: 1px solid rgba(240,232,212,.18); backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center; cursor: pointer; color: #f0e8d4;
-    font-size: 16px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; color: #f0e8d4; font-size: 16px;
   }
-  .top-right-icons { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-  .top-right-icons .icon-btn { font-size: 11px; flex-direction: column; gap: 2px; height: auto; width: auto; padding: 8px 10px; border-radius: 18px; }
-
-  /* character title */
-  .char-title { position: absolute; top: 92px; left: 30px; z-index: 5; }
-  .char-title .name { font-family: 'Cinzel', serif; font-size: 32px; font-weight: 600; letter-spacing: .02em; color: #fff; text-shadow: 0 2px 16px rgba(0,0,0,.6); }
-  .char-title .sub { font-family: 'Great Vibes', cursive; font-size: 24px; color: #c9a96e; margin-top: -2px; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
-
-  /* left side nav (换装/发型/配饰/妆容) */
-  .side-nav {
-    position: absolute; left: 0; top: 200px; z-index: 5;
-    display: flex; flex-direction: column; gap: 2px;
+  .char-name {
+    position: absolute; top: 26px; left: 72px; z-index: 5;
+    font-size: 30px; font-weight: 600; letter-spacing: .03em; color: #fff;
+    text-shadow: 0 2px 16px rgba(0,0,0,.7);
   }
-  .side-nav-item {
-    padding: 14px 22px 14px 26px; cursor: pointer; position: relative;
-    font-family: 'Cinzel', serif; color: rgba(240,232,212,.4); transition: all .2s;
-  }
-  .side-nav-item .zh { font-size: 15px; letter-spacing: .08em; display: block; }
-  .side-nav-item .en { font-size: 9px; letter-spacing: .15em; display: block; margin-top: 2px; opacity: .7; }
-  .side-nav-item.active { color: #f0e8d4; background: linear-gradient(90deg, rgba(201,169,110,.18), transparent); }
-  .side-nav-item.active::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; background: linear-gradient(180deg, #ddb96a, #c9a96e); border-radius: 0 3px 3px 0; }
 
-  /* bottom-left: reset + heart ring */
-  .bottom-left { position: absolute; left: 24px; bottom: 96px; z-index: 5; display: flex; flex-direction: column; gap: 14px; align-items: center; }
-  .reset-pill {
-    width: 56px; height: 56px; border-radius: 50%; background: rgba(0,0,0,.4);
-    border: 1px solid rgba(240,232,212,.18); display: flex; flex-direction: column;
-    align-items: center; justify-content: center; font-size: 10px; color: rgba(240,232,212,.6); gap: 2px; cursor: pointer;
+  .char-switch { position: absolute; top: 30px; right: 26px; z-index: 5; display: flex; gap: 8px; }
+  .cs-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(240,232,212,.25);
+    background: rgba(0,0,0,.4); backdrop-filter: blur(6px); color: rgba(240,232,212,.55);
+    font-family: 'Cinzel', serif; font-size: 12px; cursor: pointer;
   }
-  .heart-ring-wrap { display: flex; align-items: center; gap: 12px; }
-  .heart-ring { position: relative; width: 62px; height: 62px; }
-  .heart-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .heart-ring .ring-bg { stroke: rgba(201,169,110,.15); }
-  .heart-ring .ring-fg { stroke: #e8b4b8; stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
-  .heart-ring .ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-size: 16px; font-weight: 600; color: #fff; }
-  .heart-info .h-name { font-family: 'Cinzel', serif; font-size: 15px; color: #fff; }
-  .heart-info .h-val { font-size: 12px; color: rgba(240,232,212,.55); margin-top: 2px; }
+  .cs-btn.active { background: linear-gradient(135deg, #ddb96a, #c9a96e); color: #1a1612; border-color: transparent; }
 
-  /* bottom nav */
-  .bottom-nav {
-    position: absolute; left: 0; right: 0; bottom: 0; z-index: 6;
-    background: linear-gradient(180deg, transparent, rgba(0,0,0,.55) 40%, rgba(0,0,0,.75));
-    padding: 18px 24px max(18px, env(safe-area-inset-bottom));
-    display: flex; justify-content: space-around;
+  /* drawer handle tab on right edge */
+  .drawer-handle {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    width: 34px; height: 86px; z-index: 40;
+    background: linear-gradient(160deg, #2a241c, #15110d);
+    border: 1px solid rgba(201,169,110,.3); border-right: none;
+    border-radius: 16px 0 0 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: #ddb96a; font-size: 18px; cursor: pointer;
   }
-  .bn-item { display: flex; flex-direction: column; align-items: center; gap: 5px; color: rgba(240,232,212,.45); cursor: pointer; font-family: 'Cinzel', serif; }
-  .bn-item.active { color: #f0e8d4; }
-  .bn-item .bn-icon { font-size: 20px; }
-  .bn-item .bn-zh { font-size: 11px; letter-spacing: .04em; }
-  .bn-item .bn-en { font-size: 8px; letter-spacing: .12em; opacity: .6; }
 
-  /* ============ RIGHT: WARDROBE PANEL ============ */
-  .wardrobe-panel {
-    width: 560px; max-width: 46vw; min-width: 320px;
+  /* ============ RIGHT DRAWER (wardrobe) ============ */
+  .drawer {
+    position: absolute; top: 0; right: 0; bottom: 0; z-index: 50;
+    width: 84vw; max-width: 380px;
     background: linear-gradient(165deg, #15110d 0%, #0c0a08 100%);
-    border-left: 1px solid rgba(201,169,110,.18);
+    border-left: 1px solid rgba(201,169,110,.25);
     display: flex; flex-direction: column;
-    padding: 26px 26px 0;
+    padding: 22px 18px 0;
+    transform: translateX(100%);
+    transition: transform .32s cubic-bezier(.32,.72,0,1);
+    box-shadow: -16px 0 40px rgba(0,0,0,.5);
+  }
+  .drawer.open { transform: translateX(0); }
+
+  .drawer-close {
+    position: absolute; left: -40px; top: 18px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(0,0,0,.5); border: 1px solid rgba(240,232,212,.25);
+    color: #f0e8d4; display: flex; align-items: center; justify-content: center; cursor: pointer;
   }
 
-  .wp-tabs { display: flex; gap: 28px; border-bottom: 1px solid rgba(240,232,212,.08); margin-bottom: 16px; }
-  .wp-tab { padding-bottom: 12px; cursor: pointer; color: rgba(240,232,212,.4); position: relative; text-align: center; }
-  .wp-tab .zh { font-family: 'Cinzel', serif; font-size: 15px; display: block; letter-spacing: .05em; }
-  .wp-tab .en { font-size: 9px; letter-spacing: .15em; display: block; margin-top: 2px; opacity: .65; }
+  .wp-tabs { display: flex; gap: 18px; flex-wrap: wrap; border-bottom: 1px solid rgba(240,232,212,.08); margin-bottom: 14px; padding-bottom: 10px; }
+  .wp-tab { font-size: 14px; letter-spacing: .04em; color: rgba(240,232,212,.4); cursor: pointer; padding-bottom: 4px; position: relative; }
   .wp-tab.active { color: #f0e8d4; }
-  .wp-tab.active::after { content: ''; position: absolute; left: 10%; right: 10%; bottom: 0; height: 2px; background: linear-gradient(90deg, #ddb96a, #c9a96e); border-radius: 2px; }
+  .wp-tab.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: -10px; height: 2px; background: linear-gradient(90deg, #ddb96a, #c9a96e); border-radius: 2px; }
 
-  .wp-filters { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .wp-filter-group { display: flex; gap: 10px; }
-  .wp-filter { font-size: 12px; color: rgba(240,232,212,.5); border: 1px solid rgba(240,232,212,.15); border-radius: 14px; padding: 5px 12px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
-  .wp-owned { font-size: 12px; color: rgba(240,232,212,.4); }
-  .wp-owned b { color: #c9a96e; font-weight: 600; }
-
-  .wp-grid-wrap { flex: 1; overflow-y: auto; padding-bottom: 18px; margin-right: -8px; padding-right: 8px; }
-  .wp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .wp-grid-wrap { flex: 1; overflow-y: auto; padding-bottom: 16px; margin-right: -6px; padding-right: 6px; touch-action: pan-y; }
+  .wp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 
   .wp-card {
-    aspect-ratio: 3/4; border-radius: 12px; position: relative; cursor: pointer; overflow: hidden;
+    aspect-ratio: 3/4; border-radius: 10px; position: relative; cursor: pointer; overflow: hidden;
     background: linear-gradient(160deg, #2a241c, #1a1612);
     border: 1.5px solid rgba(240,232,212,.08);
     transition: transform .15s, border-color .15s;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    touch-action: pan-y;
   }
-  .wp-card:active { transform: scale(.95); }
+  .wp-card:active { transform: scale(.94); }
   .wp-card.selected { border-color: #ddb96a; box-shadow: 0 0 0 2px rgba(221,185,106,.35), 0 8px 20px rgba(0,0,0,.4); }
-  .wp-card .wp-icon { width: 38%; opacity: .8; margin-bottom: 6px; }
-  .wp-card .wp-stars { position: absolute; top: 6px; left: 6px; font-size: 8px; color: #ddb96a; letter-spacing: 1px; }
-  .wp-card .wp-name { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 11px; color: rgba(240,232,212,.85); font-family: 'Cinzel', serif; letter-spacing: .02em; text-shadow: 0 1px 4px rgba(0,0,0,.9); z-index: 1; }
-  .wp-card[style*="background-image"]::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.05) 40%, rgba(0,0,0,.65) 100%); }
-  .wp-card.selected::before { content: '✓'; position: absolute; top: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; background: #ddb96a; color: #1a1612; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-  .wp-card.none-card { color: rgba(240,232,212,.3); font-size: 22px; }
+  .wp-card.selected::after { content: '✓'; position: absolute; top: 6px; right: 6px; width: 18px; height: 18px; border-radius: 50%; background: #ddb96a; color: #1a1612; font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 700; z-index: 2; }
+  .wp-card.none-card { display: flex; align-items: center; justify-content: center; color: rgba(240,232,212,.3); font-size: 20px; }
 
-  .wp-bottom-bar { display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 16px 0 22px; border-top: 1px solid rgba(240,232,212,.08); }
-  .wp-icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(240,232,212,.18); background: rgba(255,255,255,.03); display: flex; align-items: center; justify-content: center; cursor: pointer; color: rgba(240,232,212,.6); font-size: 16px; }
-  .wp-action-btn {
-    flex: 1; max-width: 180px; padding: 13px 0; border-radius: 22px; text-align: center; cursor: pointer;
-    font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; border: none;
+  .wp-bottom-bar { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 14px 0 max(14px, env(safe-area-inset-bottom)); border-top: 1px solid rgba(240,232,212,.08); }
+  .wp-icon-btn {
+    width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(240,232,212,.18);
+    background: rgba(255,255,255,.04); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: rgba(240,232,212,.7); font-size: 17px;
   }
-  .wp-action-btn .zh { display: block; }
-  .wp-action-btn .en { display: block; font-size: 8px; letter-spacing: .2em; opacity: .7; margin-top: 2px; }
-  .wp-save { background: rgba(255,255,255,.06); color: #f0e8d4; border: 1px solid rgba(240,232,212,.2); }
-  .wp-quick { background: linear-gradient(135deg, #ddb96a, #c9a96e); color: #1a1612; box-shadow: 0 6px 18px rgba(201,169,110,.3); }
+  .wp-icon-btn.primary { background: linear-gradient(135deg, #ddb96a, #c9a96e); color: #1a1612; border: none; }
 
-  /* right rail of category icons (like screenshot's far right column) */
-  .cat-rail { position: absolute; right: 12px; top: 60px; display: flex; flex-direction: column; gap: 16px; z-index: 5; }
-  .cat-rail-item {
-    width: 38px; height: 38px; border-radius: 10px; background: rgba(255,255,255,.04);
-    border: 1px solid rgba(240,232,212,.1); display: flex; align-items: center; justify-content: center;
-    font-size: 15px; color: rgba(240,232,212,.4); cursor: pointer;
-  }
-  .cat-rail-item.active { background: rgba(221,185,106,.15); border-color: rgba(221,185,106,.5); color: #ddb96a; }
-
-  .wp-card { touch-action: none; }
   .drag-ghost {
-    position: fixed; z-index: 2000; pointer-events: none; border-radius: 12px;
-    width: 110px; height: 146px; box-shadow: 0 12px 30px rgba(0,0,0,.55);
+    position: fixed; z-index: 2000; pointer-events: none; border-radius: 10px;
+    width: 96px; height: 128px; box-shadow: 0 12px 30px rgba(0,0,0,.55);
     border: 2px solid #ddb96a; opacity: .92; transform: translate(-50%,-50%) scale(1.05);
   }
-  .portrait-stage.drop-hover::after {
-    content: '放到这里换装'; position: absolute; inset: 14px; z-index: 50;
-    border: 2px dashed rgba(221,185,106,.7); border-radius: 18px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .1em; color: #ddb96a;
-    background: rgba(221,185,106,.08); pointer-events: none;
+  .stage.drop-hover::before {
+    content: ''; position: absolute; inset: 14px; z-index: 30;
+    border: 2px dashed rgba(221,185,106,.6); border-radius: 18px;
+    pointer-events: none;
   }
 
   .toast {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(10px);
-    background: #1a1612; color: #f0e8d4; padding: 10px 22px; border-radius: 20px; font-size: 13px;
-    opacity: 0; transition: all .3s; pointer-events: none; letter-spacing: .05em; border: 1px solid rgba(221,185,106,.4); z-index: 999;
+    background: #1a1612; color: #f0e8d4; padding: 9px 20px; border-radius: 20px; font-size: 12px;
+    opacity: 0; transition: all .3s; pointer-events: none; letter-spacing: .04em; border: 1px solid rgba(221,185,106,.4); z-index: 999;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  @media (max-width: 760px) {
-    #app { flex-direction: column; }
-    .wardrobe-panel { width: 100%; max-width: none; flex: 1; border-left: none; border-top: 1px solid rgba(201,169,110,.18); padding: 16px 16px 0; }
-    .portrait-stage { flex: 0 0 46vh; }
-    .cat-rail { display: none; }
-    .side-nav { top: 150px; }
-  }
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- LEFT: PORTRAIT -->
-  <div class="portrait-stage">
-    <div class="top-bar">
-      <div class="icon-btn" onclick="location.href='../index.html'">‹</div>
-      <div class="top-right-icons">
-        <div class="icon-btn">!</div>
-      </div>
-    </div>
-
-    <div class="char-title">
-      <div class="name" id="stage-name">Ethan</div>
-      <div class="sub">Dress-up</div>
-    </div>
-
-    <div class="side-nav" id="side-nav"></div>
-
+  <div class="stage" id="stage">
     <img class="portrait-img" id="portrait-img" src="assets/portrait-default.webp" alt="Ethan & yaya">
-    <div class="portrait-fade"></div>
-    <div class="outfit-caption" id="outfit-caption"></div>
-
-    <div class="bottom-left">
-      <div class="reset-pill" onclick="resetOutfit()">还原<br>默认</div>
-      <div class="heart-ring-wrap">
-        <div class="heart-ring">
-          <svg viewBox="0 0 64 64">
-            <circle class="ring-bg" cx="32" cy="32" r="27" fill="none" stroke-width="5"/>
-            <circle class="ring-fg" cx="32" cy="32" r="27" fill="none" stroke-width="5"
-              stroke-dasharray="169.6" stroke-dashoffset="34" id="heart-ring-fg"/>
-          </svg>
-          <div class="ring-num">80</div>
-        </div>
-        <div class="heart-info">
-          <div class="h-name" id="heart-name">Ethan</div>
-          <div class="h-val">心动值 15680/20000</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="bottom-nav">
-      <div class="bn-item"><span class="bn-icon">◇</span><span class="bn-zh">他的页面</span><span class="bn-en">HIS PAGE</span></div>
-      <div class="bn-item"><span class="bn-icon">◈</span><span class="bn-zh">陪伴</span><span class="bn-en">COMPANION</span></div>
-      <div class="bn-item"><span class="bn-icon">⬡</span><span class="bn-zh">牵绊</span><span class="bn-en">BOND</span></div>
-      <div class="bn-item active"><span class="bn-icon">⛉</span><span class="bn-zh">换装</span><span class="bn-en">DRESS UP</span></div>
-      <div class="bn-item"><span class="bn-icon">♡</span><span class="bn-zh">记忆</span><span class="bn-en">MEMORY</span></div>
-    </div>
+    <div class="stage-fade"></div>
+    <div class="back-btn" onclick="location.href='../index.html'">‹</div>
+    <div class="char-name" id="stage-name">Ethan</div>
+    <div class="char-switch" id="char-switch"></div>
+    <div class="drawer-handle" id="drawer-handle">❮</div>
   </div>
 
-  <!-- RIGHT: WARDROBE -->
-  <div class="wardrobe-panel">
-    <div class="cat-rail" id="cat-rail"></div>
-
+  <div class="drawer" id="drawer">
+    <div class="drawer-close" id="drawer-close">✕</div>
     <div class="wp-tabs" id="wp-tabs"></div>
-
-    <div class="wp-filters">
-      <div class="wp-filter-group">
-        <div class="wp-filter">默认排序 ▾</div>
-        <div class="wp-filter">全部 ▾</div>
-      </div>
-      <div class="wp-owned">已拥有 <b id="owned-count">0</b>/<span id="total-count">0</span></div>
-    </div>
-
     <div class="wp-grid-wrap">
       <div class="wp-grid" id="wp-grid"></div>
     </div>
-
     <div class="wp-bottom-bar">
       <div class="wp-icon-btn" onclick="resetOutfit()">↺</div>
-      <div class="wp-icon-btn">🔍</div>
-      <button class="wp-action-btn wp-save" onclick="saveOutfit()"><span class="zh">保存搭配</span><span class="en">SAVE</span></button>
-      <button class="wp-action-btn wp-quick" onclick="quickChange()"><span class="zh">一键换装</span><span class="en">QUICK CHANGE</span></button>
+      <div class="wp-icon-btn primary" onclick="quickChange()">🎲</div>
     </div>
   </div>
 </div>
@@ -282,22 +161,19 @@
 <script>
 /* ---------------- 数据 ---------------- */
 const CHARS = [
-  { id: 'ethan', name: 'Ethan', en: 'Ethan' },
-  { id: 'yaya',  name: 'yaya',  en: 'yaya' },
+  { id: 'ethan', name: 'Ethan' },
+  { id: 'yaya',  name: 'yaya' },
 ];
 
 const TABS = [
-  { id: 'suit',  zh: '套装', en: 'SUIT' },
-  { id: 'top',   zh: '上衣', en: 'TOP' },
-  { id: 'bottom',zh: '下装', en: 'BOTTOM' },
-  { id: 'onepiece', zh: '连体', en: 'ONE-PIECE' },
-  { id: 'home',  zh: '居家', en: 'HOMEWEAR' },
-  { id: 'socks', zh: '袜子', en: 'SOCKS' },
+  { id: 'suit',  zh: '套装' },
+  { id: 'top',   zh: '上衣' },
+  { id: 'bottom',zh: '下装' },
+  { id: 'onepiece', zh: '连体' },
+  { id: 'home',  zh: '居家' },
+  { id: 'socks', zh: '袜子' },
 ];
 
-const CAT_RAIL = ['👔','🎩','👖','👗','🧦','👞','💍'];
-
-// 占位单品库：名字按截图风格命名，星级随机给个范围，没有真图，用渐变色块代替
 const NAME_POOL = {
   suit: ['学院燕尾','晚宴女仆','致命温柔','晨光秘恋','学长风范','禁欲系带','西装暴徒','圣诞限定'],
   top: ['奶油草莓','休闲时光','冷冽风暴','温柔陷阱','针织暖阳','薄荷微风'],
@@ -308,7 +184,6 @@ const NAME_POOL = {
 };
 const COLOR_POOL = ['#3a3228','#46392c','#2c3a46','#46303a','#3a4630','#352a46'];
 
-// 情侣合照真图：每张图男左女右，按tab分配真图（两人同款穿搭），裁剪出各自的人像
 const PHOTO_POOL = {
   suit: ['67232.PNG', '67235.PNG'],
   onepiece: ['67226.PNG', '67233.PNG'],
@@ -324,7 +199,6 @@ function buildItems(charId) {
     items[t.id] = names.map((n, i) => ({
       id: `${charId}_${t.id}_${i}`,
       name: n,
-      stars: 3 + (i % 3),
       color: COLOR_POOL[i % COLOR_POOL.length],
       img: photos[i] ? `assets/${photos[i]}` : null,
     }));
@@ -351,33 +225,27 @@ function persist() {
 }
 
 /* ---------------- 渲染 ---------------- */
-function renderSideNav() {
-  const wrap = document.getElementById('side-nav');
-  const items = [
-    { zh: '换装', en: 'DRESS UP', active: true },
-    { zh: '发型', en: 'HAIRSTYLE' },
-    { zh: '配饰', en: 'ACCESSORY' },
-    { zh: '妆容', en: 'MAKE UP' },
-  ];
-  wrap.innerHTML = items.map(i =>
-    `<div class="side-nav-item ${i.active ? 'active' : ''}"><span class="zh">${i.zh}</span><span class="en">${i.en}</span></div>`
+function renderCharSwitch() {
+  const wrap = document.getElementById('char-switch');
+  wrap.innerHTML = CHARS.map(c =>
+    `<button class="cs-btn ${c.id === state.char ? 'active' : ''}" data-char="${c.id}">${c.name[0]}</button>`
   ).join('');
-}
-
-function renderCatRail() {
-  const wrap = document.getElementById('cat-rail');
-  wrap.innerHTML = CAT_RAIL.map((icon, i) =>
-    `<div class="cat-rail-item ${i === 0 ? 'active' : ''}">${icon}</div>`
-  ).join('');
+  wrap.querySelectorAll('.cs-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.char = btn.dataset.char;
+      renderAll();
+    });
+  });
 }
 
 function renderTabs() {
   const wrap = document.getElementById('wp-tabs');
   wrap.innerHTML = TABS.map(t =>
-    `<div class="wp-tab ${t.id === state.tab ? 'active' : ''}" onclick="selectTab('${t.id}')">
-       <span class="zh">${t.zh}</span><span class="en">${t.en}</span>
-     </div>`
+    `<div class="wp-tab ${t.id === state.tab ? 'active' : ''}" data-tab="${t.id}">${t.zh}</div>`
   ).join('');
+  wrap.querySelectorAll('.wp-tab').forEach(el => {
+    el.addEventListener('click', () => selectTab(el.dataset.tab));
+  });
 }
 
 function renderGrid() {
@@ -391,16 +259,9 @@ function renderGrid() {
     const bg = item.img
       ? `background-image:url('${item.img}');background-size:cover;background-position:${PHOTO_POS[state.char]}`
       : `background:linear-gradient(160deg, ${item.color}, #14110d)`;
-    return `
-    <div class="wp-card ${current === item.id ? 'selected' : ''}" data-item-id="${item.id}" style="${bg}">
-      <span class="wp-stars">${'★'.repeat(item.stars)}${'☆'.repeat(5 - item.stars)}</span>
-      <span class="wp-name">${item.name}</span>
-    </div>`;
+    return `<div class="wp-card ${current === item.id ? 'selected' : ''}" data-item-id="${item.id}" style="${bg}"></div>`;
   }).join('');
   grid.innerHTML = html;
-
-  document.getElementById('owned-count').textContent = items.length;
-  document.getElementById('total-count').textContent = items.length + 6;
   bindDraggables();
 }
 
@@ -408,7 +269,6 @@ function renderPortrait() {
   const outfit = state.outfits[state.char] || {};
   const char = CHARS.find(c => c.id === state.char);
   document.getElementById('stage-name').textContent = char.name;
-  document.getElementById('heart-name').textContent = char.name;
 
   const picked = TABS.map(t => {
     const id = outfit[t.id];
@@ -417,15 +277,17 @@ function renderPortrait() {
     return item ? { tab: t, item } : null;
   }).filter(Boolean);
 
-  document.getElementById('outfit-caption').textContent = picked.length
-    ? `当前搭配：${picked.map(p => `${p.tab.zh}：${p.item.name}`).join(' / ')}`
-    : '默认搭配';
-
-  // 用最近选中、带真图的单品换掉主立绘；都没有就用默认合照
   const withPhoto = [...picked].reverse().find(p => p.item.img);
   const img = document.getElementById('portrait-img');
   img.src = withPhoto ? withPhoto.item.img : 'assets/portrait-default.webp';
   img.style.objectPosition = withPhoto ? PHOTO_POS[state.char] : 'top center';
+}
+
+function renderAll() {
+  renderCharSwitch();
+  renderTabs();
+  renderGrid();
+  renderPortrait();
 }
 
 function selectTab(tab) {
@@ -437,25 +299,65 @@ function selectTab(tab) {
 function pickItem(itemId) {
   if (!state.outfits[state.char]) state.outfits[state.char] = {};
   state.outfits[state.char][state.tab] = itemId || null;
+  persist();
   renderGrid();
   renderPortrait();
-  bouncePlaceholder();
+  bouncePortrait();
 }
 
-/* ---------------- 拖拽换装 ---------------- */
+function resetOutfit() {
+  state.outfits[state.char] = {};
+  persist();
+  renderGrid();
+  renderPortrait();
+}
+
+function quickChange() {
+  TABS.forEach(t => {
+    const items = ITEMS[state.char][t.id];
+    const pick = items[Math.floor(Math.random() * items.length)];
+    state.outfits[state.char][t.id] = pick.id;
+  });
+  persist();
+  renderGrid();
+  renderPortrait();
+  bouncePortrait();
+  showToast('✦');
+}
+
+function bouncePortrait() {
+  const el = document.getElementById('portrait-img');
+  el.style.transform = 'scale(1.03)';
+  setTimeout(() => { el.style.transform = 'scale(1)'; }, 200);
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1400);
+}
+
+/* ---------------- 抽屉开关 ---------------- */
+function openDrawer() { document.getElementById('drawer').classList.add('open'); }
+function closeDrawer() { document.getElementById('drawer').classList.remove('open'); }
+document.getElementById('drawer-handle').addEventListener('click', openDrawer);
+document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+
+/* ---------------- 点击 + 拖拽换装 ---------------- */
 let dragState = null;
 
 function bindDraggables() {
   document.querySelectorAll('.wp-card').forEach(card => {
+    card.addEventListener('click', () => pickItem(card.dataset.itemId || null));
     card.addEventListener('pointerdown', onCardPointerDown);
   });
 }
 
 function onCardPointerDown(e) {
   const card = e.currentTarget;
-  const itemId = card.dataset.itemId || null;
   dragState = {
-    itemId,
+    itemId: card.dataset.itemId || null,
     card,
     startX: e.clientX,
     startY: e.clientY,
@@ -470,22 +372,23 @@ function onCardPointerMove(e) {
   if (!dragState) return;
   const dx = e.clientX - dragState.startX;
   const dy = e.clientY - dragState.startY;
+  const dist = Math.hypot(dx, dy);
 
-  if (!dragState.moved && Math.hypot(dx, dy) > 8) {
+  // 只有明显的横向拖动才进入"拖拽模式"，避免和上下滑动列表冲突
+  if (!dragState.moved && dist > 24 && Math.abs(dx) > Math.abs(dy)) {
     dragState.moved = true;
     const ghost = dragState.card.cloneNode(true);
     ghost.classList.add('drag-ghost');
+    ghost.classList.remove('selected');
     document.body.appendChild(ghost);
     dragState.ghost = ghost;
   }
   if (dragState.ghost) {
     dragState.ghost.style.left = e.clientX + 'px';
     dragState.ghost.style.top = e.clientY + 'px';
-
-    const stage = document.querySelector('.portrait-stage');
-    const r = stage.getBoundingClientRect();
-    const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-    stage.classList.toggle('drop-hover', over);
+    const drawer = document.getElementById('drawer').getBoundingClientRect();
+    const overStage = e.clientX < drawer.left;
+    document.getElementById('stage').classList.toggle('drop-hover', overStage);
   }
 }
 
@@ -494,17 +397,11 @@ function onCardPointerUp(e) {
   window.removeEventListener('pointermove', onCardPointerMove);
   window.removeEventListener('pointerup', onCardPointerUp);
 
-  const stage = document.querySelector('.portrait-stage');
-  stage.classList.remove('drop-hover');
-  if (dragState.ghost) dragState.ghost.remove();
-
-  if (!dragState.moved) {
-    // 没有拖动，当成点击直接试穿
-    pickItem(dragState.itemId);
-  } else {
-    const r = stage.getBoundingClientRect();
-    const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-    if (over) {
+  document.getElementById('stage').classList.remove('drop-hover');
+  if (dragState.ghost) {
+    dragState.ghost.remove();
+    const drawer = document.getElementById('drawer').getBoundingClientRect();
+    if (e.clientX < drawer.left) {
       pickItem(dragState.itemId);
       showToast('已换上 ✦');
     }
@@ -512,49 +409,8 @@ function onCardPointerUp(e) {
   dragState = null;
 }
 
-function resetOutfit() {
-  state.outfits[state.char] = {};
-  renderGrid();
-  renderPortrait();
-}
-
-function quickChange() {
-  TABS.forEach(t => {
-    const items = ITEMS[state.char][t.id];
-    const pick = items[Math.floor(Math.random() * items.length)];
-    state.outfits[state.char][t.id] = pick.id;
-  });
-  renderGrid();
-  renderPortrait();
-  bouncePlaceholder();
-  showToast('已为你随机换上一套 ✦');
-}
-
-function bouncePlaceholder() {
-  const el = document.getElementById('portrait-img');
-  el.style.transition = 'transform .25s cubic-bezier(.34,1.56,.64,1)';
-  el.style.transform = 'scale(1.02)';
-  setTimeout(() => { el.style.transform = 'scale(1)'; }, 180);
-}
-
-function saveOutfit() {
-  persist();
-  showToast('已保存这套搭配 ✦');
-}
-
-function showToast(msg) {
-  const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 1600);
-}
-
 loadState();
-renderSideNav();
-renderCatRail();
-renderTabs();
-renderGrid();
-renderPortrait();
+renderAll();
 </script>
 </body>
 </html>
