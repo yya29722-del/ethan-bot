@@ -121,8 +121,6 @@
   .todo-peek-text { font-size: 15px; color: #2c2c2c; line-height: 1.45; flex: 1; }
   .todo-peek-text.done { text-decoration: line-through; color: #ccc; }
   .todo-peek-comment { font-size: 11px; color: #c9a96e; margin-top: 2px; font-style: italic; }
-  .todo-peek-del { background: none; border: none; color: #ddd; font-size: 18px; cursor: pointer; padding: 0 2px; flex-shrink: 0; }
-  .todo-peek-del:active { color: #e08080; }
   .todo-peek-more { text-align: center; font-size: 12px; color: #c9a96e; padding: 6px; cursor: pointer; }
 
   /* CONTEXT MODAL */
@@ -250,7 +248,6 @@
   .tag-Milestone { background:#fdf5e8; color:#b8862a; }
   #notes-detail  { overflow-y:auto; flex:1; min-height:0; }
 
-  .del-btn { position: absolute; top: 8px; right: 70px; background: none; border: none; color: #c79a9a; font-size: 24px; cursor: pointer; line-height: 1; padding: 4px; z-index: 2; }
 
   /* INPUT */
   .input-area { background: rgba(255,253,249,.92); border: 1px solid rgba(201,168,76,.28); border-radius: 14px; padding: 14px; margin-bottom: 14px; box-shadow: 0 2px 12px rgba(139,80,40,.08); }
@@ -419,6 +416,24 @@
   .vault-toggle-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #ddd; line-height: 1; padding: 4px; }
   .vault-toggle-btn.on-top { color: #c9a96e; }
   .vault-toggle-btn.on-fav { color: #bf5b6a; }
+  .card.has-toggle { padding-right: 70px; }
+
+  /* LONG-PRESS DRAG-TO-DELETE */
+  [data-del-id] { -webkit-user-select: none; user-select: none; touch-action: none; }
+  .drag-source-active { opacity: .3; }
+  .drag-ghost { position: fixed; z-index: 600; pointer-events: none; opacity: .92; box-shadow: 0 10px 34px rgba(0,0,0,.45); border-radius: 14px; }
+  #black-hole { position: fixed; bottom: -140px; left: 50%; transform: translateX(-50%) scale(.6); width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #3a1a4a 0%, #15041f 45%, #000 75%); box-shadow: 0 0 40px 10px rgba(120,40,180,.5), inset 0 0 30px rgba(0,0,0,.85); z-index: 500; opacity: 0; transition: bottom .25s ease, opacity .25s ease, transform .25s ease; pointer-events: none; }
+  #black-hole.show { bottom: 30px; opacity: 1; transform: translateX(-50%) scale(1); }
+  #black-hole.hover { transform: translateX(-50%) scale(1.3); box-shadow: 0 0 60px 20px rgba(160,60,220,.75), inset 0 0 40px rgba(0,0,0,.95); }
+  #black-hole::before { content: '松手删除'; position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 11px; letter-spacing: .1em; color: #d8c0e8; white-space: nowrap; font-family: 'Cinzel', sans-serif; }
+  #del-confirm-modal { position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; padding: 24px; }
+  #del-confirm-modal.open { display: flex; }
+  #del-confirm-sheet { background: var(--ivory, #fffdf9); border-radius: 16px; padding: 22px; max-width: 300px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+  #del-confirm-sheet p { font-size: 14px; color: var(--text-primary, #2C1810); margin: 0 0 18px; }
+  .del-confirm-actions { display: flex; gap: 10px; justify-content: center; }
+  .del-confirm-actions button { flex: 1; padding: 10px 0; border-radius: 10px; border: none; font-size: 13px; cursor: pointer; }
+  .del-confirm-cancel { background: #eee; color: #555; }
+  .del-confirm-ok { background: #8b1e2f; color: #fff; }
   .card.has-toggles, .vault-item.has-toggles { padding-right: 56px; }
 
   /* HERO DAYS COUNTER */
@@ -449,7 +464,7 @@
   /* TIMELINE (Moments) */
   .timeline { padding: 4px 16px 24px; position: relative; }
   .timeline::before { content: ''; position: absolute; left: 24px; top: 6px; bottom: 6px; width: 1px; background: var(--gold-dim); }
-  .tl-item { position: relative; padding-left: 26px; padding-right: 78px; padding-top: 4px; margin-bottom: 18px; }
+  .tl-item { position: relative; padding-left: 26px; padding-right: 62px; padding-top: 4px; margin-bottom: 18px; }
   .tl-item.has-context { padding-bottom: 22px; }
   .tl-item::before { content: ''; position: absolute; left: -2px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--gold-light); box-shadow: 0 0 0 3px var(--ivory), 0 0 8px rgba(201,168,76,.5); }
   .tl-tag { display: inline-block; font-size: 10px; letter-spacing: .1em; padding: 2px 9px; border-radius: 10px; background: rgba(201,168,76,.15); color: #9c7a30; margin-bottom: 6px; text-transform: uppercase; font-family: 'Cinzel', sans-serif; }
@@ -608,6 +623,18 @@
         <button class="ctx-modal-close" onclick="closeTodayModal()">×</button>
       </div>
       <div id="today-modal-list"></div>
+    </div>
+  </div>
+
+  <!-- Long-press drag-to-delete -->
+  <div id="black-hole"></div>
+  <div id="del-confirm-modal">
+    <div id="del-confirm-sheet">
+      <p>确定要删除这条吗？</p>
+      <div class="del-confirm-actions">
+        <button class="del-confirm-cancel" onclick="cancelDelConfirm()">取消</button>
+        <button class="del-confirm-ok" onclick="confirmDelConfirm()">删除</button>
+      </div>
     </div>
   </div>
 
@@ -931,6 +958,89 @@ function toggleFlag(table, id, field, btnEl) {
   api(table + '?id=eq.' + id, 'PATCH', body).catch(function() {});
 }
 
+// LONG-PRESS (2s) DRAG-TO-BLACK-HOLE DELETE — replaces the old × buttons everywhere.
+// Any element with data-del-fn="someFn" data-del-id="123" becomes deletable this way;
+// someFn(id) must perform the actual delete + refresh (e.g. delFeed, delDiary, delTodoPeek).
+var LP_DELAY = 2000, LP_MOVE_TOLERANCE = 8;
+var _lpTimer = null, _dragCard = null, _dragGhost = null, _dragOffX = 0, _dragOffY = 0, _pendingDel = null;
+
+document.addEventListener('pointerdown', function(e) {
+  var card = e.target.closest('[data-del-id]');
+  if (!card) return;
+  if (e.target.closest('.vault-toggle-row, .todo-check-circle')) return;
+  var sx = e.clientX, sy = e.clientY;
+  clearTimeout(_lpTimer);
+  _lpTimer = setTimeout(function() { cleanup(); beginDrag(card, sx, sy); }, LP_DELAY);
+  function moveCheck(ev) {
+    if (Math.abs(ev.clientX - sx) > LP_MOVE_TOLERANCE || Math.abs(ev.clientY - sy) > LP_MOVE_TOLERANCE) cleanup();
+  }
+  function cleanup() {
+    clearTimeout(_lpTimer);
+    document.removeEventListener('pointermove', moveCheck);
+    document.removeEventListener('pointerup', cleanup);
+  }
+  document.addEventListener('pointermove', moveCheck);
+  document.addEventListener('pointerup', cleanup);
+});
+
+function beginDrag(card, x, y) {
+  _dragCard = card;
+  var rect = card.getBoundingClientRect();
+  _dragOffX = x - rect.left;
+  _dragOffY = y - rect.top;
+  _dragGhost = card.cloneNode(true);
+  _dragGhost.className = 'drag-ghost';
+  _dragGhost.style.width = rect.width + 'px';
+  _dragGhost.style.left = rect.left + 'px';
+  _dragGhost.style.top = rect.top + 'px';
+  document.body.appendChild(_dragGhost);
+  card.classList.add('drag-source-active');
+  document.getElementById('black-hole').classList.add('show');
+  if (navigator.vibrate) navigator.vibrate(30);
+  document.addEventListener('pointermove', onDragMove);
+  document.addEventListener('pointerup', onDragEnd);
+}
+
+function onDragMove(e) {
+  if (!_dragGhost) return;
+  _dragGhost.style.left = (e.clientX - _dragOffX) + 'px';
+  _dragGhost.style.top = (e.clientY - _dragOffY) + 'px';
+  document.getElementById('black-hole').classList.toggle('hover', _overBlackHole(e));
+}
+
+function _overBlackHole(e) {
+  var r = document.getElementById('black-hole').getBoundingClientRect();
+  return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+}
+
+function onDragEnd(e) {
+  document.removeEventListener('pointermove', onDragMove);
+  document.removeEventListener('pointerup', onDragEnd);
+  var over = _overBlackHole(e);
+  var bh = document.getElementById('black-hole');
+  bh.classList.remove('show', 'hover');
+  if (_dragGhost) { _dragGhost.remove(); _dragGhost = null; }
+  if (_dragCard) { _dragCard.classList.remove('drag-source-active'); }
+  if (over && _dragCard) {
+    _pendingDel = { fn: _dragCard.dataset.delFn, id: _dragCard.dataset.delId };
+    document.getElementById('del-confirm-modal').classList.add('open');
+  }
+  _dragCard = null;
+}
+
+function cancelDelConfirm() {
+  _pendingDel = null;
+  document.getElementById('del-confirm-modal').classList.remove('open');
+}
+
+function confirmDelConfirm() {
+  if (_pendingDel && typeof window[_pendingDel.fn] === 'function') {
+    var id = _pendingDel.id;
+    window[_pendingDel.fn](isNaN(id) ? id : Number(id));
+  }
+  cancelDelConfirm();
+}
+
 // TAB SWITCHING
 var _currentTab = 'home';
 var _tabLoaded = {};
@@ -1093,12 +1203,11 @@ function renderTodoPeek(data) {
     if (!list.length) return '<div class="todo-peek-item"><span class="todo-peek-text" style="color:#ccc">All clear ✓</span></div>';
     var shown = list.slice(0, 4);
     var html = shown.map(function(t) {
-      return '<div class="todo-peek-item">' +
+      return '<div class="todo-peek-item" data-del-fn="delTodoPeek" data-del-id="' + t.id + '">' +
         '<div class="todo-check-circle" onclick="toggleTodoCircle(' + t.id + ', true, this)"></div>' +
         '<div style="flex:1"><div class="todo-peek-text">' + t.content + '</div>' +
         (t.ethan_comment ? '<div class="todo-peek-comment">' + t.ethan_comment + '</div>' : '') +
         '</div>' +
-        '<button class="todo-peek-del" onclick="delTodoPeek(' + t.id + ')">×</button>' +
         '</div>';
     }).join('');
     if (list.length > 4) html += '<div class="todo-peek-more">' + (list.length - 4) + ' more…</div>';
@@ -1195,8 +1304,8 @@ async function loadDiary() {
   var el = document.getElementById('diary-list');
   if (!data.length) { el.innerHTML = '<div class="empty">No entries yet</div>'; return; }
   el.innerHTML = data.map(function(d) {
-    return '<div class="card stripe-' + d.author + '">' +
-      '<button class="del-btn" onclick="delDiary(' + d.id + ')">×</button>' +
+    return '<div class="card has-toggle stripe-' + d.author + '" data-del-fn="delDiary" data-del-id="' + d.id + '">' +
+      toggleRowHtml('diary', d.id, d.is_top, d.is_favorite) +
       '<div class="meta">' + (d.author === 'ethan' ? 'Ethan' : 'yaya') + ' · ' + fmt(d.created_at) +
       (!d.visible_to_other ? '<span class="private-badge">Private</span>' : '') + '</div>' +
       '<div class="body">' + d.content + '</div>' +
@@ -1255,9 +1364,8 @@ function renderMoments() {
   function itemHtml(m) {
     var hasCtx = !!m.context;
     var who = m.author === 'ethan' ? 'Ethan' : (m.author === 'yaya' ? 'yaya' : '');
-    return '<div class="tl-item' + (hasCtx ? ' has-context' : '') + '"' +
+    return '<div class="tl-item' + (hasCtx ? ' has-context' : '') + '" data-del-fn="delFeed" data-del-id="' + m.id + '"' +
       (hasCtx ? ' onclick="openCtxModal(this.dataset.ctx)" data-ctx="' + encodeURIComponent(m.context) + '"' : '') + '>' +
-      '<button class="del-btn" onclick="event.stopPropagation();delFeed(' + m.id + ')">×</button>' +
       toggleRowHtml('feed', m.id, m.is_top, m.is_favorite) +
       '<span class="tl-tag">' + (typeMap[m.type] || m.bucket) + '</span>' +
       '<div class="tl-time">' + (who ? who + ' · ' : '') + fmt(m.created_at) + '</div>' +
