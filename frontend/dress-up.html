@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>换装 · yaya & Ethan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Cormorant Garamond', -apple-system, sans-serif;
+    background: radial-gradient(ellipse at 50% 0%, rgba(232,180,184,.18) 0%, transparent 55%),
+                radial-gradient(ellipse at 100% 100%, rgba(180,200,232,.16) 0%, transparent 50%),
+                #f7f1e8;
+    color: #2c2c2c;
+    min-height: 100vh;
+    padding: max(28px, env(safe-area-inset-top)) 16px 40px;
+  }
+
+  .wrap { max-width: 460px; margin: 0 auto; }
+
+  /* HEADER */
+  .header { text-align: center; margin-bottom: 22px; }
+  .eyebrow { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: .4em; color: #c9a96e; text-transform: uppercase; margin-bottom: 8px; }
+  .title { font-family: 'Great Vibes', cursive; font-size: 44px; color: #2c2c2c; line-height: 1; }
+  .divider { display: flex; align-items: center; gap: 10px; justify-content: center; margin: 14px 0; }
+  .divider-line { width: 50px; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,169,110,.6), transparent); }
+  .divider-gem { width: 5px; height: 5px; background: #c9a96e; transform: rotate(45deg); }
+
+  /* CHARACTER SWITCH */
+  .char-tabs { display: flex; gap: 10px; margin-bottom: 18px; background: rgba(255,255,255,.6); border: 1px solid rgba(201,169,110,.3); border-radius: 22px; padding: 5px; }
+  .char-tab {
+    flex: 1; padding: 10px 0; border-radius: 18px; border: none; background: none; cursor: pointer;
+    font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .12em; color: #aaa;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all .25s;
+  }
+  .char-tab.active.ethan { background: linear-gradient(135deg, #b4c8e8, #8fa6d6); color: #fff; box-shadow: 0 4px 14px rgba(143,166,214,.4); }
+  .char-tab.active.yaya  { background: linear-gradient(135deg, #e8b4b8, #d68fa0); color: #fff; box-shadow: 0 4px 14px rgba(214,143,160,.4); }
+
+  /* STAGE */
+  .stage {
+    position: relative;
+    background: linear-gradient(160deg, #fffdf9 0%, #f4ead4 100%);
+    border: 1px solid rgba(201,169,110,.4);
+    border-radius: 28px;
+    box-shadow: 0 16px 48px rgba(139,80,40,.12), inset 0 0 0 1px rgba(255,255,255,.5);
+    padding: 28px 20px 22px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .stage::before {
+    content: '';
+    position: absolute; inset: 10px;
+    border: 1px solid rgba(201,169,110,.25);
+    border-radius: 20px;
+    pointer-events: none;
+  }
+  .stage-sparkle { position: absolute; font-size: 14px; opacity: .5; animation: twinkle 2.4s ease-in-out infinite; }
+  @keyframes twinkle { 0%,100%{opacity:.15;transform:scale(.8)} 50%{opacity:.6;transform:scale(1.1)} }
+
+  .doll-box { position: relative; width: 220px; height: 280px; margin: 0 auto; }
+  .doll-box svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .doll-name { text-align: center; margin-top: 10px; font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: .25em; color: #b8862a; }
+
+  /* WARDROBE */
+  .wardrobe-label { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: .3em; color: #bbb; margin: 4px 2px 10px; text-transform: uppercase; }
+  .slot-tabs { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
+  .slot-tab {
+    flex-shrink: 0; padding: 7px 14px; border-radius: 16px; border: 1px solid rgba(201,169,110,.3);
+    background: #fff; font-size: 12px; color: #999; cursor: pointer; font-family: 'Cormorant Garamond', serif;
+    transition: all .2s;
+  }
+  .slot-tab.active { background: #2c2c2c; color: #f4ead4; border-color: #2c2c2c; }
+
+  .item-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+  .item-card {
+    aspect-ratio: 1; background: #fff; border-radius: 16px; border: 1.5px solid rgba(201,169,110,.22);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04); transition: transform .15s, border-color .15s;
+  }
+  .item-card:active { transform: scale(.93); }
+  .item-card.selected { border-color: #c9a96e; box-shadow: 0 0 0 3px rgba(201,169,110,.18); }
+  .item-card.selected::after {
+    content: '✓'; position: absolute; top: 4px; right: 6px; font-size: 10px; color: #c9a96e; font-weight: 700;
+  }
+  .item-card.none-card { color: #ccc; font-size: 18px; }
+  .item-card svg { width: 60%; height: 60%; }
+
+  .save-bar { display: flex; gap: 10px; }
+  .save-btn, .reset-btn {
+    flex: 1; padding: 14px 0; border-radius: 20px; border: none; cursor: pointer;
+    font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .18em;
+  }
+  .save-btn { background: linear-gradient(135deg, #c9a96e, #ddb96a); color: #fff; box-shadow: 0 6px 18px rgba(201,169,110,.35); }
+  .reset-btn { background: #fff; color: #aaa; border: 1px solid rgba(0,0,0,.08); }
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(10px);
+    background: #2c2c2c; color: #f4ead4; padding: 10px 22px; border-radius: 20px; font-size: 13px;
+    opacity: 0; transition: all .3s; pointer-events: none; letter-spacing: .05em;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="eyebrow">Wardrobe · 衣橱</div>
+    <div class="title">Dress Up</div>
+    <div class="divider"><span class="divider-line"></span><span class="divider-gem"></span><span class="divider-line"></span></div>
+  </div>
+
+  <div class="char-tabs">
+    <button class="char-tab ethan active" id="tab-ethan" onclick="selectChar('ethan')">♟ ETHAN</button>
+    <button class="char-tab yaya" id="tab-yaya" onclick="selectChar('yaya')">🐾 YAYA</button>
+  </div>
+
+  <div class="stage">
+    <span class="stage-sparkle" style="top:14px;left:18px;">✦</span>
+    <span class="stage-sparkle" style="top:30px;right:24px;animation-delay:.8s;">✦</span>
+    <span class="stage-sparkle" style="bottom:20px;left:30px;animation-delay:1.4s;">✦</span>
+    <div class="doll-box" id="doll-box"></div>
+    <div class="doll-name" id="doll-name">ETHAN</div>
+  </div>
+
+  <div class="wardrobe-label">Choose a piece</div>
+  <div class="slot-tabs" id="slot-tabs"></div>
+  <div class="item-grid" id="item-grid"></div>
+
+  <div class="save-bar">
+    <button class="reset-btn" onclick="resetOutfit()">清空</button>
+    <button class="save-btn" onclick="saveOutfit()">保存搭配 ✦</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">已保存这套搭配 ✦</div>
+
+<script>
+/* ---------- 数据：每个角色 + 每个槎位的可选单品 ---------- */
+const SLOTS = [
+  { id: 'hat',  label: '头饰' },
+  { id: 'top',  label: '上衣' },
+  { id: 'acc',  label: '配饰' },
+];
+
+const ITEMS = {
+  ethan: {
+    hat: [
+      { id: 'none', color: null },
+      { id: 'crown', color: '#c9a96e' },
+      { id: 'cap', color: '#8fa6d6' },
+      { id: 'beanie', color: '#5b6a8c' },
+    ],
+    top: [
+      { id: 'none', color: null },
+      { id: 'suit', color: '#2c2c2c' },
+      { id: 'sweater', color: '#8fa6d6' },
+      { id: 'shirt', color: '#e8e4d8' },
+    ],
+    acc: [
+      { id: 'none', color: null },
+      { id: 'glasses', color: '#2c2c2c' },
+      { id: 'bowtie', color: '#bf5b5b' },
+      { id: 'scarf', color: '#c9a96e' },
+    ],
+  },
+  yaya: {
+    hat: [
+      { id: 'none', color: null },
+      { id: 'bow', color: '#e8b4b8' },
+      { id: 'flowercrown', color: '#d68fa0' },
+      { id: 'beret', color: '#9b6dd6' },
+    ],
+    top: [
+      { id: 'none', color: null },
+      { id: 'dress', color: '#e8b4b8' },
+      { id: 'sweater', color: '#d6a0c8' },
+      { id: 'overalls', color: '#c9a96e' },
+    ],
+    acc: [
+      { id: 'none', color: null },
+      { id: 'necklace', color: '#ddb96a' },
+      { id: 'collar', color: '#e8b4b8' },
+      { id: 'glasses', color: '#9b6dd6' },
+    ],
+  }
+};
+
+let state = {
+  char: 'ethan',
+  slot: 'hat',
+  outfits: { ethan: {}, yaya: {} }
+};
+
+/* ---------- 持久化（localStorage 占位，未来换成 Supabase） ---------- */
+function loadState() {
+  try {
+    const raw = localStorage.getItem('eb_dressup_outfits');
+    if (raw) state.outfits = JSON.parse(raw);
+  } catch (e) {}
+}
+function persist() {
+  localStorage.setItem('eb_dressup_outfits', JSON.stringify(state.outfits));
+}
+
+/* ---------- 角色 base SVG（线稿风格，跟 index.html 封面图标一致） ---------- */
+function baseSvg(char) {
+  if (char === 'ethan') {
+    return `
+    <ellipse cx="110" cy="160" rx="62" ry="78" fill="#fdfaf4" stroke="#b4c8e8" stroke-width="2"/>
+    <path d="M58 110 L44 72 L78 96" stroke="#b4c8e8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M162 110 L176 72 L142 96" stroke="#b4c8e8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="88" cy="148" r="5" fill="#2c2c2c"/>
+    <circle cx="132" cy="148" r="5" fill="#2c2c2c"/>
+    <path d="M98 168 Q110 178 122 168" stroke="#2c2c2c" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <line x1="40" y1="156" x2="74" y2="160" stroke="#b4c8e8" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="40" y1="166" x2="74" y2="166" stroke="#b4c8e8" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="146" y1="160" x2="180" y2="156" stroke="#b4c8e8" stroke-width="1.4" stroke-linecap="round"/>
+    <line x1="146" y1="166" x2="180" y2="166" stroke="#b4c8e8" stroke-width="1.4" stroke-linecap="round"/>
+    `;
+  }
+  return `
+  <ellipse cx="110" cy="160" rx="62" ry="78" fill="#fdfaf4" stroke="#e8b4b8" stroke-width="2"/>
+  <ellipse cx="48" cy="142" rx="22" ry="34" fill="#fdfaf4" stroke="#e8b4b8" stroke-width="2"/>
+  <ellipse cx="172" cy="142" rx="22" ry="34" fill="#fdfaf4" stroke="#e8b4b8" stroke-width="2"/>
+  <circle cx="88" cy="148" r="5" fill="#2c2c2c"/>
+  <circle cx="132" cy="148" r="5" fill="#2c2c2c"/>
+  <ellipse cx="110" cy="166" rx="9" ry="7" fill="none" stroke="#2c2c2c" stroke-width="2"/>
+  <path d="M96 180 Q110 192 124 180" stroke="#2c2c2c" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  `;
+}
+
+/* ---------- 单品图层 SVG（叠加在 base 之上，绝对定位的同一 viewBox） ---------- */
+function itemSvg(slot, item, char) {
+  if (item.id === 'none') return '';
+  const c = item.color;
+  const lib = {
+    crown:        `<path d="M78 88 L86 64 L98 82 L110 58 L122 82 L134 64 L142 88 Z" fill="${c}" stroke="#fff" stroke-width="1.4"/>`,
+    cap:          `<path d="M64 96 Q110 60 156 96 L156 104 Q110 90 64 104 Z" fill="${c}"/><circle cx="110" cy="68" r="5" fill="${c}"/>`,
+    beanie:       `<path d="M64 100 Q110 56 156 100 L156 116 L64 116 Z" fill="${c}"/><rect x="64" y="108" width="92" height="10" rx="5" fill="${c}" opacity=".7"/>`,
+    bow:          `<path d="M70 78 Q90 64 100 80 Q90 96 70 82 Z" fill="${c}"/><path d="M150 78 Q130 64 120 80 Q130 96 150 82 Z" fill="${c}"/><circle cx="110" cy="80" r="7" fill="${c}"/>`,
+    flowercrown:  `<circle cx="76" cy="78" r="8" fill="${c}"/><circle cx="96" cy="64" r="8" fill="${c}"/><circle cx="120" cy="62" r="8" fill="${c}"/><circle cx="142" cy="76" r="8" fill="${c}"/><circle cx="76" cy="78" r="3" fill="#fff"/><circle cx="96" cy="64" r="3" fill="#fff"/><circle cx="120" cy="62" r="3" fill="#fff"/><circle cx="142" cy="76" r="3" fill="#fff"/>`,
+    beret:        `<ellipse cx="118" cy="74" rx="34" ry="20" fill="${c}"/><circle cx="118" cy="58" r="4" fill="${c}"/>`,
+    suit:         `<path d="M62 196 Q110 176 158 196 L158 250 Q110 264 62 250 Z" fill="${c}"/><path d="M100 196 L110 216 L120 196 L114 192 L106 192 Z" fill="#fff"/>`,
+    sweater:      `<path d="M58 198 Q110 180 162 198 L162 252 Q110 268 58 252 Z" fill="${c}"/>`,
+    shirt:        `<path d="M64 198 Q110 182 156 198 L156 248 Q110 262 64 248 Z" fill="${c}"/><line x1="110" y1="196" x2="110" y2="248" stroke="#cfc8b8" stroke-width="1.4"/>`,
+    dress:        `<path d="M58 196 Q110 178 162 196 L172 256 Q110 274 48 256 Z" fill="${c}"/>`,
+    overalls:     `<path d="M64 198 Q110 184 156 198 L156 250 Q110 264 64 250 Z" fill="${c}"/><rect x="84" y="186" width="14" height="22" rx="4" fill="${c}"/><rect x="122" y="186" width="14" height="22" rx="4" fill="${c}"/>`,
+    glasses:      `<circle cx="88" cy="148" r="14" fill="none" stroke="${c}" stroke-width="3"/><circle cx="132" cy="148" r="14" fill="none" stroke="${c}" stroke-width="3"/><line x1="102" y1="148" x2="118" y2="148" stroke="${c}" stroke-width="3"/>`,
+    bowtie:       `<path d="M92 196 Q104 188 110 196 Q104 204 92 200 Z" fill="${c}"/><path d="M128 196 Q116 188 110 196 Q116 204 128 200 Z" fill="${c}"/><circle cx="110" cy="196" r="4" fill="${c}"/>`,
+    scarf:        `<path d="M78 192 Q110 206 142 192 L142 204 Q110 218 78 204 Z" fill="${c}"/><rect x="100" y="204" width="14" height="34" rx="4" fill="${c}"/>`,
+    necklace:     `<path d="M86 188 Q110 208 134 188" stroke="${c}" stroke-width="3" fill="none"/><circle cx="110" cy="206" r="5" fill="${c}"/>`,
+    collar:       `<path d="M82 186 Q110 202 138 186 L138 196 Q110 212 82 196 Z" fill="${c}"/><circle cx="110" cy="202" r="4" fill="#fff"/>`,
+  };
+  return lib[item.id] || '';
+}
+
+/* ---------- 渲染 ---------- */
+function renderDoll() {
+  const box = document.getElementById('doll-box');
+  const outfit = state.outfits[state.char] || {};
+  let layers = '';
+  // base 在最下面
+  let svg = `<svg viewBox="0 0 220 280">${baseSvg(state.char)}`;
+  // 依次叠 top -> acc -> hat（衣服在最里，配饰中间，头饰最上）
+  ['top', 'acc', 'hat'].forEach(slot => {
+    const chosenId = outfit[slot];
+    if (!chosenId) return;
+    const item = ITEMS[state.char][slot].find(i => i.id === chosenId);
+    if (item) svg += itemSvg(slot, item, state.char);
+  });
+  svg += `</svg>`;
+  box.innerHTML = svg;
+  document.getElementById('doll-name').textContent = state.char === 'ethan' ? 'ETHAN' : 'YAYA';
+}
+
+function renderSlotTabs() {
+  const wrap = document.getElementById('slot-tabs');
+  wrap.innerHTML = SLOTS.map(s =>
+    `<button class="slot-tab ${s.id === state.slot ? 'active' : ''}" onclick="selectSlot('${s.id}')">${s.label}</button>`
+  ).join('');
+}
+
+function renderItemGrid() {
+  const grid = document.getElementById('item-grid');
+  const items = ITEMS[state.char][state.slot];
+  const outfit = state.outfits[state.char] || {};
+  const current = outfit[state.slot] || 'none';
+  grid.innerHTML = items.map(item => {
+    if (item.id === 'none') {
+      return `<div class="item-card none-card ${current === 'none' ? 'selected' : ''}" onclick="pickItem('none')">✕</div>`;
+    }
+    const preview = `<svg viewBox="0 0 220 280">${itemSvg(state.slot, item, state.char)}</svg>`;
+    return `<div class="item-card ${current === item.id ? 'selected' : ''}" onclick="pickItem('${item.id}')">${preview}</div>`;
+  }).join('');
+}
+
+function selectChar(char) {
+  state.char = char;
+  state.slot = 'hat';
+  document.getElementById('tab-ethan').classList.toggle('active', char === 'ethan');
+  document.getElementById('tab-yaya').classList.toggle('active', char === 'yaya');
+  renderSlotTabs();
+  renderItemGrid();
+  renderDoll();
+}
+
+function selectSlot(slot) {
+  state.slot = slot;
+  renderSlotTabs();
+  renderItemGrid();
+}
+
+function pickItem(itemId) {
+  if (!state.outfits[state.char]) state.outfits[state.char] = {};
+  state.outfits[state.char][state.slot] = itemId === 'none' ? null : itemId;
+  renderItemGrid();
+  renderDoll();
+}
+
+function resetOutfit() {
+  state.outfits[state.char] = {};
+  renderItemGrid();
+  renderDoll();
+}
+
+function saveOutfit() {
+  persist();
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1600);
+}
+
+loadState();
+renderSlotTabs();
+renderItemGrid();
+renderDoll();
+</script>
+</body>
+</html>
