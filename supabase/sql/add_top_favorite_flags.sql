@@ -8,3 +8,6 @@ alter table feed       add column if not exists is_favorite boolean not null def
 
 alter table yaya_notes add column if not exists is_top boolean not null default false;
 alter table yaya_notes add column if not exists is_favorite boolean not null default false;
+
+alter table diary      add column if not exists is_top boolean not null default false;
+alter table diary      add column if not exists is_favorite boolean not null default false;
