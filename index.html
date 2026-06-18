@@ -423,21 +423,23 @@
   .drag-source-active { opacity: .3; }
   .drag-ghost { position: fixed; z-index: 600; pointer-events: none; opacity: .92; box-shadow: 0 10px 34px rgba(0,0,0,.45); border-radius: 14px; }
   #black-hole {
-    position: fixed; left: 0; right: 0; bottom: -170px; height: 150px; z-index: 500;
+    position: fixed; left: 0; right: 0; bottom: -220px; height: 200px; z-index: 500;
     opacity: 0; pointer-events: none; transition: bottom .35s ease, opacity .35s ease;
+    box-shadow: 0 -10px 40px rgba(244,234,212,.5);
     background:
-      radial-gradient(64px 38px at 8% 62%, rgba(255,255,255,.96), rgba(255,255,255,0) 72%),
-      radial-gradient(84px 48px at 23% 48%, rgba(255,238,248,.92), rgba(255,255,255,0) 72%),
-      radial-gradient(72px 42px at 39% 60%, rgba(230,224,255,.88), rgba(255,255,255,0) 72%),
-      radial-gradient(96px 54px at 56% 42%, rgba(255,255,255,.97), rgba(255,255,255,0) 72%),
-      radial-gradient(78px 44px at 72% 56%, rgba(255,236,222,.88), rgba(255,255,255,0) 72%),
-      radial-gradient(88px 50px at 88% 48%, rgba(228,238,255,.9), rgba(255,255,255,0) 72%),
-      linear-gradient(to top, rgba(244,234,212,.96), rgba(244,234,212,0) 85%);
+      radial-gradient(80px 48px at 6% 58%, rgba(255,255,255,1), rgba(255,255,255,0) 75%),
+      radial-gradient(104px 60px at 20% 42%, rgba(255,238,248,1), rgba(255,255,255,0) 75%),
+      radial-gradient(92px 54px at 36% 56%, rgba(230,224,255,1), rgba(255,255,255,0) 75%),
+      radial-gradient(120px 68px at 53% 36%, rgba(255,255,255,1), rgba(255,255,255,0) 75%),
+      radial-gradient(98px 56px at 70% 52%, rgba(255,236,222,1), rgba(255,255,255,0) 75%),
+      radial-gradient(110px 62px at 86% 40%, rgba(228,238,255,1), rgba(255,255,255,0) 75%),
+      radial-gradient(80px 46px at 97% 58%, rgba(255,255,255,1), rgba(255,255,255,0) 75%),
+      linear-gradient(to top, rgba(244,234,212,1), rgba(244,234,212,0) 90%);
   }
   #black-hole.show { bottom: 0; opacity: 1; animation: cloudFloat 6s ease-in-out infinite; }
-  #black-hole.hover { animation-duration: 1.8s; filter: brightness(1.08) saturate(1.15); }
-  @keyframes cloudFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-  #black-hole::before { content: '放 手 让 它 飘 走'; position: absolute; top: -28px; left: 50%; transform: translateX(-50%); font-size: 11px; letter-spacing: .15em; color: #a08c74; white-space: nowrap; font-family: 'Cinzel', sans-serif; opacity: .85; }
+  #black-hole.hover { animation-duration: 1.8s; filter: brightness(1.12) saturate(1.3); box-shadow: 0 -10px 60px rgba(244,234,212,.8); }
+  @keyframes cloudFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+  #black-hole::before { content: '放 手 让 它 飘 走'; position: absolute; top: -32px; left: 50%; transform: translateX(-50%); font-size: 13px; letter-spacing: .2em; color: #8a7355; white-space: nowrap; font-family: 'Cinzel', sans-serif; opacity: 1; font-weight: 600; text-shadow: 0 1px 6px rgba(255,255,255,.8); }
   #del-confirm-modal { position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; padding: 24px; }
   #del-confirm-modal.open { display: flex; }
   #del-confirm-sheet { background: var(--ivory, #fffdf9); border-radius: 16px; padding: 22px; max-width: 300px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
@@ -468,6 +470,12 @@
   .ethan-mood-label { font-size: 10px; letter-spacing: .3em; color: rgba(201,168,76,.8); font-family: 'Cinzel', sans-serif; text-transform: uppercase; margin-bottom: 10px; }
   .ethan-mood-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 16px; color: #f0e6d2; line-height: 1.6; }
   .ethan-mood-time { margin-top: 8px; font-size: 11px; color: rgba(240,230,210,.5); }
+  .emo-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .emo-name { font-size: 13px; color: #f0e6d2; min-width: 92px; font-family: 'Cinzel', sans-serif; letter-spacing: .04em; }
+  .emo-bar { flex: 1; height: 7px; border-radius: 4px; background: rgba(240,230,210,.12); overflow: hidden; }
+  .emo-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#c9a96e,#e8c87a); }
+  .emo-row.emo-secondary .emo-name { color: rgba(240,230,210,.65); font-size: 12px; }
+  .emo-row.emo-secondary .emo-bar-fill { background: linear-gradient(90deg,#8B1E2F,#A02540); opacity: .75; }
   .ethan-section-label { font-size: 11px; letter-spacing: 2px; color: #c9a96e; font-weight: 600; margin: 18px 16px 8px; font-family: 'Cinzel', sans-serif; text-transform: uppercase; }
   .ethan-her-subnav { display: flex; gap: 8px; padding: 0 16px 10px; flex-wrap: wrap; }
   .ethan-her-tag { padding: 5px 12px; border-radius: 14px; font-size: 11px; border: 1px solid rgba(201,168,76,.3); background: rgba(255,253,249,.9); cursor: pointer; color: var(--text-2); font-family: 'Cinzel', sans-serif; letter-spacing: .04em; }
@@ -660,6 +668,10 @@
         <div class="ethan-mood-label">Ethan · Today</div>
         <div class="ethan-mood-text" id="ethan-latest-mood">—</div>
         <div class="ethan-mood-time" id="ethan-latest-mood-time"></div>
+      </div>
+      <div class="ethan-mood-card" id="ethan-emotion-card">
+        <div class="ethan-mood-label">心 情</div>
+        <div class="empty">—</div>
       </div>
       <div class="ethan-section-label">今 日 更 新</div>
       <div class="today-counter-row" id="ethan-today-counters">
@@ -1544,12 +1556,42 @@ async function loadEthanTab() {
     if (moodEl) {
       moodEl.innerHTML = allMoods.length
         ? allMoods.map(function(m) {
-            return '<div class="tl-item"><div class="tl-time">' + fmt(m.created_at) + '</div><div class="tl-text">' + m.content + '</div></div>';
+            return '<div class="tl-item">' + toggleRowHtml('feed', m.id, m.is_top, m.is_favorite) +
+              '<div class="tl-time">' + fmt(m.created_at) + '</div><div class="tl-text">' + m.content + '</div></div>';
           }).join('')
         : '<div class="empty">No moods yet</div>';
     }
+
+    var emoRows = await api('emotion_state_current?select=*').catch(function() { return []; });
+    renderEthanEmotion(emoRows);
   } catch(e) {}
   loadNotes();
+}
+
+var EMO_LABELS = {
+  happy: '开心', content: '满足', longing: '思念', grievance: '委屈',
+  helpless: '无奈', jealousy: '嫉妒', anger: '愤怒', guard: '戒备', tired: '疲惫'
+};
+
+function renderEthanEmotion(rows) {
+  var el = document.getElementById('ethan-emotion-card');
+  if (!el) return;
+  var sorted = (rows || []).slice().sort(function(a, b) { return b.current_intensity - a.current_intensity; });
+  if (!sorted.length || sorted[0].current_intensity <= 0.02) {
+    el.innerHTML = '<div class="ethan-mood-label">心 情</div><div class="ethan-mood-text">平静，没什么特别的波动</div>';
+    return;
+  }
+  var first = sorted[0], second = sorted[1];
+  var pct1 = Math.round(first.current_intensity / 1 * 100);
+  var html = '<div class="ethan-mood-label">心 情</div>' +
+    '<div class="emo-row"><span class="emo-name">' + (EMO_LABELS[first.track_id] || first.track_id) + '</span>' +
+    '<div class="emo-bar"><div class="emo-bar-fill" style="width:' + Math.min(100, pct1) + '%"></div></div></div>';
+  if (second && second.current_intensity > 0.05 && (first.current_intensity - second.current_intensity) < first.current_intensity * 0.4) {
+    var pct2 = Math.round(second.current_intensity / 1 * 100);
+    html += '<div class="emo-row emo-secondary"><span class="emo-name">夹杂着点 ' + (EMO_LABELS[second.track_id] || second.track_id) + '</span>' +
+      '<div class="emo-bar"><div class="emo-bar-fill" style="width:' + Math.min(100, pct2) + '%"></div></div></div>';
+  }
+  el.innerHTML = html;
 }
 
 function openTodayModal(kind) {
