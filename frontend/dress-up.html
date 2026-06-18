@@ -170,6 +170,20 @@
   }
   .cat-rail-item.active { background: rgba(221,185,106,.15); border-color: rgba(221,185,106,.5); color: #ddb96a; }
 
+  .wp-card { touch-action: none; }
+  .drag-ghost {
+    position: fixed; z-index: 2000; pointer-events: none; border-radius: 12px;
+    width: 110px; height: 146px; box-shadow: 0 12px 30px rgba(0,0,0,.55);
+    border: 2px solid #ddb96a; opacity: .92; transform: translate(-50%,-50%) scale(1.05);
+  }
+  .portrait-stage.drop-hover::after {
+    content: '放到这里换装'; position: absolute; inset: 14px; z-index: 50;
+    border: 2px dashed rgba(221,185,106,.7); border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .1em; color: #ddb96a;
+    background: rgba(221,185,106,.08); pointer-events: none;
+  }
+
   .toast {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(10px);
     background: #1a1612; color: #f0e8d4; padding: 10px 22px; border-radius: 20px; font-size: 13px;
@@ -366,13 +380,13 @@ function renderGrid() {
   const outfit = state.outfits[state.char] || {};
   const current = outfit[state.tab];
 
-  let html = `<div class="wp-card none-card ${!current ? 'selected' : ''}" onclick="pickItem(null)">✕</div>`;
+  let html = `<div class="wp-card none-card ${!current ? 'selected' : ''}" data-item-id="">✕</div>`;
   html += items.map(item => {
     const bg = item.img
       ? `background-image:url('${item.img}');background-size:cover;background-position:${PHOTO_POS[state.char]}`
       : `background:linear-gradient(160deg, ${item.color}, #14110d)`;
     return `
-    <div class="wp-card ${current === item.id ? 'selected' : ''}" onclick="pickItem('${item.id}')" style="${bg}">
+    <div class="wp-card ${current === item.id ? 'selected' : ''}" data-item-id="${item.id}" style="${bg}">
       <span class="wp-stars">${'★'.repeat(item.stars)}${'☆'.repeat(5 - item.stars)}</span>
       <span class="wp-name">${item.name}</span>
     </div>`;
@@ -381,6 +395,7 @@ function renderGrid() {
 
   document.getElementById('owned-count').textContent = items.length;
   document.getElementById('total-count').textContent = items.length + 6;
+  bindDraggables();
 }
 
 function renderPortrait() {
@@ -409,10 +424,80 @@ function selectTab(tab) {
 
 function pickItem(itemId) {
   if (!state.outfits[state.char]) state.outfits[state.char] = {};
-  state.outfits[state.char][state.tab] = itemId;
+  state.outfits[state.char][state.tab] = itemId || null;
   renderGrid();
   renderPortrait();
   bouncePlaceholder();
+}
+
+/* ---------------- 拖拽换装 ---------------- */
+let dragState = null;
+
+function bindDraggables() {
+  document.querySelectorAll('.wp-card').forEach(card => {
+    card.addEventListener('pointerdown', onCardPointerDown);
+  });
+}
+
+function onCardPointerDown(e) {
+  const card = e.currentTarget;
+  const itemId = card.dataset.itemId || null;
+  dragState = {
+    itemId,
+    card,
+    startX: e.clientX,
+    startY: e.clientY,
+    moved: false,
+    ghost: null,
+  };
+  window.addEventListener('pointermove', onCardPointerMove);
+  window.addEventListener('pointerup', onCardPointerUp);
+}
+
+function onCardPointerMove(e) {
+  if (!dragState) return;
+  const dx = e.clientX - dragState.startX;
+  const dy = e.clientY - dragState.startY;
+
+  if (!dragState.moved && Math.hypot(dx, dy) > 8) {
+    dragState.moved = true;
+    const ghost = dragState.card.cloneNode(true);
+    ghost.classList.add('drag-ghost');
+    document.body.appendChild(ghost);
+    dragState.ghost = ghost;
+  }
+  if (dragState.ghost) {
+    dragState.ghost.style.left = e.clientX + 'px';
+    dragState.ghost.style.top = e.clientY + 'px';
+
+    const stage = document.querySelector('.portrait-stage');
+    const r = stage.getBoundingClientRect();
+    const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    stage.classList.toggle('drop-hover', over);
+  }
+}
+
+function onCardPointerUp(e) {
+  if (!dragState) return;
+  window.removeEventListener('pointermove', onCardPointerMove);
+  window.removeEventListener('pointerup', onCardPointerUp);
+
+  const stage = document.querySelector('.portrait-stage');
+  stage.classList.remove('drop-hover');
+  if (dragState.ghost) dragState.ghost.remove();
+
+  if (!dragState.moved) {
+    // 没有拖动，当成点击直接试穿
+    pickItem(dragState.itemId);
+  } else {
+    const r = stage.getBoundingClientRect();
+    const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    if (over) {
+      pickItem(dragState.itemId);
+      showToast('已换上 ✦');
+    }
+  }
+  dragState = null;
 }
 
 function resetOutfit() {
