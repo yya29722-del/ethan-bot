@@ -86,7 +86,29 @@
     content: '✓'; position: absolute; top: 4px; right: 6px; font-size: 10px; color: #c9a96e; font-weight: 700;
   }
   .item-card.none-card { color: #ccc; font-size: 18px; }
-  .item-card svg { width: 60%; height: 60%; }
+  .item-card svg { width: 60%; height: 60%; pointer-events: none; }
+  .item-card { touch-action: none; user-select: none; }
+  .item-card.dragging-source { opacity: .35; }
+
+  .drag-ghost {
+    position: fixed; width: 64px; height: 64px; border-radius: 16px;
+    background: #fff; border: 2px solid #c9a96e; box-shadow: 0 10px 28px rgba(0,0,0,.22);
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none; z-index: 999; transform: translate(-50%,-50%) scale(1.08);
+  }
+  .drag-ghost svg { width: 60%; height: 60%; }
+
+  .stage.drop-hover { border-color: #c9a96e; box-shadow: 0 16px 48px rgba(201,169,110,.35), inset 0 0 0 2px rgba(201,169,110,.5); }
+
+  .hint { text-align: center; font-size: 12px; color: #c2a878; margin: -6px 0 16px; letter-spacing: .04em; }
+
+  .equipped-strip { display: flex; gap: 8px; flex-wrap: wrap; margin: -4px 0 16px; min-height: 4px; }
+  .equipped-chip {
+    display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid rgba(201,169,110,.3);
+    border-radius: 14px; padding: 5px 8px 5px 10px; font-size: 11px; color: #999; font-family: 'Cinzel', serif; letter-spacing: .04em;
+  }
+  .equipped-chip button { border: none; background: none; color: #ccc; font-size: 13px; cursor: pointer; line-height: 1; padding: 0; }
+  .equipped-chip button:active { color: #bf5b5b; }
 
   .save-bar { display: flex; gap: 10px; }
   .save-btn, .reset-btn {
@@ -124,6 +146,9 @@
     <div class="doll-box" id="doll-box"></div>
     <div class="doll-name" id="doll-name">ETHAN</div>
   </div>
+
+  <div class="hint">拖动衣服到她/他身上试穿 ✦ 或者直接点一下</div>
+  <div class="equipped-strip" id="equipped-strip"></div>
 
   <div class="wardrobe-label">Choose a piece</div>
   <div class="slot-tabs" id="slot-tabs"></div>
@@ -290,11 +315,97 @@ function renderItemGrid() {
   const current = outfit[state.slot] || 'none';
   grid.innerHTML = items.map(item => {
     if (item.id === 'none') {
-      return `<div class="item-card none-card ${current === 'none' ? 'selected' : ''}" onclick="pickItem('none')">✕</div>`;
+      return `<div class="item-card none-card ${current === 'none' ? 'selected' : ''}" data-item="none" data-slot="${state.slot}">✕</div>`;
     }
     const preview = `<svg viewBox="0 0 220 280">${itemSvg(state.slot, item, state.char)}</svg>`;
-    return `<div class="item-card ${current === item.id ? 'selected' : ''}" onclick="pickItem('${item.id}')">${preview}</div>`;
+    return `<div class="item-card ${current === item.id ? 'selected' : ''}" data-item="${item.id}" data-slot="${state.slot}">${preview}</div>`;
   }).join('');
+  bindDraggables();
+}
+
+function renderEquippedStrip() {
+  const strip = document.getElementById('equipped-strip');
+  const outfit = state.outfits[state.char] || {};
+  const labelMap = Object.fromEntries(SLOTS.map(s => [s.id, s.label]));
+  const chips = SLOTS.filter(s => outfit[s.id]).map(s =>
+    `<span class="equipped-chip">${labelMap[s.id]} · ${outfit[s.id]}<button onclick="removeSlot('${s.id}')">×</button></span>`
+  );
+  strip.innerHTML = chips.join('') || '';
+}
+
+function removeSlot(slot) {
+  if (state.outfits[state.char]) state.outfits[state.char][slot] = null;
+  renderItemGrid();
+  renderEquippedStrip();
+  renderDoll();
+}
+
+/* ---------- 拖拽换装（Pointer Events，兼容触屏） ---------- */
+const DRAG_THRESHOLD = 8;
+let dragState = null;
+
+function bindDraggables() {
+  document.querySelectorAll('.item-card').forEach(card => {
+    card.onpointerdown = onItemPointerDown;
+  });
+}
+
+function onItemPointerDown(e) {
+  const card = e.currentTarget;
+  dragState = {
+    card,
+    itemId: card.dataset.item,
+    slot: card.dataset.slot,
+    startX: e.clientX,
+    startY: e.clientY,
+    moved: false,
+    ghost: null,
+  };
+  window.addEventListener('pointermove', onItemPointerMove);
+  window.addEventListener('pointerup', onItemPointerUp);
+}
+
+function onItemPointerMove(e) {
+  if (!dragState) return;
+  const dx = e.clientX - dragState.startX;
+  const dy = e.clientY - dragState.startY;
+  if (!dragState.moved && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
+    dragState.moved = true;
+    dragState.card.classList.add('dragging-source');
+    const ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.innerHTML = dragState.card.innerHTML;
+    document.body.appendChild(ghost);
+    dragState.ghost = ghost;
+  }
+  if (dragState.moved && dragState.ghost) {
+    dragState.ghost.style.left = e.clientX + 'px';
+    dragState.ghost.style.top = e.clientY + 'px';
+    const stage = document.querySelector('.stage');
+    const r = stage.getBoundingClientRect();
+    const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    stage.classList.toggle('drop-hover', over);
+  }
+}
+
+function onItemPointerUp(e) {
+  window.removeEventListener('pointermove', onItemPointerMove);
+  window.removeEventListener('pointerup', onItemPointerUp);
+  if (!dragState) return;
+  const stage = document.querySelector('.stage');
+  stage.classList.remove('drop-hover');
+  dragState.card.classList.remove('dragging-source');
+  if (dragState.ghost) dragState.ghost.remove();
+
+  if (!dragState.moved) {
+    // 没拖动，当成点一下直接试穿
+    pickItem(dragState.itemId, dragState.slot);
+  } else {
+    const r = stage.getBoundingClientRect();
+    const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    if (over) pickItem(dragState.itemId, dragState.slot);
+  }
+  dragState = null;
 }
 
 function selectChar(char) {
@@ -304,6 +415,7 @@ function selectChar(char) {
   document.getElementById('tab-yaya').classList.toggle('active', char === 'yaya');
   renderSlotTabs();
   renderItemGrid();
+  renderEquippedStrip();
   renderDoll();
 }
 
@@ -313,16 +425,27 @@ function selectSlot(slot) {
   renderItemGrid();
 }
 
-function pickItem(itemId) {
+function pickItem(itemId, slot) {
+  slot = slot || state.slot;
   if (!state.outfits[state.char]) state.outfits[state.char] = {};
-  state.outfits[state.char][state.slot] = itemId === 'none' ? null : itemId;
+  state.outfits[state.char][slot] = itemId === 'none' ? null : itemId;
   renderItemGrid();
+  renderEquippedStrip();
   renderDoll();
+  bounceDoll();
+}
+
+function bounceDoll() {
+  const box = document.getElementById('doll-box');
+  box.style.transition = 'transform .25s cubic-bezier(.34,1.56,.64,1)';
+  box.style.transform = 'scale(1.06)';
+  setTimeout(() => { box.style.transform = 'scale(1)'; }, 180);
 }
 
 function resetOutfit() {
   state.outfits[state.char] = {};
   renderItemGrid();
+  renderEquippedStrip();
   renderDoll();
 }
 
@@ -336,6 +459,7 @@ function saveOutfit() {
 loadState();
 renderSlotTabs();
 renderItemGrid();
+renderEquippedStrip();
 renderDoll();
 </script>
 </body>
