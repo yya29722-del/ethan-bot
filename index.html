@@ -921,7 +921,7 @@ var _prefetch = {};
 function prefetchAll() {
   _prefetch.todos = api('todos?select=*&order=created_at.desc');
   _prefetch.weather = fetch('https://wttr.in/?format=j1&lang=zh').then(function(r) { return r.json(); }).catch(function() { return null; });
-  _prefetch.feed = api('feed?select=*&order=created_at.desc&limit=50');
+  _prefetch.feed = api('feed?select=*&order=created_at.desc&limit=150');
   _prefetch.diary = api('diary?select=*&order=created_at.desc&limit=30');
   _prefetch.notes = api('yaya_notes?select=*&order=created_at.desc');
 }
@@ -1335,7 +1335,7 @@ var MOMENTS_BUCKET = {
 var _momentsData = [];
 
 async function loadMoments() {
-  var feedData = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=50'));
+  var feedData = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=150'));
   _prefetch.feed = null;
   var merged = feedData.filter(function(f) { return f.type !== 'mood' && f.type !== 'emotion'; }).map(function(f) {
     return { source: 'feed', id: f.id, author: f.author, content: f.content, created_at: f.created_at, context: f.context, bucket: MOMENTS_BUCKET[f.type] || 'Small Events', type: f.type, is_top: f.is_top, is_favorite: f.is_favorite };
@@ -1384,15 +1384,20 @@ function vaultItemHtml(table, item) {
 }
 
 async function loadVault() {
-  var feedData = await api('feed?select=*&order=created_at.desc&limit=200').catch(function() { return []; });
+  // Starred/favorited items are fetched via their own flag-filtered query (no row limit),
+  // so they stay in Vault permanently no matter how big feed/yaya_notes grow — they don't
+  // age out the way Moments/Ethan's recent-N feeds do.
   var notesData = await api('yaya_notes?select=*&order=created_at.desc').catch(function() { return []; });
+  var topQuotesFeed = await api('feed?select=*&is_top=eq.true&type=eq.quote&order=created_at.desc').catch(function() { return []; });
+  var topMomentsFeed = await api('feed?select=*&is_top=eq.true&type=neq.quote&order=created_at.desc').catch(function() { return []; });
+  var favFeed = await api('feed?select=*&is_favorite=eq.true&order=created_at.desc').catch(function() { return []; });
   var lettersData = await api('diary?select=*&author=eq.ethan&visible_to_other=eq.true&order=created_at.desc&limit=30').catch(function() { return []; });
 
-  var topQuotes = feedData.filter(function(f) { return f.is_top && f.type === 'quote'; });
-  var topMoments = feedData.filter(function(f) { return f.is_top && f.type !== 'quote'; })
+  var topQuotes = topQuotesFeed;
+  var topMoments = topMomentsFeed
     .concat(notesData.filter(function(n) { return n.is_top; }))
     .sort(function(a, b) { return new Date(b.created_at || b.date_ref) - new Date(a.created_at || a.date_ref); });
-  var favorites = feedData.filter(function(f) { return f.is_favorite; })
+  var favorites = favFeed
     .concat(notesData.filter(function(n) { return n.is_favorite; }))
     .sort(function(a, b) { return new Date(b.created_at || b.date_ref) - new Date(a.created_at || a.date_ref); });
 
