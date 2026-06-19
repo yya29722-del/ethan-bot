@@ -56,7 +56,7 @@
     overflow-y: auto; -webkit-overflow-scrolling: touch;
     display: none;
   }
-  .tab-page.active { display: block; }
+  .tab-page.active { display: block; -webkit-transform: translateZ(0); transform: translateZ(0); }
 
   @media (max-width: 700px) {
     #app-body { flex-direction: column; padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
@@ -150,8 +150,7 @@
 
   /* SECTION HEADER (inside tab pages) */
   .tab-section-header {
-    position: sticky; top: 0; background: rgba(255,253,249,.95);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    position: sticky; top: 0; background: rgba(255,253,249,.99);
     padding: max(14px, calc(env(safe-area-inset-top) + 14px)) 20px 12px;
     display: flex; align-items: center; gap: 10px;
     z-index: 5; border-bottom: 1px solid rgba(201,168,76,.18);
@@ -425,6 +424,17 @@
   .vault-toggle-btn.on-top { color: #c9a96e; }
   .vault-toggle-btn.on-fav { color: #bf5b6a; }
   .card.has-toggle { padding-right: 70px; }
+
+  /* VAULT ACCORDION */
+  .vacc { border: 1px solid rgba(201,168,76,.22); border-radius: 14px; margin-bottom: 10px; overflow: hidden; background: rgba(255,253,249,.92); }
+  .vacc-hd { display: flex; align-items: center; gap: 8px; padding: 13px 16px; cursor: pointer; -webkit-user-select: none; user-select: none; }
+  .vacc-hd:active { background: rgba(201,168,76,.08); }
+  .vacc-title { font-size: 11px; letter-spacing: 2px; color: #c9a96e; font-weight: 600; font-family: 'Cinzel', sans-serif; text-transform: uppercase; flex: 1; }
+  .vacc-ct { font-size: 11px; color: #bbb; margin-right: 4px; }
+  .vacc-arrow { font-size: 16px; color: #c9a96e; transition: transform .2s; display: inline-block; }
+  .vacc.open > .vacc-hd .vacc-arrow { transform: rotate(90deg); }
+  .vacc-bd { display: none; padding: 4px 10px 12px; }
+  .vacc.open > .vacc-bd { display: block; }
 
   /* LONG-PRESS DRAG-TO-DELETE */
   [data-del-id] { -webkit-user-select: none; user-select: none; touch-action: none; }
@@ -806,18 +816,42 @@
       </div>
       <div id="vault-search-results"></div>
 
-      <div class="vault-section-label">U S</div>
-      <div id="vault-us"><div class="empty">No entries yet</div></div>
-      <div class="vault-section-label" style="margin-top:18px">M A T T E R S</div>
-      <div id="vault-matters"><div class="empty">No entries yet</div></div>
-      <div class="vault-section-label" style="margin-top:18px">T O P &nbsp;Q U O T E S</div>
-      <div id="vault-top-quotes"><div class="empty">No top quotes yet</div></div>
-      <div class="vault-section-label" style="margin-top:18px">T O P &nbsp;M O M E N T S</div>
-      <div id="vault-top-moments"><div class="empty">No top moments yet</div></div>
-      <div class="vault-section-label" style="margin-top:18px">E T H A N &nbsp;L E T T E R S</div>
-      <div id="vault-letters"><div class="empty">No letters yet</div></div>
-      <div class="vault-section-label" style="margin-top:18px">F A V O R I T E S</div>
-      <div id="vault-favorites"><div class="empty">No favorites yet</div></div>
+      <div class="vacc" id="vacc-us">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-us')">
+          <span class="vacc-title">U S</span><span class="vacc-ct" id="vacc-ct-us"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-us"><div class="empty">No entries yet</div></div>
+      </div>
+      <div class="vacc" id="vacc-matters">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-matters')">
+          <span class="vacc-title">M A T T E R S</span><span class="vacc-ct" id="vacc-ct-matters"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-matters"><div class="empty">No entries yet</div></div>
+      </div>
+      <div class="vacc" id="vacc-quotes">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-quotes')">
+          <span class="vacc-title">T O P &nbsp;Q U O T E S</span><span class="vacc-ct" id="vacc-ct-quotes"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-top-quotes"><div class="empty">No top quotes yet</div></div>
+      </div>
+      <div class="vacc" id="vacc-moments">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-moments')">
+          <span class="vacc-title">T O P &nbsp;M O M E N T S</span><span class="vacc-ct" id="vacc-ct-moments"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-top-moments"><div class="empty">No top moments yet</div></div>
+      </div>
+      <div class="vacc" id="vacc-letters">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-letters')">
+          <span class="vacc-title">E T H A N &nbsp;L E T T E R S</span><span class="vacc-ct" id="vacc-ct-letters"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-letters"><div class="empty">No letters yet</div></div>
+      </div>
+      <div class="vacc" id="vacc-favs">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-favs')">
+          <span class="vacc-title">F A V O R I T E S</span><span class="vacc-ct" id="vacc-ct-favs"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-favorites"><div class="empty">No favorites yet</div></div>
+      </div>
     </div>
   </div>
 
@@ -1440,15 +1474,19 @@ function closeVaultDetail() {
   document.getElementById('vault-detail-modal').classList.remove('open');
 }
 
+function toggleVacc(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
 async function loadVault() {
-  // Starred/favorited items are fetched via their own flag-filtered query (no row limit),
-  // so they stay in Vault permanently no matter how big feed/yaya_notes grow — they don't
-  // age out the way Moments/Ethan's recent-N feeds do.
-  var notesData = await api('yaya_notes?select=*&order=created_at.desc').catch(function() { return []; });
-  var topQuotesFeed = await api('feed?select=*&is_top=eq.true&type=eq.quote&order=created_at.desc').catch(function() { return []; });
-  var topMomentsFeed = await api('feed?select=*&is_top=eq.true&type=neq.quote&order=created_at.desc').catch(function() { return []; });
-  var favFeed = await api('feed?select=*&is_favorite=eq.true&order=created_at.desc').catch(function() { return []; });
-  var lettersData = await api('diary?select=*&author=eq.ethan&visible_to_other=eq.true&order=created_at.desc&limit=30').catch(function() { return []; });
+  var results = await Promise.all([
+    api('yaya_notes?select=*&order=created_at.desc').catch(function() { return []; }),
+    api('feed?select=*&is_top=eq.true&type=eq.quote&order=created_at.desc').catch(function() { return []; }),
+    api('feed?select=*&is_top=eq.true&type=neq.quote&order=created_at.desc').catch(function() { return []; }),
+    api('feed?select=*&is_favorite=eq.true&order=created_at.desc').catch(function() { return []; }),
+    api('diary?select=*&author=eq.ethan&visible_to_other=eq.true&order=created_at.desc&limit=30').catch(function() { return []; })
+  ]);
+  var notesData = results[0], topQuotesFeed = results[1], topMomentsFeed = results[2], favFeed = results[3], lettersData = results[4];
 
   var topQuotes = topQuotesFeed;
   var topMoments = topMomentsFeed
@@ -1461,25 +1499,19 @@ async function loadVault() {
   var usNotes = notesData.filter(function(n) { return CAT_BUCKET[n.category] === 'Us'; });
   var mattersNotes = notesData.filter(function(n) { return CAT_BUCKET[n.category] === 'Matters'; });
 
-  var elUs = document.getElementById('vault-us');
-  if (elUs) elUs.innerHTML = usNotes.length ? usNotes.map(function(n) { return vaultItemHtml('yaya_notes', n); }).join('') : '<div class="empty">No entries yet</div>';
+  function fillSection(bodyId, ctId, items, emptyMsg, renderFn) {
+    var ct = document.getElementById(ctId);
+    if (ct) ct.textContent = items.length ? items.length + '条' : '';
+    var el = document.getElementById(bodyId);
+    if (el) el.innerHTML = items.length ? items.map(renderFn).join('') : '<div class="empty">' + emptyMsg + '</div>';
+  }
 
-  var elMatters = document.getElementById('vault-matters');
-  if (elMatters) elMatters.innerHTML = mattersNotes.length ? mattersNotes.map(function(n) { return vaultItemHtml('yaya_notes', n); }).join('') : '<div class="empty">No entries yet</div>';
-
-  var elQ = document.getElementById('vault-top-quotes');
-  elQ.innerHTML = topQuotes.length ? topQuotes.map(function(f) { return vaultItemHtml('feed', f); }).join('') : '<div class="empty">No top quotes yet</div>';
-
-  var elM = document.getElementById('vault-top-moments');
-  elM.innerHTML = topMoments.length ? topMoments.map(function(item) { return vaultItemHtml(item.category ? 'yaya_notes' : 'feed', item); }).join('') : '<div class="empty">No top moments yet</div>';
-
-  var elL = document.getElementById('vault-letters');
-  elL.innerHTML = lettersData.length
-    ? lettersData.map(function(d) { return vaultItemHtml('diary', d); }).join('')
-    : '<div class="empty">No letters yet</div>';
-
-  var elF = document.getElementById('vault-favorites');
-  elF.innerHTML = favorites.length ? favorites.map(function(item) { return vaultItemHtml(item.category ? 'yaya_notes' : 'feed', item); }).join('') : '<div class="empty">No favorites yet</div>';
+  fillSection('vault-us', 'vacc-ct-us', usNotes, 'No entries yet', function(n) { return vaultItemHtml('yaya_notes', n); });
+  fillSection('vault-matters', 'vacc-ct-matters', mattersNotes, 'No entries yet', function(n) { return vaultItemHtml('yaya_notes', n); });
+  fillSection('vault-top-quotes', 'vacc-ct-quotes', topQuotes, 'No top quotes yet', function(f) { return vaultItemHtml('feed', f); });
+  fillSection('vault-top-moments', 'vacc-ct-moments', topMoments, 'No top moments yet', function(item) { return vaultItemHtml(item.category ? 'yaya_notes' : 'feed', item); });
+  fillSection('vault-letters', 'vacc-ct-letters', lettersData, 'No letters yet', function(d) { return vaultItemHtml('diary', d); });
+  fillSection('vault-favorites', 'vacc-ct-favs', favorites, 'No favorites yet', function(item) { return vaultItemHtml(item.category ? 'yaya_notes' : 'feed', item); });
 
   var featured = topQuotes.concat(topMoments)[0];
   if (featured) {
@@ -1584,7 +1616,7 @@ async function loadEthanTab() {
       return '<div class="today-counter-item clickable" onclick="openTodayModal(\'' + k + '\')"><div class="tc-num">' + _ethanTodayBuckets[k].length + '</div><div class="tc-label">' + labels[k] + '</div></div>';
     }).join('');
 
-    var allMoods = await api('feed?select=*&author=eq.ethan&type=in.(mood,emotion)&order=created_at.desc&limit=500').catch(function() { return []; });
+    var allMoods = await api('feed?select=*&author=eq.ethan&type=in.(mood,emotion)&order=created_at.desc&limit=60').catch(function() { return []; });
     var moodEl = document.getElementById('ethan-mood-list');
     if (moodEl) {
       moodEl.innerHTML = allMoods.length
