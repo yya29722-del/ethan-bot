@@ -466,8 +466,8 @@
   #del-confirm-modal { position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; padding: 24px; }
   #del-confirm-modal.open { display: flex; }
   /* HER DETAIL FULL-PAGE */
-  #her-detail-page { position: fixed; inset: 0; z-index: 200; background: #f8f5ef; display: none; flex-direction: column; }
-  #her-detail-page.open { display: flex; }
+  #her-detail-page { position: fixed; inset: 0; z-index: 200; background: #f8f5ef; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .28s cubic-bezier(.25,.46,.45,.94); pointer-events: none; }
+  #her-detail-page.open { transform: translateX(0); pointer-events: auto; }
   .her-detail-hd { display: flex; align-items: center; gap: 10px; padding: max(14px, calc(env(safe-area-inset-top) + 14px)) 20px 12px; background: rgba(248,245,239,.98); border-bottom: 1px solid rgba(201,168,76,.18); flex-shrink: 0; }
   .her-detail-back { font-size: 24px; color: #c9a96e; background: none; border: none; padding: 0 4px; cursor: pointer; line-height: 1; }
   .her-detail-title { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 3px; color: #2C1810; flex: 1; }
@@ -1026,7 +1026,7 @@ var _prefetch = {};
 function prefetchAll() {
   _prefetch.todos = api('todos?select=*&order=created_at.desc');
   _prefetch.weather = fetch('https://wttr.in/?format=j1&lang=zh').then(function(r) { return r.json(); }).catch(function() { return null; });
-  _prefetch.feed = api('feed?select=*&order=created_at.desc&limit=150');
+  _prefetch.feed = api('feed?select=*&order=created_at.desc&limit=60');
   _prefetch.diary = api('diary?select=*&order=created_at.desc&limit=30');
   _prefetch.notes = api('yaya_notes?select=*&order=created_at.desc');
 }
@@ -1450,7 +1450,7 @@ var MOMENTS_BUCKET = {
 var _momentsData = [];
 
 async function loadMoments() {
-  var feedData = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=150'));
+  var feedData = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=60'));
   _prefetch.feed = null;
   var merged = feedData.filter(function(f) { return f.type !== 'mood' && f.type !== 'emotion'; }).map(function(f) {
     return { source: 'feed', id: f.id, author: f.author, content: f.content, created_at: f.created_at, context: f.context, bucket: MOMENTS_BUCKET[f.type] || 'Small Events', type: f.type, is_top: f.is_top, is_favorite: f.is_favorite };
@@ -1729,8 +1729,16 @@ function renderNotesCats() {
 }
 
 var _herFilter = '全部';
-var _HER_FILTERS = ['全部','心情','身体','日常','学业','错题本'];
-var _HER_FILTER_MAP = { '心情':['心情','情绪','昨日心情','Mood'], '身体':['身体','Body'], '日常':['日常','她说的话','我观察到','Daily'], '学业':['学业','Study'], '错题本':['错题本','Bad Pup','Mistake'] };
+var _HER_FILTERS = ['全部','心情','身体','日常','学业','错题本','关于我们','重要'];
+var _HER_FILTER_MAP = {
+  '心情':['心情','情绪','昨日心情','Mood'],
+  '身体':['身体','Body'],
+  '日常':['日常','她说的话','我观察到','Daily'],
+  '学业':['学业','Study'],
+  '错题本':['错题本','Bad Pup','Mistake'],
+  '关于我们':['关于我们','AboutUs'],
+  '重要':['重要','重要的一天','Matters','Milestone']
+};
 
 function openNotesCat(cat) {
   _herFilter = '全部';
@@ -1759,8 +1767,7 @@ function _renderHerSubnav() {
 }
 
 function _renderHerList() {
-  var herItems = _notesData.filter(function(n) { return bucketOf(n) === 'Her'; });
-  var items = _herFilter === '全部' ? herItems : herItems.filter(function(n) {
+  var items = _herFilter === '全部' ? _notesData : _notesData.filter(function(n) {
     var cats = _HER_FILTER_MAP[_herFilter] || [];
     return cats.indexOf(n.category) !== -1;
   });
