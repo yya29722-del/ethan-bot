@@ -104,6 +104,12 @@
   .todo-peek-label { font-size: 10px; letter-spacing: 2px; color: #bbb; font-weight: 600; }
   .todo-peek-date { font-size: 12px; color: #c9a96e; font-weight: 500; }
   .todo-today-btn { font-size: 11px; color: #bbb; cursor: pointer; border: none; background: none; padding: 0; text-decoration: underline; }
+  .todo-date-nav { display: flex; align-items: center; gap: 6px; }
+  .todo-nav-btn { font-size: 18px; color: #c9a96e; background: none; border: none; padding: 0 2px; cursor: pointer; line-height: 1; }
+  .todo-add-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+  .todo-add-input { flex: 1; border: 1px solid rgba(201,168,76,.3); border-radius: 10px; padding: 8px 12px; font-size: 14px; background: rgba(255,253,249,.9); outline: none; font-family: inherit; color: #2C1810; }
+  .todo-add-input::placeholder { color: #ccc; }
+  .todo-add-btn { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#8B1E2F,#A02540); color: #fff; border: none; font-size: 20px; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .todo-peek-item {
     display: flex; align-items: center; gap: 12px;
     padding: 14px 16px; background: #fff; border-radius: 14px;
@@ -650,6 +656,10 @@
       <div id="todo-peek-list-mine"></div>
       <div class="todo-group-label">E T H A N 希 望 你 完 成 的 事</div>
       <div id="todo-peek-list-ethan"></div>
+      <div class="todo-add-row">
+        <input id="todo-input" class="todo-add-input" type="text" placeholder="添加待办…" onkeydown="if(event.key==='Enter')addTodo()">
+        <button class="todo-add-btn" onclick="addTodo()">+</button>
+      </div>
     </div>
   </div>
 
@@ -1249,6 +1259,13 @@ function goToToday() {
   renderTodoPeek(_todosData);
 }
 
+function stepPeekDate(delta) {
+  var d = new Date(_peekDate + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  _peekDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  renderTodoPeek(_todosData);
+}
+
 function _saveTodos() { lsSet('todos', _todosData); }
 
 function _refreshTodosFromServer() {
@@ -1285,8 +1302,11 @@ function renderTodoPeek(data) {
     var dp = new Date(_peekDate + 'T00:00:00');
     var dateLabel = isToday ? 'Today' : (months[dp.getMonth()] + ' ' + dp.getDate());
     headerEl.innerHTML = '<div class="todo-peek-label">T O D O</div>' +
-      '<span class="todo-peek-date">' + dateLabel + '</span>' +
-      (!isToday ? '<button class="todo-today-btn" onclick="goToToday()">← Today</button>' : '');
+      '<div class="todo-date-nav">' +
+      '<button class="todo-nav-btn" onclick="stepPeekDate(-1)">‹</button>' +
+      '<span class="todo-peek-date" onclick="' + (isToday ? '' : 'goToToday()') + '" style="' + (isToday ? '' : 'cursor:pointer;text-decoration:underline') + '">' + dateLabel + '</span>' +
+      '<button class="todo-nav-btn" onclick="stepPeekDate(1)">›</button>' +
+      '</div>';
   }
 
   var pending = data.filter(function(t) {
