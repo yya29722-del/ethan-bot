@@ -55,7 +55,7 @@
 
   /* TAB PAGES */
   .tab-page {
-    flex: 1; min-width: 0;
+    flex: 1; min-width: 0; min-height: 0;
     overflow-y: auto; -webkit-overflow-scrolling: touch;
     display: none;
   }
@@ -1852,7 +1852,7 @@ async function loadHomeExtras() {
 }
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/ethan-bot/sw.js');
+  navigator.serviceWorker.register('/ethan-bot/sw.js?v=6');
 }
 
 // TAROT ENTRANCE — organic ink-drop reveal (harmonic blob, destination-out)
