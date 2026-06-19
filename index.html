@@ -66,7 +66,7 @@
       padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
       border-right: none; border-top: 1px solid var(--gold-dim);
       box-shadow: 0 -4px 20px var(--shadow-warm);
-      z-index: 50; gap: 0; background: rgba(255,253,249,.97); backdrop-filter: blur(16px);
+      z-index: 50; gap: 0; background: rgba(255,253,249,.99);
     }
     .sidebar-brand { display: none; }
     .nav-tab {
@@ -245,7 +245,6 @@
   .tag-AboutUs   { background:#e8f0f5; color:#4a7a9a; }
   .tag-Matters   { background:#fdf5e8; color:#b8862a; }
   .tag-Milestone { background:#fdf5e8; color:#b8862a; }
-  #notes-detail  { overflow-y:auto; flex:1; min-height:0; }
 
 
   /* INPUT */
@@ -460,6 +459,18 @@
   #black-hole::before { content: '放 手 让 它 飘 走'; position: absolute; top: -32px; left: 50%; transform: translateX(-50%); font-size: 13px; letter-spacing: .2em; color: #8a7355; white-space: nowrap; font-family: 'Cinzel', sans-serif; opacity: 1; font-weight: 600; text-shadow: 0 1px 6px rgba(255,255,255,.8); }
   #del-confirm-modal { position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; padding: 24px; }
   #del-confirm-modal.open { display: flex; }
+  /* HER DETAIL FULL-PAGE */
+  #her-detail-page { position: fixed; inset: 0; z-index: 200; background: #f8f5ef; display: none; flex-direction: column; }
+  #her-detail-page.open { display: flex; }
+  .her-detail-hd { display: flex; align-items: center; gap: 10px; padding: max(14px, calc(env(safe-area-inset-top) + 14px)) 20px 12px; background: rgba(248,245,239,.98); border-bottom: 1px solid rgba(201,168,76,.18); flex-shrink: 0; }
+  .her-detail-back { font-size: 24px; color: #c9a96e; background: none; border: none; padding: 0 4px; cursor: pointer; line-height: 1; }
+  .her-detail-title { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 3px; color: #2C1810; flex: 1; }
+  .her-detail-count { font-size: 11px; color: #bbb; font-family: 'Cinzel', serif; letter-spacing: .05em; }
+  .her-filter-bar { display: flex; gap: 6px; padding: 10px 14px; overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; background: rgba(248,245,239,.95); border-bottom: 1px solid rgba(201,168,76,.1); }
+  .her-filter-bar::-webkit-scrollbar { display: none; }
+  .her-filter-btn { padding: 5px 13px; border-radius: 14px; font-size: 11px; border: 1px solid rgba(201,168,76,.3); background: rgba(255,253,249,.9); cursor: pointer; color: #7a6050; font-family: 'Cinzel', sans-serif; letter-spacing: .04em; white-space: nowrap; flex-shrink: 0; }
+  .her-filter-btn.active { background: linear-gradient(135deg,#8B1E2F,#A02540); color: #F4EAD4; border-color: transparent; }
+  #her-detail-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px 12px 24px; }
   #del-confirm-sheet { background: var(--ivory, #fffdf9); border-radius: 16px; padding: 22px; max-width: 300px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
   #del-confirm-sheet p { font-size: 14px; color: var(--text-primary, #2C1810); margin: 0 0 18px; }
   .del-confirm-actions { display: flex; gap: 10px; justify-content: center; }
@@ -687,6 +698,17 @@
     </div>
   </div>
 
+  <!-- HER DETAIL PAGE -->
+  <div id="her-detail-page">
+    <div class="her-detail-hd">
+      <button class="her-detail-back" onclick="notesBack()">‹</button>
+      <span class="her-detail-title">H E R</span>
+      <span class="her-detail-count" id="her-detail-count"></span>
+    </div>
+    <div class="her-filter-bar" id="her-filter-bar"></div>
+    <div id="her-detail-scroll"></div>
+  </div>
+
   <!-- TAB: Ethan -->
   <div class="tab-page" id="tab-ethan">
     <div class="tab-section-header">
@@ -712,12 +734,8 @@
       <div class="ethan-section-label">M O O D</div>
       <div id="ethan-mood-list"><div class="empty">No moods yet</div></div>
 
-      <div class="ethan-section-label" id="ethan-her-title">Her</div>
-      <button class="back-btn" id="ethan-her-back-btn" onclick="notesBack()" style="display:none">‹</button>
+      <div class="ethan-section-label">Her</div>
       <div id="notes-cats" class="cat-grid"></div>
-      <div id="notes-detail" style="display:none">
-        <div id="notes-detail-list"></div>
-      </div>
     </div>
   </div>
 
@@ -1678,30 +1696,56 @@ function closeTodayModal() {
 }
 
 function renderNotesCats() {
-  var counts = {};
-  NOTE_CATS.forEach(function(c) { counts[c] = 0; });
-  _notesData.forEach(function(n) { counts[bucketOf(n)]++; });
-
+  var herCount = _notesData.filter(function(n) { return bucketOf(n) === 'Her'; }).length;
   document.getElementById('notes-cats').innerHTML = NOTE_CATS.map(function(cat) {
-    var n = counts[cat];
+    var n = cat === 'Her' ? herCount : _notesData.filter(function(x) { return bucketOf(x) === cat; }).length;
     return '<div class="cat-card cat-' + cat + '" onclick="openNotesCat(\'' + cat + '\')">' +
       (_CAT_SVG[cat] || '') +
       '<div class="cat-card-count">' + (n ? n + ' entries' : 'empty') + '</div>' +
       '<div class="cat-card-name">' + cat + '</div>' +
       '</div>';
   }).join('');
-
-  document.getElementById('notes-cats').style.display = '';
-  document.getElementById('notes-detail').style.display = 'none';
-  document.getElementById('ethan-her-title').textContent = 'Her';
-  document.getElementById('ethan-her-back-btn').style.display = 'none';
   _notesInDetail = false;
 }
 
+var _herFilter = '全部';
+var _HER_FILTERS = ['全部','心情','身体','日常','学业','错题本'];
+var _HER_FILTER_MAP = { '心情':['心情','情绪','昨日心情','Mood'], '身体':['身体','Body'], '日常':['日常','她说的话','我观察到','Daily'], '学业':['学业','Study'], '错题本':['错题本','Bad Pup','Mistake'] };
+
 function openNotesCat(cat) {
-  var items = _notesData.filter(function(n) { return bucketOf(n) === cat; });
-  var el = document.getElementById('notes-detail-list');
-  el.innerHTML = items.length
+  _herFilter = '全部';
+  _notesInDetail = true;
+  _renderHerSubnav();
+  _renderHerList();
+  document.getElementById('her-detail-page').classList.add('open');
+}
+
+function notesBack() {
+  document.getElementById('her-detail-page').classList.remove('open');
+  _notesInDetail = false;
+}
+
+function filterHer(f) {
+  _herFilter = f;
+  _renderHerSubnav();
+  _renderHerList();
+  document.getElementById('her-detail-scroll').scrollTop = 0;
+}
+
+function _renderHerSubnav() {
+  document.getElementById('her-filter-bar').innerHTML = _HER_FILTERS.map(function(f) {
+    return '<button class="her-filter-btn' + (f === _herFilter ? ' active' : '') + '" onclick="filterHer(\'' + f + '\')">' + f + '</button>';
+  }).join('');
+}
+
+function _renderHerList() {
+  var herItems = _notesData.filter(function(n) { return bucketOf(n) === 'Her'; });
+  var items = _herFilter === '全部' ? herItems : herItems.filter(function(n) {
+    var cats = _HER_FILTER_MAP[_herFilter] || [];
+    return cats.indexOf(n.category) !== -1;
+  });
+  document.getElementById('her-detail-count').textContent = items.length + ' entries';
+  document.getElementById('her-detail-scroll').innerHTML = items.length
     ? items.map(function(n) {
         var tag = tagOf(n);
         var tagClass = 'tag-' + tag.replace(/\s+/g,'');
@@ -1714,16 +1758,6 @@ function openNotesCat(cat) {
           '</div>';
       }).join('')
     : '<div class="empty">No records yet</div>';
-
-  document.getElementById('notes-cats').style.display = 'none';
-  document.getElementById('notes-detail').style.display = '';
-  document.getElementById('ethan-her-title').textContent = cat;
-  document.getElementById('ethan-her-back-btn').style.display = '';
-  _notesInDetail = true;
-}
-
-function notesBack() {
-  if (_notesInDetail) { renderNotesCats(); }
 }
 
 function enterApp() {
