@@ -146,7 +146,7 @@
   #today-modal.open { display: flex; }
   #today-modal-sheet { width: 100%; max-width: 380px; background: var(--ivory, #fffdf9); border-radius: 18px; overflow: hidden; max-height: 78vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.25); animation: fadeScale .2s ease; }
   #today-modal-header { background: var(--text-primary, #2C1810); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  #today-modal-list { flex: 1; overflow-y: auto; padding: 18px 18px 18px 26px; }
+  #today-modal-list { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 18px 18px 18px 26px; }
   #today-modal-list .tl-item:last-child { margin-bottom: 0; }
   .ctx-row { display: flex; }
   .ctx-row.from-yaya { justify-content: flex-start; }
