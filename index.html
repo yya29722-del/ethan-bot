@@ -475,11 +475,11 @@
   .her-detail-back { font-size: 24px; color: #c9a96e; background: none; border: none; padding: 0 4px; cursor: pointer; line-height: 1; }
   .her-detail-title { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 3px; color: #2C1810; flex: 1; }
   .her-detail-count { font-size: 11px; color: #bbb; font-family: 'Cinzel', serif; letter-spacing: .05em; }
-  .her-filter-bar { display: flex; gap: 6px; padding: 10px 14px; overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; background: rgba(248,245,239,.95); border-bottom: 1px solid rgba(201,168,76,.1); }
+  .her-filter-bar { display: flex; gap: 6px; padding: 10px 14px; overflow-x: scroll; flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; background: rgba(248,245,239,.95); border-bottom: 1px solid rgba(201,168,76,.1); touch-action: pan-x; }
   .her-filter-bar::-webkit-scrollbar { display: none; }
-  .her-filter-btn { padding: 5px 13px; border-radius: 14px; font-size: 11px; border: 1px solid rgba(201,168,76,.3); background: rgba(255,253,249,.9); cursor: pointer; color: #7a6050; font-family: 'Cinzel', sans-serif; letter-spacing: .04em; white-space: nowrap; flex-shrink: 0; }
+  .her-filter-btn { padding: 5px 13px; border-radius: 14px; font-size: 11px; border: 1px solid rgba(201,168,76,.3); background: rgba(255,253,249,.9); cursor: pointer; color: #7a6050; font-family: 'Cinzel', sans-serif; letter-spacing: .04em; white-space: nowrap; flex-shrink: 0; touch-action: manipulation; }
   .her-filter-btn.active { background: linear-gradient(135deg,#8B1E2F,#A02540); color: #F4EAD4; border-color: transparent; }
-  #her-detail-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px 12px 24px; }
+  #her-detail-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px 12px 24px; }
   #del-confirm-sheet { background: var(--ivory, #fffdf9); border-radius: 16px; padding: 22px; max-width: 300px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
   #del-confirm-sheet p { font-size: 14px; color: var(--text-primary, #2C1810); margin: 0 0 18px; }
   .del-confirm-actions { display: flex; gap: 10px; justify-content: center; }
