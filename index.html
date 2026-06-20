@@ -56,11 +56,10 @@
   /* TAB PAGES */
   .tab-page {
     flex: 1; min-width: 0; min-height: 0;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
     display: none;
   }
   .tab-page.active { display: flex; flex-direction: column; }
-  /* Home tab has no section-body — scrolls as a block */
-  #tab-home.active { display: block; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
 
   @media (max-width: 700px) {
     #app-body { flex-direction: column; padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
@@ -168,7 +167,7 @@
   .tab-section-header h2 { font-size: 22px; font-weight: 400; font-family: 'Great Vibes', cursive; color: var(--text-primary, #2C1810); }
   .back-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-secondary, #7A5C4A); padding: 0 4px; }
 
-  .section-body { flex: 1; min-height: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 16px 16px 24px; }
+  .section-body { padding: 16px 16px 24px; }
 
   /* CARDS */
   .card { background: rgba(255,253,249,.92); border: 1px solid rgba(201,168,76,.28); border-radius: 14px; padding: 16px; margin-bottom: 10px; box-shadow: 0 2px 12px rgba(139,80,40,.08); position: relative; }
@@ -1155,6 +1154,24 @@ function confirmDelConfirm() {
 var _currentTab = 'home';
 var _tabLoaded = {};
 
+function _fixSectionBodyScroll(name) {
+  var tab = document.getElementById('tab-' + name);
+  if (!tab) return;
+  var body = tab.querySelector('.section-body');
+  if (!body) return;
+  requestAnimationFrame(function() {
+    var tabH = tab.offsetHeight;
+    var header = tab.querySelector('.tab-section-header');
+    var headerH = header ? header.offsetHeight : 0;
+    var h = tabH - headerH;
+    if (h > 0) {
+      body.style.height = h + 'px';
+      body.style.overflowY = 'scroll';
+      body.style.webkitOverflowScrolling = 'touch';
+    }
+  });
+}
+
 function switchTab(name) {
   // deactivate all
   document.querySelectorAll('.tab-page').forEach(function(p) { p.classList.remove('active'); });
@@ -1166,6 +1183,7 @@ function switchTab(name) {
   var navEl = document.getElementById(navId);
   if (navEl) navEl.classList.add('active');
   _currentTab = name;
+  _fixSectionBodyScroll(name);
   // lazy load
   if (!_tabLoaded[name]) {
     _tabLoaded[name] = true;
@@ -1802,8 +1820,11 @@ function enterApp() {
     loadWeather();
     loadTodos();
     loadHomeExtras();
+    _fixSectionBodyScroll(_currentTab);
   }, 600);
 }
+
+window.addEventListener('resize', function() { _fixSectionBodyScroll(_currentTab); });
 
 // HOME EXTRAS — Ethan Today / 今日留言 / 今日更新
 function _isToday(ts) {
