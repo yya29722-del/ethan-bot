@@ -58,7 +58,7 @@
     flex: 1; min-width: 0; min-height: 0;
     display: none;
   }
-  .tab-page.active { display: flex; flex-direction: column; overflow: hidden; }
+  .tab-page.active { display: flex; flex-direction: column; }
   /* Home tab has no section-body — scrolls as a block */
   #tab-home.active { display: block; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
 
@@ -160,7 +160,7 @@
 
   /* SECTION HEADER (inside tab pages) */
   .tab-section-header {
-    flex-shrink: 0; background: rgba(255,253,249,.99);
+    flex-shrink: 0; position: sticky; top: 0; background: rgba(255,253,249,.99);
     padding: max(14px, calc(env(safe-area-inset-top) + 14px)) 20px 12px;
     display: flex; align-items: center; gap: 10px;
     z-index: 5; border-bottom: 1px solid rgba(201,168,76,.18);
