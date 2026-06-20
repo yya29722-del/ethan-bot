@@ -1758,9 +1758,10 @@ function renderCart() {
   upEl.style.display = upcoming.length ? '' : 'none';
   document.getElementById('cart-upcoming-list').innerHTML = upcoming.map(function(item){
     return '<div class="cart-item-card cart-locked">' +
-      '<div class="cart-item-top"><div class="cart-item-em">'+item.emoji+'</div><div class="cart-item-info">' +
-      '<div class="cart-item-name">'+item.name+'</div><div class="cart-item-spec">'+item.spec+'</div>' +
-      '<div><span class="cart-item-price">'+item.price+'</span><span class="cart-item-orig">'+item.orig+'</span></div>' +
+      '<div class="cart-item-top"><div class="cart-item-em" style="font-size:28px;color:#ccc;">🔒</div><div class="cart-item-info">' +
+      '<div class="cart-item-name" style="color:#ccc;">还没到时候</div>' +
+      '<div class="cart-item-spec" style="color:#ddd;">内容保密</div>' +
+      '<div><span class="cart-item-price" style="color:#ddd;">?</span></div>' +
       '</div></div>' +
       '<div class="cart-item-bottom"><div class="cart-item-time">'+item.date+' 解锁</div><span class="cart-lock-badge">🔒</span></div>' +
       '</div>';
