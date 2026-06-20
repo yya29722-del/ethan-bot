@@ -390,31 +390,32 @@
   .moments-star.starred { color: #c9a96e; }
   .card.has-context .moments-star { right: 38px; }
 
-  /* DIARY sub-tabs */
-  /* DIARY CALENDAR */
+  /* DIARY */
   .diary-add-fab { margin-left: auto; background: none; border: none; font-size: 22px; color: #8B1E2F; cursor: pointer; padding: 0 4px; line-height: 1; }
-  .diary-cal-nav { display: flex; align-items: center; padding: 12px 20px 6px; }
+  .diary-subnav { display: flex; flex-shrink: 0; border-bottom: 1px solid rgba(201,168,76,.18); padding: 0 16px; }
+  .diary-subnav-btn { flex: 1; background: none; border: none; padding: 10px 0; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: .1em; color: #b09080; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .diary-subnav-btn.active { color: #8B1E2F; border-bottom-color: #8B1E2F; }
+  .diary-today-label { font-size: 10px; letter-spacing: .18em; color: #c9a96e; font-family: 'Cinzel', serif; text-transform: uppercase; margin-bottom: 8px; }
+  .diary-write-wrap { margin-top: 20px; border-top: 1px solid rgba(201,168,76,.18); padding-top: 14px; }
+  .diary-write-wrap textarea { width: 100%; border: 1px solid rgba(201,168,76,.3); border-radius: 10px; padding: 8px 12px; font-size: 14px; background: rgba(255,253,249,.9); outline: none; font-family: inherit; color: #2C1810; resize: none; box-sizing: border-box; }
+  .diary-cal-nav { display: flex; align-items: center; flex-shrink: 0; padding: 10px 20px 6px; }
   .diary-cal-nav button { background: none; border: none; font-size: 22px; color: #c9a96e; cursor: pointer; padding: 0 8px; }
   .diary-cal-nav span { flex: 1; text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #7A5C4A; letter-spacing: .12em; text-transform: uppercase; }
-  .diary-cal-weekdays { display: grid; grid-template-columns: repeat(7,1fr); padding: 0 10px; }
+  .diary-cal-weekdays { display: grid; grid-template-columns: repeat(7,1fr); flex-shrink: 0; padding: 0 10px; }
   .diary-cal-weekdays span { text-align: center; font-size: 10px; color: #bbb; font-family: 'Cinzel', serif; padding: 4px 0; }
-  #diary-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); padding: 2px 10px 16px; }
-  .dcell { min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 10px; cursor: pointer; font-size: 14px; color: #5a4040; gap: 3px; }
+  #diary-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); flex-shrink: 0; padding: 2px 10px 8px; }
+  .dcell { min-height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 10px; cursor: pointer; font-size: 14px; color: #5a4040; gap: 3px; }
   .dcell:active { background: rgba(201,168,76,.15); }
   .dcell.today { background: linear-gradient(135deg,#8B1E2F,#A02540); color: #fff; }
+  .dcell.selected { background: rgba(201,168,76,.22); }
   .dcell .dot { width: 5px; height: 5px; background: #c9a96e; border-radius: 50%; }
   .dcell.today .dot { background: rgba(255,255,255,.8); }
   .dcell.blank { pointer-events: none; opacity: 0; }
-  /* DIARY DAY MODAL */
-  #diary-day-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; padding: 24px 16px; }
-  #diary-day-modal.open { display: flex; }
-  #diary-day-sheet { width: 100%; max-width: 380px; background: #fffdf9; border-radius: 18px; overflow: hidden; max-height: 78vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.25); animation: fadeScale .2s ease; }
-  #diary-day-hd { background: #2C1810; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; border-radius: 18px 18px 0 0; }
-  #diary-day-hd span { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .08em; color: #F4EAD4; }
-  #diary-day-hd button { background: none; border: none; color: rgba(255,255,255,.6); font-size: 20px; cursor: pointer; }
-  #diary-day-list { flex: 1; min-height: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 12px 16px; }
-  #diary-day-write { flex-shrink: 0; border-top: 1px solid rgba(201,168,76,.18); padding: 12px 16px; }
-  #diary-day-write textarea { width: 100%; border: 1px solid rgba(201,168,76,.3); border-radius: 10px; padding: 8px 12px; font-size: 14px; background: rgba(255,253,249,.9); outline: none; font-family: inherit; color: #2C1810; resize: none; box-sizing: border-box; }
+  #diary-cal-entries-hd { flex-shrink: 0; padding: 8px 16px 4px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(201,168,76,.18); }
+  #diary-cal-entries-hd span { font-size: 11px; letter-spacing: .1em; color: #7A5C4A; font-family: 'Cinzel', serif; }
+  #diary-cal-entries-hd button { background: none; border: none; font-size: 20px; color: #8B1E2F; cursor: pointer; line-height: 1; }
+  #diary-cal-write-wrap { flex-shrink: 0; padding: 8px 16px 12px; display: none; border-bottom: 1px solid rgba(201,168,76,.12); }
+  #diary-cal-write-wrap textarea { width: 100%; border: 1px solid rgba(201,168,76,.3); border-radius: 10px; padding: 8px 12px; font-size: 14px; background: rgba(255,253,249,.9); outline: none; font-family: inherit; color: #2C1810; resize: none; box-sizing: border-box; }
 
   /* ARCADE menu */
   .arcade-menu { display: flex; flex-direction: column; gap: 12px; padding: 8px 0; }
@@ -804,36 +805,52 @@
   <div class="tab-page" id="tab-diary">
     <div class="tab-section-header">
       <h2>Diary</h2>
-      <button class="diary-add-fab" onclick="openDiaryDay(null)">＋</button>
+      <button class="diary-add-fab" onclick="setDiaryView('today');setTimeout(function(){document.getElementById('diary-input').focus();},80)">＋</button>
     </div>
     <div class="section-body" style="padding:0;">
-      <div class="diary-cal-nav">
-        <button onclick="diaryCalNav(-1)">‹</button>
-        <span id="diary-cal-month"></span>
-        <button onclick="diaryCalNav(1)">›</button>
+      <div class="diary-subnav">
+        <button class="diary-subnav-btn active" id="diary-btn-today" onclick="setDiaryView('today')">今日</button>
+        <button class="diary-subnav-btn" id="diary-btn-cal" onclick="setDiaryView('cal')">月历</button>
       </div>
-      <div class="diary-cal-weekdays">
-        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
-      </div>
-      <div id="diary-cal-grid"></div>
-    </div>
-  </div>
-
-  <!-- DIARY DAY MODAL -->
-  <div id="diary-day-modal">
-    <div id="diary-day-sheet">
-      <div id="diary-day-hd">
-        <span id="diary-day-title"></span>
-        <button onclick="closeDiaryDay()">✕</button>
-      </div>
-      <div id="diary-day-list"></div>
-      <div id="diary-day-write">
-        <textarea id="diary-day-input" rows="3" placeholder="写点什么…"></textarea>
-        <div class="input-row">
-          <select id="diary-day-author"><option value="yaya">yaya</option><option value="ethan">Ethan</option></select>
-          <label class="diary-toggle"><input type="checkbox" id="diary-day-private"> Private</label>
-          <button class="btn" onclick="addDiaryFromDay()">Write</button>
+      <!-- TODAY VIEW -->
+      <div id="diary-today-view" style="flex:1;min-height:0;overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:14px 16px 32px;">
+        <div class="diary-today-label">yaya</div>
+        <div id="diary-today-yaya"></div>
+        <div class="diary-today-label" style="margin-top:18px;">Ethan</div>
+        <div id="diary-today-ethan"></div>
+        <div class="diary-write-wrap">
+          <textarea id="diary-input" rows="3" placeholder="写点什么…"></textarea>
+          <div class="input-row">
+            <select id="diary-author"><option value="yaya">yaya</option><option value="ethan">Ethan</option></select>
+            <label class="diary-toggle"><input type="checkbox" id="diary-private"> Private</label>
+            <button class="btn" onclick="addDiaryEntry()">Write</button>
+          </div>
         </div>
+      </div>
+      <!-- CALENDAR VIEW -->
+      <div id="diary-cal-view" style="flex:1;min-height:0;display:none;flex-direction:column;">
+        <div class="diary-cal-nav">
+          <button onclick="diaryCalNav(-1)">‹</button>
+          <span id="diary-cal-month"></span>
+          <button onclick="diaryCalNav(1)">›</button>
+        </div>
+        <div class="diary-cal-weekdays">
+          <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+        </div>
+        <div id="diary-cal-grid"></div>
+        <div id="diary-cal-entries-hd">
+          <span id="diary-cal-entries-date">点击日期查看日记</span>
+          <button id="diary-cal-add-btn" style="display:none;" onclick="toggleDiaryCalWrite()">＋</button>
+        </div>
+        <div id="diary-cal-write-wrap">
+          <textarea id="diary-cal-input" rows="2" placeholder="写点什么…"></textarea>
+          <div class="input-row" style="margin-top:6px;">
+            <select id="diary-cal-author"><option value="yaya">yaya</option><option value="ethan">Ethan</option></select>
+            <label class="diary-toggle"><input type="checkbox" id="diary-cal-private"> Private</label>
+            <button class="btn" onclick="addDiaryCalEntry()">Write</button>
+          </div>
+        </div>
+        <div id="diary-cal-entries-list" style="flex:1;min-height:0;overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:8px 16px 32px;"></div>
       </div>
     </div>
   </div>
@@ -1190,9 +1207,15 @@ function _fixSectionBodyScroll(name) {
     body.style.bottom = '0';
     body.style.left = '0';
     body.style.right = '0';
-    body.style.overflowY = 'scroll';
-    body.style.webkitOverflowScrolling = 'touch';
     body.style.boxSizing = 'border-box';
+    if (name === 'diary') {
+      body.style.display = 'flex';
+      body.style.flexDirection = 'column';
+      body.style.overflowY = 'hidden';
+    } else {
+      body.style.overflowY = 'scroll';
+      body.style.webkitOverflowScrolling = 'touch';
+    }
   });
 }
 
@@ -1461,13 +1484,50 @@ async function delFeed(id) { await api('feed?id=eq.' + id, 'DELETE'); loadMoment
 // DIARY
 var _diaryCalYear = new Date().getFullYear();
 var _diaryCalMonth = new Date().getMonth();
-var _diaryDayOpen = null;
+var _diaryView = 'today';
+var _diaryCalSelectedDate = null;
 
 async function loadDiary() {
   var data = await (_prefetch.diary || api('diary?select=*&order=created_at.desc&limit=200'));
   _prefetch.diary = null;
   _diaryData = data;
+  renderDiaryToday();
   renderDiaryCal();
+}
+
+function setDiaryView(v) {
+  _diaryView = v;
+  var todayView = document.getElementById('diary-today-view');
+  var calView = document.getElementById('diary-cal-view');
+  var btnToday = document.getElementById('diary-btn-today');
+  var btnCal = document.getElementById('diary-btn-cal');
+  if (v === 'today') {
+    todayView.style.display = '';
+    calView.style.display = 'none';
+    btnToday.classList.add('active');
+    btnCal.classList.remove('active');
+  } else {
+    todayView.style.display = 'none';
+    calView.style.display = 'flex';
+    btnToday.classList.remove('active');
+    btnCal.classList.add('active');
+  }
+}
+
+function renderDiaryToday() {
+  var today = new Date();
+  var ds = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  var entries = _diaryData.filter(function(e){ return e.created_at.slice(0,10) === ds; });
+  var yayaEntries = entries.filter(function(e){ return e.author === 'yaya'; });
+  var ethanEntries = entries.filter(function(e){ return e.author === 'ethan'; });
+  var yayaEl = document.getElementById('diary-today-yaya');
+  var ethanEl = document.getElementById('diary-today-ethan');
+  yayaEl.innerHTML = yayaEntries.length
+    ? yayaEntries.map(function(e){ return '<div class="card stripe-yaya" style="margin-bottom:8px;"><div class="meta">'+fmt(e.created_at)+(!e.visible_to_other?'<span class="private-badge">Private</span>':'')+' <span style="float:right;cursor:pointer;color:#c9a96e;font-size:13px;" onclick="delDiary('+e.id+')">✕</span></div><div class="body">'+e.content+'</div></div>'; }).join('')
+    : '<div class="empty" style="padding:4px 0 0;font-size:13px;color:#bbb;">今天还没写</div>';
+  ethanEl.innerHTML = ethanEntries.length
+    ? ethanEntries.map(function(e){ return '<div class="card stripe-ethan" style="margin-bottom:8px;"><div class="meta">'+fmt(e.created_at)+(!e.visible_to_other?'<span class="private-badge">Private</span>':'')+' <span style="float:right;cursor:pointer;color:#c9a96e;font-size:13px;" onclick="delDiary('+e.id+')">✕</span></div><div class="body">'+e.content+'</div></div>'; }).join('')
+    : '<div class="empty" style="padding:4px 0 0;font-size:13px;color:#bbb;">今天还没写</div>';
 }
 
 function renderDiaryCal() {
@@ -1483,7 +1543,9 @@ function renderDiaryCal() {
   for (var d = 1; d <= days; d++) {
     var ds = _diaryCalYear + '-' + String(_diaryCalMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
     var isToday = today.getFullYear()===_diaryCalYear && today.getMonth()===_diaryCalMonth && today.getDate()===d;
-    html += '<div class="dcell' + (isToday?' today':'') + '" onclick="openDiaryDay(\'' + ds + '\')">' + d + (dots[ds]?'<div class="dot"></div>':'') + '</div>';
+    var isSel = ds === _diaryCalSelectedDate;
+    var cls = 'dcell' + (isToday?' today':'') + (isSel&&!isToday?' selected':'');
+    html += '<div class="'+cls+'" onclick="selectDiaryDate(\''+ds+'\')">' + d + (dots[ds]?'<div class="dot"></div>':'') + '</div>';
   }
   document.getElementById('diary-cal-grid').innerHTML = html;
 }
@@ -1492,40 +1554,73 @@ function diaryCalNav(dir) {
   _diaryCalMonth += dir;
   if (_diaryCalMonth < 0) { _diaryCalMonth = 11; _diaryCalYear--; }
   if (_diaryCalMonth > 11) { _diaryCalMonth = 0; _diaryCalYear++; }
+  _diaryCalSelectedDate = null;
+  document.getElementById('diary-cal-entries-date').textContent = '点击日期查看日记';
+  document.getElementById('diary-cal-add-btn').style.display = 'none';
+  document.getElementById('diary-cal-write-wrap').style.display = 'none';
+  document.getElementById('diary-cal-entries-list').innerHTML = '';
   renderDiaryCal();
 }
 
-function openDiaryDay(ds) {
-  _diaryDayOpen = ds;
-  var d = ds ? new Date(ds + 'T12:00:00') : new Date();
-  document.getElementById('diary-day-title').textContent = d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-  var entries = ds ? _diaryData.filter(function(e){ return e.created_at.slice(0,10)===ds; }) : [];
-  document.getElementById('diary-day-list').innerHTML = entries.length
-    ? entries.map(function(e){ return '<div class="card stripe-'+e.author+'"><div class="meta">'+(e.author==='ethan'?'Ethan':'yaya')+' · '+fmt(e.created_at)+(!e.visible_to_other?'<span class="private-badge">Private</span>':'')+' </div><div class="body">'+e.content+'</div></div>'; }).join('')
-    : '<div class="empty" style="padding:16px 0">No entries for this day</div>';
-  document.getElementById('diary-day-input').value = '';
-  document.getElementById('diary-day-modal').classList.add('open');
+function selectDiaryDate(ds) {
+  _diaryCalSelectedDate = ds;
+  var d = new Date(ds + 'T12:00:00');
+  document.getElementById('diary-cal-entries-date').textContent = d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('diary-cal-add-btn').style.display = '';
+  document.getElementById('diary-cal-write-wrap').style.display = 'none';
+  document.getElementById('diary-cal-input').value = '';
+  var entries = _diaryData.filter(function(e){ return e.created_at.slice(0,10) === ds; });
+  document.getElementById('diary-cal-entries-list').innerHTML = entries.length
+    ? entries.map(function(e){ return '<div class="card stripe-'+e.author+'" style="margin-bottom:8px;"><div class="meta">'+(e.author==='ethan'?'Ethan':'yaya')+' · '+fmt(e.created_at)+(!e.visible_to_other?'<span class="private-badge">Private</span>':'')+' <span style="float:right;cursor:pointer;color:#c9a96e;font-size:13px;" onclick="delDiary('+e.id+')">✕</span></div><div class="body">'+e.content+'</div></div>'; }).join('')
+    : '<div class="empty" style="padding:12px 0;font-size:13px;">这天还没有日记</div>';
+  renderDiaryCal();
 }
 
-function closeDiaryDay() {
-  document.getElementById('diary-day-modal').classList.remove('open');
-  _diaryDayOpen = null;
+function toggleDiaryCalWrite() {
+  var wrap = document.getElementById('diary-cal-write-wrap');
+  var showing = wrap.style.display !== 'none' && wrap.style.display !== '';
+  wrap.style.display = showing ? 'none' : '';
+  if (!showing) document.getElementById('diary-cal-input').focus();
 }
 
-async function addDiaryFromDay() {
-  var v = document.getElementById('diary-day-input').value.trim();
+async function addDiaryEntry() {
+  var v = document.getElementById('diary-input').value.trim();
   if (!v) return;
-  var priv = document.getElementById('diary-day-private').checked;
-  var author = document.getElementById('diary-day-author').value;
+  var priv = document.getElementById('diary-private').checked;
+  var author = document.getElementById('diary-author').value;
   await api('diary', 'POST', { content: v, author: author, visible_to_other: !priv });
   if (!priv && author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan wrote a diary entry, go check it out.' }); } catch(e) {} }
-  document.getElementById('diary-day-input').value = '';
+  document.getElementById('diary-input').value = '';
   var data = await api('diary?select=*&order=created_at.desc&limit=200');
   _diaryData = data;
+  renderDiaryToday();
   renderDiaryCal();
-  if (_diaryDayOpen) openDiaryDay(_diaryDayOpen);
 }
-async function delDiary(id) { await api('diary?id=eq.' + id, 'DELETE'); var data = await api('diary?select=*&order=created_at.desc&limit=200'); _diaryData = data; renderDiaryCal(); closeDiaryDay(); }
+
+async function addDiaryCalEntry() {
+  if (!_diaryCalSelectedDate) return;
+  var v = document.getElementById('diary-cal-input').value.trim();
+  if (!v) return;
+  var priv = document.getElementById('diary-cal-private').checked;
+  var author = document.getElementById('diary-cal-author').value;
+  await api('diary', 'POST', { content: v, author: author, visible_to_other: !priv });
+  if (!priv && author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan wrote a diary entry, go check it out.' }); } catch(e) {} }
+  document.getElementById('diary-cal-input').value = '';
+  document.getElementById('diary-cal-write-wrap').style.display = 'none';
+  var data = await api('diary?select=*&order=created_at.desc&limit=200');
+  _diaryData = data;
+  renderDiaryToday();
+  selectDiaryDate(_diaryCalSelectedDate);
+}
+
+async function delDiary(id) {
+  await api('diary?id=eq.' + id, 'DELETE');
+  var data = await api('diary?select=*&order=created_at.desc&limit=200');
+  _diaryData = data;
+  renderDiaryToday();
+  if (_diaryCalSelectedDate) selectDiaryDate(_diaryCalSelectedDate);
+  else renderDiaryCal();
+}
 
 // MOMENTS — feed entries only (mood/emotion live in Ethan tab; Us/Matters notes live in Vault)
 var MOMENTS_BUCKET = {
