@@ -1,4 +1,8 @@
 {
+  "env": {
+    "SUPABASE_URL": "https://tnhmimwkgmdskacwcona.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuaG1pbXdrZ21kc2thY3djb25hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTk2MDAsImV4cCI6MjA5Njg5NTYwMH0.KUNhT-8Hy2Uy8snd_GaCyl_HFIZwjS_z-CzwSv8daa0"
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
