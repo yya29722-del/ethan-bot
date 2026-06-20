@@ -1853,7 +1853,7 @@ async function loadHomeExtras() {
 }
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/ethan-bot/sw.js?v=6');
+  navigator.serviceWorker.register('/ethan-bot/sw.js?v=7', { updateViaCache: 'none' });
 }
 
 // TAROT ENTRANCE — organic ink-drop reveal (harmonic blob, destination-out)
