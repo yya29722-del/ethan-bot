@@ -479,7 +479,7 @@
   .her-filter-bar::-webkit-scrollbar { display: none; }
   .her-filter-btn { padding: 5px 13px; border-radius: 14px; font-size: 11px; border: 1px solid rgba(201,168,76,.3); background: rgba(255,253,249,.9); cursor: pointer; color: #7a6050; font-family: 'Cinzel', sans-serif; letter-spacing: .04em; white-space: nowrap; flex-shrink: 0; touch-action: manipulation; }
   .her-filter-btn.active { background: linear-gradient(135deg,#8B1E2F,#A02540); color: #F4EAD4; border-color: transparent; }
-  #her-detail-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px 12px 24px; }
+  #her-detail-scroll { flex: 1; min-height: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 10px 12px 24px; }
   #del-confirm-sheet { background: var(--ivory, #fffdf9); border-radius: 16px; padding: 22px; max-width: 300px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
   #del-confirm-sheet p { font-size: 14px; color: var(--text-primary, #2C1810); margin: 0 0 18px; }
   .del-confirm-actions { display: flex; gap: 10px; justify-content: center; }
@@ -1166,6 +1166,9 @@ function _fixSectionBodyScroll(name) {
     var h = tabH - headerH;
     if (h > 0) {
       body.style.height = h + 'px';
+      body.style.minHeight = '0';
+      body.style.maxHeight = h + 'px';
+      body.style.boxSizing = 'border-box';
       body.style.overflowY = 'scroll';
       body.style.webkitOverflowScrolling = 'touch';
     }
