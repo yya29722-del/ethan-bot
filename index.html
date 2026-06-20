@@ -197,9 +197,9 @@
   #tab-ethan.active { display:flex; flex-direction:column; }
   #tab-ethan .tab-section-header { flex-shrink:0; }
   #tab-ethan .section-body { padding:10px; display:flex; flex-direction:column; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; box-sizing:border-box; }
-  #tab-diary.active, #tab-moments.active, #tab-arcade.active, #tab-vault.active, #tab-tarot.active { display:flex; flex-direction:column; overflow-y:visible; }
-  #tab-diary .tab-section-header, #tab-moments .tab-section-header, #tab-arcade .tab-section-header, #tab-vault .tab-section-header, #tab-tarot .tab-section-header { flex-shrink:0; }
-  #tab-diary .section-body, #tab-moments .section-body, #tab-arcade .section-body, #tab-vault .section-body, #tab-tarot .section-body { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  #tab-diary.active, #tab-moments.active, #tab-arcade.active, #tab-vault.active, #tab-tarot.active { display:flex; flex-direction:column; overflow:hidden; }
+  #tab-diary .tab-section-header, #tab-moments .tab-section-header, #tab-arcade .tab-section-header, #tab-vault .tab-section-header, #tab-tarot .tab-section-header { flex-shrink:0; position:relative; z-index:5; }
+  #tab-diary .section-body, #tab-moments .section-body, #tab-arcade .section-body, #tab-vault .section-body, #tab-tarot .section-body { flex:1; min-height:0; overflow-y:scroll; -webkit-overflow-scrolling:touch; }
   .cat-grid { display:flex; flex-direction:column; gap:8px; }
   .cat-card {
     flex:1; min-height:0; border-radius:18px; padding:20px 24px; cursor:pointer;
