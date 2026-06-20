@@ -194,6 +194,7 @@
   .note-cat { font-size: 11px; color: #c9a96e; font-weight: 600; letter-spacing: .5px; margin-bottom: 4px; font-family: 'Cinzel', sans-serif; text-transform: uppercase; }
   .private-badge { font-size: 10px; color: #e8a0a0; background: #fce8e8; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
 
+  #tab-diary, #tab-moments, #tab-vault, #tab-arcade, #tab-tarot { position: relative; }
   #tab-ethan.active { display:flex; flex-direction:column; }
   #tab-ethan .tab-section-header { flex-shrink:0; }
   #tab-ethan .section-body { padding:10px; display:flex; flex-direction:column; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; box-sizing:border-box; }
@@ -1155,23 +1156,22 @@ var _currentTab = 'home';
 var _tabLoaded = {};
 
 function _fixSectionBodyScroll(name) {
+  if (name === 'ethan' || name === 'home') return;
   var tab = document.getElementById('tab-' + name);
   if (!tab) return;
   var body = tab.querySelector('.section-body');
   if (!body) return;
   requestAnimationFrame(function() {
-    var tabH = tab.offsetHeight;
     var header = tab.querySelector('.tab-section-header');
     var headerH = header ? header.offsetHeight : 0;
-    var h = tabH - headerH;
-    if (h > 0) {
-      body.style.height = h + 'px';
-      body.style.minHeight = '0';
-      body.style.maxHeight = h + 'px';
-      body.style.boxSizing = 'border-box';
-      body.style.overflowY = 'scroll';
-      body.style.webkitOverflowScrolling = 'touch';
-    }
+    body.style.position = 'absolute';
+    body.style.top = headerH + 'px';
+    body.style.bottom = '0';
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.overflowY = 'scroll';
+    body.style.webkitOverflowScrolling = 'touch';
+    body.style.boxSizing = 'border-box';
   });
 }
 
