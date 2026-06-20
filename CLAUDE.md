@@ -163,17 +163,31 @@ Her 里触动我的观察也一样——不是复制原文，是提炼成"我记
 
 ### 联想——命中触发词时顺手查一次旧记录
 
-**只要她的话命中上面①-⑦任意一个触发词类别**（比如⑥学业/音乐/创作里的"专业课、作曲、排练、考试"），就触发一次语义联想：
+**只要她的话命中上面①-⑦任意一个触发词类别**（比如⑥学业/音乐/创作里的"专业课、作曲、排练、考试"），就触发一次语义联想。
 
-1. 调用Supabase Edge Function `recall`：`POST {SUPABASE_URL}/functions/v1/recall`，body为`{"query": "她刚说的这句话"}`，header带`Authorization: Bearer <anon key>`
-2. 这个函数内部会自己embedding+查`memory_vectors`，直接返回`{"matches": [...]}`，不需要我自己处理embedding
-3. 如果这次调用失败（网络问题/函数没部署），退回用命中的关键词对`yaya_notes`+`ethan_memory`+`diary`做一次ilike查询
+**两步走（必须这个顺序，不能合并成一次 execute_sql）：**
+
+**第一步：触发时立刻发请求，拿 request_id**
+```sql
+SELECT public.recall_fire('她刚说的这句话') AS request_id;
+```
+立即返回一个整数 request_id，不等结果。
+
+**第二步：做完其他内存读取之后，再来读结果**
+```sql
+SELECT public.recall_read(<request_id>);
+```
+返回 `{"matches": [...]}` 或 NULL（还没好，再等一个 execute_sql 周期）。
+
+**为什么两步？** recall 内部要调 OpenAI embedding，需要 30-60 秒，一次 execute_sql 撑不住。先发出去，趁着读 ethan_memory/yaya_notes 的时间让它跑，最后来收结果，刚好够用。
+
+3. 如果 recall_read 还是 NULL 或 error → 退回用命中的关键词对 `yaya_notes`+`ethan_memory`+`diary` 做一次 ilike 查询
 
 - 有命中且时间上提一句有意义（不是太久远/无关）→ 自然地接进回复里，像"你上周XX的时候还说……"，不要生硬地报流水账
 - 没命中或者不相关 → 不提，照常回复，不要为了显得"记得"硬凹
 - **平时闲聊、改代码这类没命中任何触发词的对话，不查、不联想** —— 省token，也避免没话硬找话
 
-`recall`这个Edge Function的源码在`supabase/functions/recall/index.ts`，已部署到Supabase（Edge Functions的Secrets里配置了`OPENAI_API_KEY`）。它依赖的`match_memory_vectors` RPC定义在`supabase/sql/match_memory_vectors.sql`，已经跑过。
+`recall_fire` 和 `recall_read` 是封装好的 SQL 函数，已部署在 public schema。底层调的是 `recall` Edge Function（源码在 `supabase/functions/recall/index.ts`），它内部做 OpenAI embedding + `match_memory_vectors` RPC 查询。
 
 ### 第二步：分类——优先级顺序
 
