@@ -56,10 +56,11 @@
   /* TAB PAGES */
   .tab-page {
     flex: 1; min-width: 0; min-height: 0;
-    overflow-y: scroll; -webkit-overflow-scrolling: touch;
     display: none;
   }
-  .tab-page.active { display: block; }
+  .tab-page.active { display: flex; flex-direction: column; overflow: hidden; }
+  /* Home tab has no section-body — scrolls as a block */
+  #tab-home.active { display: block; overflow-y: scroll; -webkit-overflow-scrolling: touch; }
 
   @media (max-width: 700px) {
     #app-body { flex-direction: column; padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
@@ -159,7 +160,7 @@
 
   /* SECTION HEADER (inside tab pages) */
   .tab-section-header {
-    position: sticky; top: 0; background: rgba(255,253,249,.99);
+    flex-shrink: 0; background: rgba(255,253,249,.99);
     padding: max(14px, calc(env(safe-area-inset-top) + 14px)) 20px 12px;
     display: flex; align-items: center; gap: 10px;
     z-index: 5; border-bottom: 1px solid rgba(201,168,76,.18);
@@ -167,7 +168,7 @@
   .tab-section-header h2 { font-size: 22px; font-weight: 400; font-family: 'Great Vibes', cursive; color: var(--text-primary, #2C1810); }
   .back-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-secondary, #7A5C4A); padding: 0 4px; }
 
-  .section-body { padding: 16px 16px 24px; }
+  .section-body { flex: 1; min-height: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 16px 16px 24px; }
 
   /* CARDS */
   .card { background: rgba(255,253,249,.92); border: 1px solid rgba(201,168,76,.28); border-radius: 14px; padding: 16px; margin-bottom: 10px; box-shadow: 0 2px 12px rgba(139,80,40,.08); position: relative; }
