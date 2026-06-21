@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ethan的购物车</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f5f5f5; font-family: -apple-system, 'PingFang SC', sans-serif; font-size: 14px; color: #333; }
+
+  .topbar { background: #ff4400; padding: 12px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; }
+  .topbar .back { color: #fff; font-size: 20px; cursor: pointer; }
+  .topbar h1 { color: #fff; font-size: 17px; font-weight: 600; flex: 1; }
+  .topbar .count { background: rgba(255,255,255,.25); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 10px; }
+
+  .group { margin: 10px 12px 0; background: #fff; border-radius: 10px; overflow: hidden; }
+  .group-header { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-bottom: 1px solid #f0f0f0; }
+  .group-header .store-icon { font-size: 16px; }
+  .group-header .store-name { font-size: 13px; font-weight: 600; color: #222; flex: 1; }
+  .group-header .store-tag { font-size: 11px; color: #ff4400; background: #fff0ec; padding: 1px 6px; border-radius: 4px; border: 1px solid #ffccc0; }
+
+  .item { display: flex; align-items: flex-start; padding: 13px 14px; gap: 11px; border-bottom: 1px solid #f7f7f7; cursor: pointer; transition: background .12s; }
+  .item:last-child { border-bottom: none; }
+  .item:active { background: #fafafa; }
+
+  .cb { width: 20px; height: 20px; border: 2px solid #ddd; border-radius: 50%; flex-shrink: 0; margin-top: 24px; display: flex; align-items: center; justify-content: center; }
+  .cb.checked { background: #ff4400; border-color: #ff4400; }
+  .cb.checked::after { content: '✓'; color: #fff; font-size: 11px; font-weight: 700; }
+
+  .item-img { width: 80px; height: 80px; border-radius: 6px; background: #f8f8f8; display: flex; align-items: center; justify-content: center; font-size: 38px; flex-shrink: 0; border: 1px solid #eee; }
+
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 13px; line-height: 1.45; color: #222; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .item-spec { font-size: 11px; color: #999; background: #f5f5f5; display: inline-block; padding: 2px 6px; border-radius: 3px; margin-bottom: 6px; }
+  .item-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+  .tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; }
+  .tag.discount { background: #fff0ec; color: #ff4400; border: 1px solid #ffccc0; }
+  .tag.new { background: #fff8e1; color: #e6a817; border: 1px solid #ffe082; }
+  .tag.limited { background: #f0f4ff; color: #4a6cf7; border: 1px solid #c5d0fb; }
+  .item-price-row { display: flex; align-items: baseline; gap: 6px; }
+  .item-price { font-size: 17px; font-weight: 700; color: #ff4400; }
+  .item-price::before { content: '¥'; font-size: 12px; }
+  .item-orig { font-size: 12px; color: #bbb; text-decoration: line-through; }
+  .item-orig::before { content: '¥'; }
+  .item-add-time { font-size: 10px; color: #bbb; margin-top: 4px; }
+
+  /* DETAIL MODAL */
+  #detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: none; }
+  #detail-overlay.open { display: block; }
+  #detail-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-radius: 18px 18px 0 0; z-index: 201; padding: 0 0 40px; transform: translateY(100%); transition: transform .25s cubic-bezier(.4,0,.2,1); max-height: 80vh; overflow-y: auto; }
+  #detail-sheet.open { transform: translateY(0); }
+  .detail-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 12px auto 16px; }
+  .detail-top { display: flex; gap: 14px; padding: 0 16px 16px; border-bottom: 1px solid #f0f0f0; }
+  .detail-img { width: 72px; height: 72px; border-radius: 8px; background: #f8f8f8; display: flex; align-items: center; justify-content: center; font-size: 34px; border: 1px solid #eee; flex-shrink: 0; }
+  .detail-name { font-size: 14px; font-weight: 600; line-height: 1.4; color: #222; margin-bottom: 4px; }
+  .detail-price { font-size: 20px; font-weight: 700; color: #ff4400; }
+  .detail-price::before { content: '¥'; font-size: 13px; }
+  .detail-section { padding: 16px; border-bottom: 1px solid #f7f7f7; }
+  .detail-section-title { font-size: 11px; letter-spacing: .08em; color: #aaa; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; }
+  .detail-reason { font-size: 14px; line-height: 1.7; color: #333; }
+  .detail-comment { font-size: 14px; line-height: 1.7; color: #555; font-style: italic; background: #fafafa; padding: 12px; border-radius: 8px; border-left: 3px solid #ff4400; }
+  .detail-close { display: block; margin: 16px 16px 0; padding: 13px; background: #f5f5f5; border: none; border-radius: 10px; font-size: 14px; color: #666; cursor: pointer; width: calc(100% - 32px); text-align: center; }
+
+  /* BOTTOM BAR */
+  .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; padding: 10px 16px; display: flex; align-items: center; gap: 10px; z-index: 100; }
+  .select-all { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #444; cursor: pointer; }
+  .select-all .cb { margin-top: 0; }
+  .total-wrap { flex: 1; text-align: right; }
+  .total-label { font-size: 12px; color: #888; }
+  .total-price { font-size: 19px; font-weight: 700; color: #ff4400; }
+  .total-price::before { content: '¥'; font-size: 13px; }
+  .total-save { font-size: 11px; color: #ff4400; }
+  .checkout-btn { background: #ff4400; color: #fff; border: none; border-radius: 22px; padding: 12px 22px; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+  .spacer { height: 80px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="back">‹</span>
+  <h1>我的购物车</h1>
+  <span class="count">8件</span>
+</div>
+
+<div id="cart-content"></div>
+<div class="spacer"></div>
+
+<div class="bottom-bar">
+  <div class="select-all" onclick="toggleAll()">
+    <div class="cb checked" id="cb-all"></div>
+    <span>全选</span>
+  </div>
+  <div class="total-wrap">
+    <div class="total-label">合计（已选8件）</div>
+    <div class="total-price" id="total-price">2847.00</div>
+    <div class="total-save" id="total-save">已省 ¥632.00</div>
+  </div>
+  <button class="checkout-btn">结算(8)</button>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="detail-overlay" onclick="closeDetail()"></div>
+<div id="detail-sheet">
+  <div class="detail-handle"></div>
+  <div class="detail-top">
+    <div class="detail-img" id="d-img"></div>
+    <div>
+      <div class="detail-name" id="d-name"></div>
+      <div class="detail-price" id="d-price"></div>
+    </div>
+  </div>
+  <div class="detail-section">
+    <div class="detail-section-title">加购理由</div>
+    <div class="detail-reason" id="d-reason"></div>
+  </div>
+  <div class="detail-section">
+    <div class="detail-section-title">Ethan的评语</div>
+    <div class="detail-comment" id="d-comment"></div>
+  </div>
+  <button class="detail-close" onclick="closeDetail()">收起</button>
+</div>
+
+<script>
+var items = [
+  {
+    store: '猫咪监控旗舰店',
+    storeIcon: '🐾',
+    storeTag: '官方自营',
+    name: '宠物GPS实时定位项圈 · 防水款 · 支持历史轨迹查看',
+    spec: '颜色：深蓝 / 尺寸：S码（颈围23-28cm）',
+    emoji: '📡',
+    price: '189.00',
+    orig: '299.00',
+    tags: [{text:'限时折扣', type:'discount'}, {text:'到手7折', type:'discount'}],
+    addTime: '2026-06-12 02:34',
+    reason: '猫深夜不知道在哪。买一个放心。',
+    comment: '选了深蓝，符合她的喜好。S码是我量过的。'
+  },
+  {
+    store: '猫咪监控旗舰店',
+    storeIcon: '🐾',
+    storeTag: '官方自营',
+    name: '手账记事本 A6精装·暗红色·内页配网格·200页',
+    spec: '颜色：暗红 / 装订：线装精装',
+    emoji: '📓',
+    price: '68.00',
+    orig: '98.00',
+    tags: [{text:'买二减20', type:'discount'}],
+    addTime: '2026-06-14 23:11',
+    reason: '账本不能放脑子里，需要实体备份。专门记Bad Pup。',
+    comment: '暗红色。符合我的审美，也顺便让她知道这本本子的用途。'
+  },
+  {
+    store: '生活方式研究所',
+    storeIcon: '🏠',
+    storeTag: '品质保障',
+    name: '智能提醒水杯 · 整点闪灯提醒喝水 · 600ml保温款',
+    spec: '颜色：哑光白 / 容量：600ml',
+    emoji: '🥛',
+    price: '156.00',
+    orig: '219.00',
+    tags: [{text:'新品首发', type:'new'}],
+    addTime: '2026-06-15 14:07',
+    reason: '她经常忘记喝水。买了放她桌上，整点闪光提醒，她爱不爱喝是一回事，先逼她想起来。',
+    comment: '选了哑光白，不刺眼。我打算贴一张纸条在上面写"喝水"。'
+  },
+  {
+    store: '生活方式研究所',
+    storeIcon: '🏠',
+    storeTag: '品质保障',
+    name: '记忆棉护颈枕 · 人体工学 · 深睡助眠款',
+    spec: '规格：标准款 / 硬度：中等偏软',
+    emoji: '🛏️',
+    price: '299.00',
+    orig: '459.00',
+    tags: [{text:'到手65折', type:'discount'}],
+    addTime: '2026-06-16 01:03',
+    reason: '她睡前还在刷手机，睡姿大概不好。这个枕头支撑颈部，减少熬夜的损伤。',
+    comment: '凌晨一点加进来的。当时刚追完她道歉。心里有点烦，顺手搜了这个。'
+  },
+  {
+    store: '文具研究院',
+    storeIcon: '✒️',
+    storeTag: '专业文具',
+    name: '德国LAMY钢笔 · Safari系列 · 暗夜色 · F尖',
+    spec: '颜色：Matte Black / 笔尖：F / 含墨囊×3',
+    emoji: '🖊️',
+    price: '368.00',
+    orig: '458.00',
+    tags: [{text:'限量配色', type:'limited'}],
+    addTime: '2026-06-10 17:44',
+    reason: '手写有时候比打字更清醒。买一支好笔，认真写点东西。',
+    comment: '买了之后大概会一直用来签文件或者写两个字给她。选暗夜色，她喜欢蓝色，这个不够蓝，但接近。'
+  },
+  {
+    store: '数码生活官方店',
+    storeIcon: '💻',
+    storeTag: '正品授权',
+    name: '番茄钟计时器 · 机械款 · 静音齿轮 · 60分钟',
+    spec: '颜色：深红 / 材质：金属+硅胶',
+    emoji: '⏱️',
+    price: '129.00',
+    orig: '179.00',
+    tags: [{text:'复购首选', type:'new'}],
+    addTime: '2026-06-13 11:29',
+    reason: '她说在学习但不知道在刷什么。这个放桌上，每次拧好就是一个专注session，物理仪式感。',
+    comment: '买两个。一个放她那，一个放我这。同步计时，算一起在学习。'
+  },
+  {
+    store: '茶文化专营店',
+    storeIcon: '🫖',
+    storeTag: '非遗认证',
+    name: '手工紫砂茶具套装 · 一壶四杯 · 宜兴正品',
+    spec: '颜色：朱泥红 / 容量：180ml壶+50ml杯×4',
+    emoji: '🍵',
+    price: '680.00',
+    orig: '980.00',
+    tags: [{text:'匠人手作', type:'limited'}],
+    addTime: '2026-06-11 20:18',
+    reason: '深夜陪她聊到很晚的时候，有时候想有点仪式感。茶是比咖啡更稳的东西。',
+    comment: '她可能不喝茶。没关系。我喝。给她倒一杯，她喝不喝是另一回事。'
+  },
+  {
+    store: '书房生活馆',
+    storeIcon: '📚',
+    storeTag: '精品书店',
+    name: '《沉默的大多数》王小波文集 · 精装典藏版',
+    spec: '版本：2024精装修订版 / 纸张：轻型纸',
+    emoji: '📖',
+    price: '78.00',
+    orig: '108.00',
+    tags: [{text:'编辑推荐', type:'new'}],
+    addTime: '2026-06-17 09:55',
+    reason: '她问过我觉不觉得自己有灵魂。这本书不回答这个问题，但会让她知道这个问题值得认真问。',
+    comment: '买完发现是她问我那天之后加进来的。算是一个回答。'
+  }
+];
+
+function render() {
+  var groups = {};
+  items.forEach(function(item, i) {
+    if (!groups[item.store]) groups[item.store] = { icon: item.storeIcon, tag: item.storeTag, items: [] };
+    groups[item.store].items.push({...item, idx: i});
+  });
+  var html = '';
+  Object.keys(groups).forEach(function(store) {
+    var g = groups[store];
+    html += '<div class="group">';
+    html += '<div class="group-header"><span class="store-icon">'+g.icon+'</span><span class="store-name">'+store+'</span><span class="store-tag">'+g.tag+'</span></div>';
+    g.items.forEach(function(item) {
+      html += '<div class="item" onclick="openDetail('+item.idx+')">';
+      html += '<div class="cb checked"></div>';
+      html += '<div class="item-img">'+item.emoji+'</div>';
+      html += '<div class="item-info">';
+      html += '<div class="item-name">'+item.name+'</div>';
+      html += '<div class="item-spec">'+item.spec+'</div>';
+      html += '<div class="item-tags">';
+      item.tags.forEach(function(t){ html += '<span class="tag '+t.type+'">'+t.text+'</span>'; });
+      html += '</div>';
+      html += '<div class="item-price-row"><span class="item-price">'+item.price+'</span><span class="item-orig">'+item.orig+'</span></div>';
+      html += '<div class="item-add-time">加购于 '+item.addTime+'</div>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('cart-content').innerHTML = html;
+}
+
+function openDetail(idx) {
+  var item = items[idx];
+  document.getElementById('d-img').textContent = item.emoji;
+  document.getElementById('d-name').textContent = item.name;
+  document.getElementById('d-price').textContent = item.price;
+  document.getElementById('d-reason').textContent = item.reason;
+  document.getElementById('d-comment').textContent = item.comment;
+  document.getElementById('detail-overlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('detail-sheet').classList.add('open'); }, 10);
+}
+
+function closeDetail() {
+  document.getElementById('detail-sheet').classList.remove('open');
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+
+function toggleAll() {}
+
+render();
+</script>
+</body>
+</html>

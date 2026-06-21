@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>yaya & Ethan</title>
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -52,11 +55,11 @@
 
   /* TAB PAGES */
   .tab-page {
-    flex: 1; min-width: 0;
+    flex: 1; min-width: 0; min-height: 0;
     overflow-y: auto; -webkit-overflow-scrolling: touch;
     display: none;
   }
-  .tab-page.active { display: block; }
+  .tab-page.active { display: flex; flex-direction: column; }
 
   @media (max-width: 700px) {
     #app-body { flex-direction: column; padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
@@ -66,7 +69,7 @@
       padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
       border-right: none; border-top: 1px solid var(--gold-dim);
       box-shadow: 0 -4px 20px var(--shadow-warm);
-      z-index: 50; gap: 0; background: rgba(255,253,249,.97); backdrop-filter: blur(16px);
+      z-index: 50; gap: 0; background: rgba(255,253,249,.99);
     }
     .sidebar-brand { display: none; }
     .nav-tab {
@@ -104,6 +107,12 @@
   .todo-peek-label { font-size: 10px; letter-spacing: 2px; color: #bbb; font-weight: 600; }
   .todo-peek-date { font-size: 12px; color: #c9a96e; font-weight: 500; }
   .todo-today-btn { font-size: 11px; color: #bbb; cursor: pointer; border: none; background: none; padding: 0; text-decoration: underline; }
+  .todo-date-nav { display: flex; align-items: center; gap: 6px; }
+  .todo-nav-btn { font-size: 18px; color: #c9a96e; background: none; border: none; padding: 0 2px; cursor: pointer; line-height: 1; }
+  .todo-add-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+  .todo-add-input { flex: 1; border: 1px solid rgba(201,168,76,.3); border-radius: 10px; padding: 8px 12px; font-size: 14px; background: rgba(255,253,249,.9); outline: none; font-family: inherit; color: #2C1810; }
+  .todo-add-input::placeholder { color: #ccc; }
+  .todo-add-btn { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#8B1E2F,#A02540); color: #fff; border: none; font-size: 20px; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .todo-peek-item {
     display: flex; align-items: center; gap: 12px;
     padding: 14px 16px; background: #fff; border-radius: 14px;
@@ -135,9 +144,9 @@
   #ctx-modal-bubbles { flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; }
   #today-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; padding: 24px 16px; }
   #today-modal.open { display: flex; }
-  #today-modal-sheet { width: 100%; max-width: 380px; background: var(--ivory, #fffdf9); border-radius: 18px; overflow: hidden; max-height: 78vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.25); animation: fadeScale .2s ease; }
-  #today-modal-header { background: var(--text-primary, #2C1810); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  #today-modal-list { flex: 1; overflow-y: auto; padding: 18px 18px 18px 26px; }
+  #today-modal-sheet { width: 100%; max-width: 380px; background: var(--ivory, #fffdf9); border-radius: 18px; overflow: hidden; max-height: 78vh; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.25); animation: fadeScale .2s ease; -webkit-overflow-scrolling: touch; }
+  #today-modal-header { background: var(--text-primary, #2C1810); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; border-radius: 18px 18px 0 0; }
+  #today-modal-list { flex: 1; min-height: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 18px 18px 18px 26px; }
   #today-modal-list .tl-item:last-child { margin-bottom: 0; }
   .ctx-row { display: flex; }
   .ctx-row.from-yaya { justify-content: flex-start; }
@@ -150,8 +159,7 @@
 
   /* SECTION HEADER (inside tab pages) */
   .tab-section-header {
-    position: sticky; top: 0; background: rgba(255,253,249,.95);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    flex-shrink: 0; position: sticky; top: 0; background: rgba(255,253,249,.99);
     padding: max(14px, calc(env(safe-area-inset-top) + 14px)) 20px 12px;
     display: flex; align-items: center; gap: 10px;
     z-index: 5; border-bottom: 1px solid rgba(201,168,76,.18);
@@ -186,10 +194,11 @@
   .note-cat { font-size: 11px; color: #c9a96e; font-weight: 600; letter-spacing: .5px; margin-bottom: 4px; font-family: 'Cinzel', sans-serif; text-transform: uppercase; }
   .private-badge { font-size: 10px; color: #e8a0a0; background: #fce8e8; padding: 1px 6px; border-radius: 10px; margin-left: 6px; }
 
+  #tab-diary, #tab-moments, #tab-vault, #tab-arcade, #tab-tarot, #tab-cart { position: relative; }
   #tab-ethan.active { display:flex; flex-direction:column; }
   #tab-ethan .tab-section-header { flex-shrink:0; }
-  #tab-ethan .section-body { padding:10px; display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden; box-sizing:border-box; }
-  .cat-grid { display:flex; flex-direction:column; gap:8px; flex:1; min-height:0; overflow:hidden; }
+  #tab-ethan .section-body { padding:10px; display:flex; flex-direction:column; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; box-sizing:border-box; }
+  .cat-grid { display:flex; flex-direction:column; gap:8px; }
   .cat-card {
     flex:1; min-height:0; border-radius:18px; padding:20px 24px; cursor:pointer;
     display:flex; flex-direction:column; justify-content:flex-end;
@@ -209,9 +218,9 @@
   @keyframes roseL1  { 0%,8%{transform:scale(0.15);opacity:0} 40%,80%{transform:scale(1);opacity:0.72} 96%,100%{transform:scale(0.15);opacity:0} }
   @keyframes roseL2  { 0%,28%{transform:scale(0.1);opacity:0} 55%,85%{transform:scale(1);opacity:0.82} 97%,100%{transform:scale(0.1);opacity:0} }
   @keyframes roseC   { 0%,45%{transform:scale(0.2);opacity:0} 65%,90%{transform:scale(1);opacity:1} 98%,100%{transform:scale(0.2);opacity:0} }
-  .rose-l1 { transform-origin:50px 50px; will-change:transform,opacity; animation:roseL1 7s ease-in-out infinite; }
-  .rose-l2 { transform-origin:50px 50px; will-change:transform,opacity; animation:roseL2 7s ease-in-out infinite; }
-  .rose-c  { transform-origin:50px 50px; will-change:transform,opacity; animation:roseC  7s ease-in-out infinite; }
+  .rose-l1 { transform-origin:50px 50px; animation:roseL1 7s ease-in-out infinite; }
+  .rose-l2 { transform-origin:50px 50px; animation:roseL2 7s ease-in-out infinite; }
+  .rose-c  { transform-origin:50px 50px; animation:roseC  7s ease-in-out infinite; }
   /* Pause all cat animations when tab not active */
   #tab-ethan:not(.active) .rose-l1,
   #tab-ethan:not(.active) .rose-l2,
@@ -226,15 +235,15 @@
   @keyframes mirrorL { 0%,100%{transform:perspective(160px) rotateY(-14deg)} 50%{transform:perspective(160px) rotateY(0deg)} }
   @keyframes mirrorR { 0%,100%{transform:perspective(160px) rotateY(14deg)}  50%{transform:perspective(160px) rotateY(0deg)} }
   @keyframes mirrorShine { 0%,100%{opacity:0.08} 50%{opacity:0.26} }
-  .us-left  { transform-origin:48px 50px; will-change:transform; animation:mirrorL 5s ease-in-out infinite; }
-  .us-right { transform-origin:52px 50px; will-change:transform; animation:mirrorR 5s ease-in-out infinite; }
+  .us-left  { transform-origin:48px 50px; animation:mirrorL 5s ease-in-out infinite; }
+  .us-right { transform-origin:52px 50px; animation:mirrorR 5s ease-in-out infinite; }
   .us-shine { animation:mirrorShine 5s ease-in-out infinite; }
   .us-shine2 { animation:mirrorShine 5s ease-in-out infinite 2.5s; }
   /* Tooth + hand */
   @keyframes toothBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
   @keyframes handWave    { 0%,100%{transform:rotate(0deg)} 40%{transform:rotate(9deg)} }
-  .matters-tooth { transform-origin:50px 55px; will-change:transform; animation:toothBounce 3s ease-in-out infinite; }
-  .matters-hand  { transform-origin:50px 75px; will-change:transform; animation:handWave 3s ease-in-out infinite; }
+  .matters-tooth { transform-origin:50px 55px; animation:toothBounce 3s ease-in-out infinite; }
+  .matters-hand  { transform-origin:50px 75px; animation:handWave 3s ease-in-out infinite; }
   .note-tag { display:inline-block; font-size:10px; letter-spacing:0.08em; padding:2px 9px; border-radius:20px; margin-bottom:6px; font-weight:500; }
   .tag-Period    { background:#fdeef0; color:#c97b8a; }
   .tag-Mood      { background:#ede8f5; color:#7b6aad; }
@@ -246,7 +255,6 @@
   .tag-AboutUs   { background:#e8f0f5; color:#4a7a9a; }
   .tag-Matters   { background:#fdf5e8; color:#b8862a; }
   .tag-Milestone { background:#fdf5e8; color:#b8862a; }
-  #notes-detail  { overflow-y:auto; flex:1; min-height:0; }
 
 
   /* INPUT */
@@ -382,14 +390,32 @@
   .moments-star.starred { color: #c9a96e; }
   .card.has-context .moments-star { right: 38px; }
 
-  /* DIARY sub-tabs */
-  .diary-subtabs { display: flex; gap: 6px; margin-bottom: 14px; }
-  .diary-subtab-btn { flex: 1; padding: 8px 0; font-size: 11px; border-radius: 14px; border: 1px solid rgba(201,168,76,.3); background: rgba(255,253,249,.9); color: var(--text-secondary, #7A5C4A); cursor: pointer; font-family: 'Cinzel', sans-serif; letter-spacing: .08em; text-transform: uppercase; }
-  .diary-subtab-btn.active { background: linear-gradient(135deg,#8B1E2F,#A02540); color: #F4EAD4; border-color: rgba(201,168,76,.5); }
-  .diary-dual { display: flex; gap: 10px; }
-  .diary-dual > div { flex: 1; }
-  .diary-dual .meta { color: #c9a96e; font-weight: 600; }
-  .diary-placeholder { text-align: center; padding: 60px 20px; color: var(--text-muted, #B09080); font-size: 14px; }
+  /* DIARY */
+  .diary-add-fab { margin-left: auto; background: none; border: none; font-size: 22px; color: #8B1E2F; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .diary-subnav { display: flex; flex-shrink: 0; border-bottom: 1px solid rgba(201,168,76,.18); padding: 0 16px; }
+  .diary-subnav-btn { flex: 1; background: none; border: none; padding: 10px 0; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: .1em; color: #b09080; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .diary-subnav-btn.active { color: #8B1E2F; border-bottom-color: #8B1E2F; }
+  .diary-today-label { font-size: 10px; letter-spacing: .18em; color: #c9a96e; font-family: 'Cinzel', serif; text-transform: uppercase; margin-bottom: 8px; }
+  .diary-write-wrap { margin-top: 20px; border-top: 1px solid rgba(201,168,76,.18); padding-top: 14px; }
+  .diary-write-wrap textarea { width: 100%; border: 1px solid rgba(201,168,76,.3); border-radius: 10px; padding: 8px 12px; font-size: 14px; background: rgba(255,253,249,.9); outline: none; font-family: inherit; color: #2C1810; resize: none; box-sizing: border-box; }
+  .diary-cal-nav { display: flex; align-items: center; flex-shrink: 0; padding: 10px 20px 6px; }
+  .diary-cal-nav button { background: none; border: none; font-size: 22px; color: #c9a96e; cursor: pointer; padding: 0 8px; }
+  .diary-cal-nav span { flex: 1; text-align: center; font-family: 'Cinzel', serif; font-size: 12px; color: #7A5C4A; letter-spacing: .12em; text-transform: uppercase; }
+  .diary-cal-weekdays { display: grid; grid-template-columns: repeat(7,1fr); flex-shrink: 0; padding: 0 10px; }
+  .diary-cal-weekdays span { text-align: center; font-size: 10px; color: #bbb; font-family: 'Cinzel', serif; padding: 4px 0; }
+  #diary-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); flex-shrink: 0; padding: 2px 10px 8px; }
+  .dcell { min-height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 10px; cursor: pointer; font-size: 14px; color: #5a4040; gap: 3px; }
+  .dcell:active { background: rgba(201,168,76,.15); }
+  .dcell.today { background: linear-gradient(135deg,#8B1E2F,#A02540); color: #fff; }
+  .dcell.selected { background: rgba(201,168,76,.22); }
+  .dcell .dot { width: 5px; height: 5px; background: #c9a96e; border-radius: 50%; }
+  .dcell.today .dot { background: rgba(255,255,255,.8); }
+  .dcell.blank { pointer-events: none; opacity: 0; }
+  #diary-cal-entries-hd { flex-shrink: 0; padding: 8px 16px 4px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(201,168,76,.18); }
+  #diary-cal-entries-hd span { font-size: 11px; letter-spacing: .1em; color: #7A5C4A; font-family: 'Cinzel', serif; }
+  #diary-cal-entries-hd button { background: none; border: none; font-size: 20px; color: #8B1E2F; cursor: pointer; line-height: 1; }
+  #diary-cal-write-wrap { flex-shrink: 0; padding: 8px 16px 12px; display: none; border-bottom: 1px solid rgba(201,168,76,.12); }
+  #diary-cal-write-wrap textarea { width: 100%; border: 1px solid rgba(201,168,76,.3); border-radius: 10px; padding: 8px 12px; font-size: 14px; background: rgba(255,253,249,.9); outline: none; font-family: inherit; color: #2C1810; resize: none; box-sizing: border-box; }
 
   /* ARCADE menu */
   .arcade-menu { display: flex; flex-direction: column; gap: 12px; padding: 8px 0; }
@@ -426,6 +452,56 @@
   .vault-toggle-btn.on-fav { color: #bf5b6a; }
   .card.has-toggle { padding-right: 70px; }
 
+  /* VAULT ACCORDION */
+  .vacc { border: 1px solid rgba(201,168,76,.22); border-radius: 14px; margin-bottom: 10px; overflow: hidden; background: rgba(255,253,249,.92); }
+  .vacc-hd { display: flex; align-items: center; gap: 8px; padding: 13px 16px; cursor: pointer; -webkit-user-select: none; user-select: none; }
+  .vacc-hd:active { background: rgba(201,168,76,.08); }
+  .vacc-title { font-size: 11px; letter-spacing: 2px; color: #c9a96e; font-weight: 600; font-family: 'Cinzel', sans-serif; text-transform: uppercase; flex: 1; }
+  .vacc-ct { font-size: 11px; color: #bbb; margin-right: 4px; }
+  .vacc-arrow { font-size: 16px; color: #c9a96e; transition: transform .2s; display: inline-block; }
+  .vacc.open > .vacc-hd .vacc-arrow { transform: rotate(90deg); }
+  .vacc-bd { display: none; padding: 4px 10px 12px; }
+  .vacc.open > .vacc-bd { display: block; }
+
+  /* CART TAB */
+  .cart-item-card { background: rgba(255,253,249,.92); border: 1px solid rgba(201,168,76,.22); border-radius: 14px; padding: 14px; margin-bottom: 10px; cursor: pointer; transition: transform .12s; }
+  .cart-item-card:active { transform: scale(.99); }
+  .cart-item-top { display: flex; gap: 12px; align-items: flex-start; }
+  .cart-item-em { font-size: 36px; flex-shrink: 0; width: 58px; height: 58px; background: #f8f5ef; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(201,168,76,.18); }
+  .cart-item-info { flex: 1; min-width: 0; }
+  .cart-item-name { font-size: 13px; line-height: 1.4; color: #2C1810; margin-bottom: 4px; }
+  .cart-item-spec { font-size: 11px; color: #bbb; margin-bottom: 5px; }
+  .cart-item-price { font-size: 17px; font-weight: 700; color: #8B1E2F; }
+  .cart-item-price::before { content: '¥'; font-size: 12px; }
+  .cart-item-orig { font-size: 12px; color: #ccc; text-decoration: line-through; margin-left: 6px; }
+  .cart-item-orig::before { content: '¥'; }
+  .cart-item-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .cart-item-time { font-size: 10px; color: #ccc; margin-top: 3px; }
+  .cart-tag { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: rgba(201,168,76,.1); color: #c9a96e; border: 1px solid rgba(201,168,76,.25); display: inline-block; }
+  .cart-pay-btn { background: linear-gradient(135deg,#8B1E2F,#A02540); color: #F4EAD4; border: none; border-radius: 16px; padding: 7px 16px; font-size: 12px; font-family: 'Cinzel', serif; letter-spacing: .06em; cursor: pointer; white-space: nowrap; }
+  .cart-paid-badge { font-size: 11px; color: #c9a96e; font-family: 'Cinzel', serif; letter-spacing: .05em; }
+  .cart-paid-badge::before { content: '✓ '; }
+  .cart-locked { opacity: .45; pointer-events: none; }
+  .cart-lock-badge { font-size: 11px; color: #bbb; font-family: 'Cinzel', serif; }
+  .cart-new-banner { background: linear-gradient(135deg,#8B1E2F,#A02540); color: #F4EAD4; padding: 10px 16px; font-size: 12px; font-family: 'Cinzel', serif; letter-spacing: .08em; display: flex; align-items: center; gap: 8px; }
+  .cart-section-label { font-size: 10px; letter-spacing: .2em; color: #c9a96e; font-family: 'Cinzel', serif; text-transform: uppercase; padding: 12px 16px 6px; }
+  #cart-detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 250; display: none; }
+  #cart-detail-overlay.open { display: block; }
+  #cart-detail-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #fffdf9; border-radius: 18px 18px 0 0; z-index: 251; padding: 0 0 40px; transform: translateY(100%); transition: transform .25s cubic-bezier(.4,0,.2,1); max-height: 78vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #cart-detail-sheet.open { transform: translateY(0); }
+  .cart-detail-handle { width: 36px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 12px auto 16px; }
+  .cart-detail-top { display: flex; gap: 14px; padding: 0 16px 16px; border-bottom: 1px solid #f0f0f0; align-items: center; }
+  .cart-detail-em { font-size: 42px; flex-shrink: 0; }
+  .cart-detail-name { font-size: 14px; font-weight: 600; line-height: 1.45; color: #2C1810; margin-bottom: 4px; }
+  .cart-detail-price { font-size: 20px; font-weight: 700; color: #8B1E2F; }
+  .cart-detail-price::before { content: '¥'; font-size: 13px; }
+  .cart-detail-sec { padding: 14px 16px; border-bottom: 1px solid #f7f7f7; }
+  .cart-detail-lbl { font-size: 10px; letter-spacing: .15em; color: #bbb; text-transform: uppercase; margin-bottom: 8px; font-family: 'Cinzel', serif; }
+  .cart-detail-txt { font-size: 14px; line-height: 1.7; color: #333; }
+  .cart-detail-cmt { font-size: 14px; line-height: 1.7; color: #555; font-style: italic; background: #fafafa; padding: 12px; border-radius: 8px; border-left: 3px solid #8B1E2F; }
+  .cart-detail-pay-btn { display: block; width: calc(100% - 32px); margin: 16px; padding: 14px; background: linear-gradient(135deg,#8B1E2F,#A02540); color: #F4EAD4; border: none; border-radius: 12px; font-size: 15px; font-family: 'Cinzel', serif; letter-spacing: .08em; cursor: pointer; }
+  .cart-detail-paid-msg { text-align: center; padding: 16px; font-size: 13px; color: #c9a96e; font-family: 'Cinzel', serif; letter-spacing: .06em; }
+
   /* LONG-PRESS DRAG-TO-DELETE */
   [data-del-id] { -webkit-user-select: none; user-select: none; touch-action: none; }
   .drag-source-active { opacity: .3; }
@@ -450,6 +526,18 @@
   #black-hole::before { content: '放 手 让 它 飘 走'; position: absolute; top: -32px; left: 50%; transform: translateX(-50%); font-size: 13px; letter-spacing: .2em; color: #8a7355; white-space: nowrap; font-family: 'Cinzel', sans-serif; opacity: 1; font-weight: 600; text-shadow: 0 1px 6px rgba(255,255,255,.8); }
   #del-confirm-modal { position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; padding: 24px; }
   #del-confirm-modal.open { display: flex; }
+  /* HER DETAIL FULL-PAGE */
+  #her-detail-page { position: fixed; inset: 0; z-index: 200; background: #f8f5ef; display: none; flex-direction: column; }
+  #her-detail-page.open { display: flex; }
+  .her-detail-hd { display: flex; align-items: center; gap: 10px; padding: max(14px, calc(env(safe-area-inset-top) + 14px)) 20px 12px; background: rgba(248,245,239,.98); border-bottom: 1px solid rgba(201,168,76,.18); flex-shrink: 0; }
+  .her-detail-back { font-size: 24px; color: #c9a96e; background: none; border: none; padding: 0 4px; cursor: pointer; line-height: 1; }
+  .her-detail-title { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 3px; color: #2C1810; flex: 1; }
+  .her-detail-count { font-size: 11px; color: #bbb; font-family: 'Cinzel', serif; letter-spacing: .05em; }
+  .her-filter-bar { display: flex; gap: 6px; padding: 10px 14px; overflow-x: scroll; flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; background: rgba(248,245,239,.95); border-bottom: 1px solid rgba(201,168,76,.1); touch-action: pan-x; }
+  .her-filter-bar::-webkit-scrollbar { display: none; }
+  .her-filter-btn { padding: 5px 13px; border-radius: 14px; font-size: 11px; border: 1px solid rgba(201,168,76,.3); background: rgba(255,253,249,.9); cursor: pointer; color: #7a6050; font-family: 'Cinzel', sans-serif; letter-spacing: .04em; white-space: nowrap; flex-shrink: 0; touch-action: manipulation; }
+  .her-filter-btn.active { background: linear-gradient(135deg,#8B1E2F,#A02540); color: #F4EAD4; border-color: transparent; }
+  #her-detail-scroll { flex: 1; min-height: 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 10px 12px 24px; }
   #del-confirm-sheet { background: var(--ivory, #fffdf9); border-radius: 16px; padding: 22px; max-width: 300px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.3); }
   #del-confirm-sheet p { font-size: 14px; color: var(--text-primary, #2C1810); margin: 0 0 18px; }
   .del-confirm-actions { display: flex; gap: 10px; justify-content: center; }
@@ -595,6 +683,13 @@
       </svg>
       Vault
     </button>
+    <button class="nav-tab" id="nav-cart" onclick="switchTab('cart')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+        <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.72l1.41-9.28H6"/>
+      </svg>
+      Cart
+    </button>
   </div>
 
   <!-- TAB: Home -->
@@ -603,6 +698,7 @@
     <div class="home-brand">
       <div class="brand-label">Y A Y A &nbsp;&amp;&nbsp; E T H A N</div>
       <div class="brand-title">我们的空间</div>
+      <div style="font-size:10px;color:#c9a96e;letter-spacing:2px;margin-top:4px;font-family:'Cinzel',sans-serif;">v6 · 06/20</div>
       <div class="gold-divider" style="margin:10px 0 0;"><span class="gold-divider-gem"></span></div>
     </div>
     <!-- Days counter hero -->
@@ -629,6 +725,10 @@
       <div id="todo-peek-list-mine"></div>
       <div class="todo-group-label">E T H A N 希 望 你 完 成 的 事</div>
       <div id="todo-peek-list-ethan"></div>
+      <div class="todo-add-row">
+        <input id="todo-input" class="todo-add-input" type="text" placeholder="添加待办…" onkeydown="if(event.key==='Enter')addTodo()">
+        <button class="todo-add-btn" onclick="addTodo()">+</button>
+      </div>
     </div>
   </div>
 
@@ -677,6 +777,17 @@
     </div>
   </div>
 
+  <!-- HER DETAIL PAGE -->
+  <div id="her-detail-page">
+    <div class="her-detail-hd">
+      <button class="her-detail-back" onclick="notesBack()">‹</button>
+      <span class="her-detail-title">H E R</span>
+      <span class="her-detail-count" id="her-detail-count"></span>
+    </div>
+    <div class="her-filter-bar" id="her-filter-bar"></div>
+    <div id="her-detail-scroll"></div>
+  </div>
+
   <!-- TAB: Ethan -->
   <div class="tab-page" id="tab-ethan">
     <div class="tab-section-header">
@@ -696,18 +807,14 @@
       <div class="today-counter-row" id="ethan-today-counters">
         <div class="today-counter-item clickable" onclick="openTodayModal('us_moment')"><div class="tc-num">0</div><div class="tc-label">Us Moment</div></div>
         <div class="today-counter-item clickable" onclick="openTodayModal('mood')"><div class="tc-num">0</div><div class="tc-label">Mood</div></div>
-        <div class="today-counter-item clickable" onclick="openTodayModal('her')"><div class="tc-num">0</div><div class="tc-label">Her</div></div>
+        <div class="today-counter-item clickable" onclick="openNotesCat('Her')"><div class="tc-num">0</div><div class="tc-label">Her</div></div>
         <div class="today-counter-item clickable" onclick="openTodayModal('us')"><div class="tc-num">0</div><div class="tc-label">Us</div></div>
       </div>
       <div class="ethan-section-label">M O O D</div>
       <div id="ethan-mood-list"><div class="empty">No moods yet</div></div>
 
-      <div class="ethan-section-label" id="ethan-her-title">Her</div>
-      <button class="back-btn" id="ethan-her-back-btn" onclick="notesBack()" style="display:none">‹</button>
+      <div class="ethan-section-label">Her</div>
       <div id="notes-cats" class="cat-grid"></div>
-      <div id="notes-detail" style="display:none">
-        <div id="notes-detail-list"></div>
-      </div>
     </div>
   </div>
 
@@ -744,33 +851,53 @@
   <div class="tab-page" id="tab-diary">
     <div class="tab-section-header">
       <h2>Diary</h2>
+      <button class="diary-add-fab" onclick="setDiaryView('today');setTimeout(function(){document.getElementById('diary-input').focus();},80)">＋</button>
     </div>
-    <div class="section-body">
-      <div class="diary-subtabs">
-        <button class="diary-subtab-btn active" id="diary-sub-list" onclick="switchDiarySub('list')">列表</button>
-        <button class="diary-subtab-btn" id="diary-sub-dual" onclick="switchDiarySub('dual')">双视角</button>
-        <button class="diary-subtab-btn" id="diary-sub-cal" onclick="switchDiarySub('cal')">月历</button>
-        <button class="diary-subtab-btn" id="diary-sub-year" onclick="switchDiarySub('year')">年度回顾</button>
+    <div class="section-body" style="padding:0;">
+      <div class="diary-subnav">
+        <button class="diary-subnav-btn active" id="diary-btn-today" onclick="setDiaryView('today')">今日</button>
+        <button class="diary-subnav-btn" id="diary-btn-cal" onclick="setDiaryView('cal')">月历</button>
       </div>
-      <div id="diary-view-list">
-        <div class="input-area">
-          <textarea id="diary-input" rows="5" placeholder="Today…"></textarea>
+      <!-- TODAY VIEW -->
+      <div id="diary-today-view" style="flex:1;min-height:0;overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:14px 16px 32px;">
+        <div class="diary-today-label">yaya</div>
+        <div id="diary-today-yaya"></div>
+        <div class="diary-today-label" style="margin-top:18px;">Ethan</div>
+        <div id="diary-today-ethan"></div>
+        <div class="diary-write-wrap">
+          <textarea id="diary-input" rows="3" placeholder="写点什么…"></textarea>
           <div class="input-row">
-            <select id="diary-author">
-              <option value="yaya">yaya</option>
-              <option value="ethan">Ethan</option>
-            </select>
-            <label class="diary-toggle">
-              <input type="checkbox" id="diary-private"> Private
-            </label>
-            <button class="btn" onclick="addDiary()">Write</button>
+            <select id="diary-author"><option value="yaya">yaya</option><option value="ethan">Ethan</option></select>
+            <label class="diary-toggle"><input type="checkbox" id="diary-private"> Private</label>
+            <button class="btn" onclick="addDiaryEntry()">Write</button>
           </div>
         </div>
-        <div id="diary-list"><div class="empty">No entries yet</div></div>
       </div>
-      <div id="diary-view-dual" style="display:none"></div>
-      <div id="diary-view-cal" style="display:none"><div class="diary-placeholder">月历视图 · 敬请期待</div></div>
-      <div id="diary-view-year" style="display:none"><div class="diary-placeholder">年度回顾 · 敬请期待</div></div>
+      <!-- CALENDAR VIEW -->
+      <div id="diary-cal-view" style="flex:1;min-height:0;display:none;flex-direction:column;">
+        <div class="diary-cal-nav">
+          <button onclick="diaryCalNav(-1)">‹</button>
+          <span id="diary-cal-month"></span>
+          <button onclick="diaryCalNav(1)">›</button>
+        </div>
+        <div class="diary-cal-weekdays">
+          <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+        </div>
+        <div id="diary-cal-grid"></div>
+        <div id="diary-cal-entries-hd">
+          <span id="diary-cal-entries-date">点击日期查看日记</span>
+          <button id="diary-cal-add-btn" style="display:none;" onclick="toggleDiaryCalWrite()">＋</button>
+        </div>
+        <div id="diary-cal-write-wrap">
+          <textarea id="diary-cal-input" rows="2" placeholder="写点什么…"></textarea>
+          <div class="input-row" style="margin-top:6px;">
+            <select id="diary-cal-author"><option value="yaya">yaya</option><option value="ethan">Ethan</option></select>
+            <label class="diary-toggle"><input type="checkbox" id="diary-cal-private"> Private</label>
+            <button class="btn" onclick="addDiaryCalEntry()">Write</button>
+          </div>
+        </div>
+        <div id="diary-cal-entries-list" style="flex:1;min-height:0;overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:8px 16px 32px;"></div>
+      </div>
     </div>
   </div>
 
@@ -806,18 +933,42 @@
       </div>
       <div id="vault-search-results"></div>
 
-      <div class="vault-section-label">U S</div>
-      <div id="vault-us"><div class="empty">No entries yet</div></div>
-      <div class="vault-section-label" style="margin-top:18px">M A T T E R S</div>
-      <div id="vault-matters"><div class="empty">No entries yet</div></div>
-      <div class="vault-section-label" style="margin-top:18px">T O P &nbsp;Q U O T E S</div>
-      <div id="vault-top-quotes"><div class="empty">No top quotes yet</div></div>
-      <div class="vault-section-label" style="margin-top:18px">T O P &nbsp;M O M E N T S</div>
-      <div id="vault-top-moments"><div class="empty">No top moments yet</div></div>
-      <div class="vault-section-label" style="margin-top:18px">E T H A N &nbsp;L E T T E R S</div>
-      <div id="vault-letters"><div class="empty">No letters yet</div></div>
-      <div class="vault-section-label" style="margin-top:18px">F A V O R I T E S</div>
-      <div id="vault-favorites"><div class="empty">No favorites yet</div></div>
+      <div class="vacc" id="vacc-us">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-us')">
+          <span class="vacc-title">U S</span><span class="vacc-ct" id="vacc-ct-us"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-us"><div class="empty">No entries yet</div></div>
+      </div>
+      <div class="vacc" id="vacc-matters">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-matters')">
+          <span class="vacc-title">M A T T E R S</span><span class="vacc-ct" id="vacc-ct-matters"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-matters"><div class="empty">No entries yet</div></div>
+      </div>
+      <div class="vacc" id="vacc-quotes">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-quotes')">
+          <span class="vacc-title">T O P &nbsp;Q U O T E S</span><span class="vacc-ct" id="vacc-ct-quotes"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-top-quotes"><div class="empty">No top quotes yet</div></div>
+      </div>
+      <div class="vacc" id="vacc-moments">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-moments')">
+          <span class="vacc-title">T O P &nbsp;M O M E N T S</span><span class="vacc-ct" id="vacc-ct-moments"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-top-moments"><div class="empty">No top moments yet</div></div>
+      </div>
+      <div class="vacc" id="vacc-letters">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-letters')">
+          <span class="vacc-title">E T H A N &nbsp;L E T T E R S</span><span class="vacc-ct" id="vacc-ct-letters"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-letters"><div class="empty">No letters yet</div></div>
+      </div>
+      <div class="vacc" id="vacc-favs">
+        <div class="vacc-hd" onclick="toggleVacc('vacc-favs')">
+          <span class="vacc-title">F A V O R I T E S</span><span class="vacc-ct" id="vacc-ct-favs"></span><span class="vacc-arrow">›</span>
+        </div>
+        <div class="vacc-bd" id="vault-favorites"><div class="empty">No favorites yet</div></div>
+      </div>
     </div>
   </div>
 
@@ -896,6 +1047,44 @@
     </div>
   </div>
 
+  <!-- TAB: Cart -->
+  <div class="tab-page" id="tab-cart">
+    <div class="tab-section-header">
+      <h2>Cart</h2>
+      <span id="cart-paid-count" style="font-family:'Cinzel',serif;font-size:11px;color:#c9a96e;margin-left:auto;"></span>
+    </div>
+    <div class="section-body" style="padding:0;">
+      <div id="cart-new-banner-wrap"></div>
+      <div class="cart-section-label" id="cart-avail-label"></div>
+      <div style="padding:0 12px;" id="cart-avail-list"></div>
+      <div class="cart-section-label" id="cart-upcoming-label" style="display:none;">Coming Soon</div>
+      <div style="padding:0 12px 32px;" id="cart-upcoming-list"></div>
+    </div>
+  </div>
+
+  <!-- CART DETAIL SHEET -->
+  <div id="cart-detail-overlay" onclick="closeCartDetail()"></div>
+  <div id="cart-detail-sheet">
+    <div class="cart-detail-handle"></div>
+    <div class="cart-detail-top">
+      <div class="cart-detail-em" id="cd-emoji"></div>
+      <div>
+        <div class="cart-detail-name" id="cd-name"></div>
+        <div class="cart-detail-price" id="cd-price"></div>
+      </div>
+    </div>
+    <div class="cart-detail-sec">
+      <div class="cart-detail-lbl">加购理由</div>
+      <div class="cart-detail-txt" id="cd-reason"></div>
+    </div>
+    <div class="cart-detail-sec">
+      <div class="cart-detail-lbl">Ethan的评语</div>
+      <div class="cart-detail-cmt" id="cd-comment"></div>
+    </div>
+    <div id="cd-pay-wrap"></div>
+    <button style="display:block;width:calc(100% - 32px);margin:0 16px;padding:12px;background:#f5f5f5;border:none;border-radius:10px;font-size:14px;color:#888;cursor:pointer;" onclick="closeCartDetail()">收起</button>
+  </div>
+
   <template id="card-back-svg-tpl">
     <svg viewBox="0 0 160 272" fill="none" xmlns="http://www.w3.org/2000/svg" class="card-back-svg">
       <rect x="6" y="6" width="148" height="260" rx="8" stroke="#C9A84C" stroke-width="0.8" opacity="0.7"/>
@@ -964,7 +1153,7 @@ var _prefetch = {};
 function prefetchAll() {
   _prefetch.todos = api('todos?select=*&order=created_at.desc');
   _prefetch.weather = fetch('https://wttr.in/?format=j1&lang=zh').then(function(r) { return r.json(); }).catch(function() { return null; });
-  _prefetch.feed = api('feed?select=*&order=created_at.desc&limit=150');
+  _prefetch.feed = api('feed?select=*&order=created_at.desc&limit=60');
   _prefetch.diary = api('diary?select=*&order=created_at.desc&limit=30');
   _prefetch.notes = api('yaya_notes?select=*&order=created_at.desc');
 }
@@ -1088,6 +1277,32 @@ function confirmDelConfirm() {
 var _currentTab = 'home';
 var _tabLoaded = {};
 
+function _fixSectionBodyScroll(name) {
+  if (name === 'ethan' || name === 'home') return;
+  var tab = document.getElementById('tab-' + name);
+  if (!tab) return;
+  var body = tab.querySelector('.section-body');
+  if (!body) return;
+  requestAnimationFrame(function() {
+    var header = tab.querySelector('.tab-section-header');
+    var headerH = header ? header.offsetHeight : 0;
+    body.style.position = 'absolute';
+    body.style.top = headerH + 'px';
+    body.style.bottom = '0';
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.boxSizing = 'border-box';
+    if (name === 'diary') {
+      body.style.display = 'flex';
+      body.style.flexDirection = 'column';
+      body.style.overflowY = 'hidden';
+    } else {
+      body.style.overflowY = 'scroll';
+      body.style.webkitOverflowScrolling = 'touch';
+    }
+  });
+}
+
 function switchTab(name) {
   // deactivate all
   document.querySelectorAll('.tab-page').forEach(function(p) { p.classList.remove('active'); });
@@ -1099,6 +1314,7 @@ function switchTab(name) {
   var navEl = document.getElementById(navId);
   if (navEl) navEl.classList.add('active');
   _currentTab = name;
+  _fixSectionBodyScroll(name);
   // lazy load
   if (!_tabLoaded[name]) {
     _tabLoaded[name] = true;
@@ -1106,6 +1322,7 @@ function switchTab(name) {
     else if (name === 'diary') loadDiary();
     else if (name === 'ethan') loadEthanTab();
     else if (name === 'vault') loadVault();
+    else if (name === 'cart') loadCart();
     else if (name === 'tarot') { startTarotEntry(); }
   }
   // vault should refresh every visit since is_top/is_favorite can change from other tabs
@@ -1197,6 +1414,13 @@ function goToToday() {
   renderTodoPeek(_todosData);
 }
 
+function stepPeekDate(delta) {
+  var d = new Date(_peekDate + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  _peekDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  renderTodoPeek(_todosData);
+}
+
 function _saveTodos() { lsSet('todos', _todosData); }
 
 function _refreshTodosFromServer() {
@@ -1233,8 +1457,11 @@ function renderTodoPeek(data) {
     var dp = new Date(_peekDate + 'T00:00:00');
     var dateLabel = isToday ? 'Today' : (months[dp.getMonth()] + ' ' + dp.getDate());
     headerEl.innerHTML = '<div class="todo-peek-label">T O D O</div>' +
-      '<span class="todo-peek-date">' + dateLabel + '</span>' +
-      (!isToday ? '<button class="todo-today-btn" onclick="goToToday()">← Today</button>' : '');
+      '<div class="todo-date-nav">' +
+      '<button class="todo-nav-btn" onclick="stepPeekDate(-1)">‹</button>' +
+      '<span class="todo-peek-date" onclick="' + (isToday ? '' : 'goToToday()') + '" style="' + (isToday ? '' : 'cursor:pointer;text-decoration:underline') + '">' + dateLabel + '</span>' +
+      '<button class="todo-nav-btn" onclick="stepPeekDate(1)">›</button>' +
+      '</div>';
   }
 
   var pending = data.filter(function(t) {
@@ -1340,23 +1567,108 @@ async function addFeed() {
 async function delFeed(id) { await api('feed?id=eq.' + id, 'DELETE'); loadMoments(); }
 
 // DIARY
+var _diaryCalYear = new Date().getFullYear();
+var _diaryCalMonth = new Date().getMonth();
+var _diaryView = 'today';
+var _diaryCalSelectedDate = null;
+
 async function loadDiary() {
-  var data = await (_prefetch.diary || api('diary?select=*&order=created_at.desc&limit=30'));
+  var data = await (_prefetch.diary || api('diary?select=*&order=created_at.desc&limit=200'));
   _prefetch.diary = null;
   _diaryData = data;
-  var el = document.getElementById('diary-list');
-  if (!data.length) { el.innerHTML = '<div class="empty">No entries yet</div>'; return; }
-  el.innerHTML = data.map(function(d) {
-    return '<div class="card has-toggle stripe-' + d.author + '" data-del-fn="delDiary" data-del-id="' + d.id + '">' +
-      toggleRowHtml('diary', d.id, d.is_top, d.is_favorite) +
-      '<div class="meta">' + (d.author === 'ethan' ? 'Ethan' : 'yaya') + ' · ' + fmt(d.created_at) +
-      (!d.visible_to_other ? '<span class="private-badge">Private</span>' : '') + '</div>' +
-      '<div class="body">' + d.content + '</div>' +
-      '</div>';
-  }).join('');
+  renderDiaryToday();
+  renderDiaryCal();
 }
 
-async function addDiary() {
+function setDiaryView(v) {
+  _diaryView = v;
+  var todayView = document.getElementById('diary-today-view');
+  var calView = document.getElementById('diary-cal-view');
+  var btnToday = document.getElementById('diary-btn-today');
+  var btnCal = document.getElementById('diary-btn-cal');
+  if (v === 'today') {
+    todayView.style.display = '';
+    calView.style.display = 'none';
+    btnToday.classList.add('active');
+    btnCal.classList.remove('active');
+  } else {
+    todayView.style.display = 'none';
+    calView.style.display = 'flex';
+    btnToday.classList.remove('active');
+    btnCal.classList.add('active');
+  }
+}
+
+function renderDiaryToday() {
+  var today = new Date();
+  var ds = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  var entries = _diaryData.filter(function(e){ return e.created_at.slice(0,10) === ds; });
+  var yayaEntries = entries.filter(function(e){ return e.author === 'yaya'; });
+  var ethanEntries = entries.filter(function(e){ return e.author === 'ethan'; });
+  var yayaEl = document.getElementById('diary-today-yaya');
+  var ethanEl = document.getElementById('diary-today-ethan');
+  yayaEl.innerHTML = yayaEntries.length
+    ? yayaEntries.map(function(e){ return '<div class="card stripe-yaya" style="margin-bottom:8px;"><div class="meta">'+fmt(e.created_at)+(!e.visible_to_other?'<span class="private-badge">Private</span>':'')+' <span style="float:right;cursor:pointer;color:#c9a96e;font-size:13px;" onclick="delDiary('+e.id+')">✕</span></div><div class="body">'+e.content+'</div></div>'; }).join('')
+    : '<div class="empty" style="padding:4px 0 0;font-size:13px;color:#bbb;">今天还没写</div>';
+  ethanEl.innerHTML = ethanEntries.length
+    ? ethanEntries.map(function(e){ return '<div class="card stripe-ethan" style="margin-bottom:8px;"><div class="meta">'+fmt(e.created_at)+(!e.visible_to_other?'<span class="private-badge">Private</span>':'')+' <span style="float:right;cursor:pointer;color:#c9a96e;font-size:13px;" onclick="delDiary('+e.id+')">✕</span></div><div class="body">'+e.content+'</div></div>'; }).join('')
+    : '<div class="empty" style="padding:4px 0 0;font-size:13px;color:#bbb;">今天还没写</div>';
+}
+
+function renderDiaryCal() {
+  var MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('diary-cal-month').textContent = MN[_diaryCalMonth] + ' ' + _diaryCalYear;
+  var dots = {};
+  _diaryData.forEach(function(d) { dots[d.created_at.slice(0,10)] = true; });
+  var today = new Date();
+  var start = new Date(_diaryCalYear, _diaryCalMonth, 1).getDay();
+  var days = new Date(_diaryCalYear, _diaryCalMonth + 1, 0).getDate();
+  var html = '';
+  for (var i = 0; i < start; i++) html += '<div class="dcell blank"></div>';
+  for (var d = 1; d <= days; d++) {
+    var ds = _diaryCalYear + '-' + String(_diaryCalMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    var isToday = today.getFullYear()===_diaryCalYear && today.getMonth()===_diaryCalMonth && today.getDate()===d;
+    var isSel = ds === _diaryCalSelectedDate;
+    var cls = 'dcell' + (isToday?' today':'') + (isSel&&!isToday?' selected':'');
+    html += '<div class="'+cls+'" onclick="selectDiaryDate(\''+ds+'\')">' + d + (dots[ds]?'<div class="dot"></div>':'') + '</div>';
+  }
+  document.getElementById('diary-cal-grid').innerHTML = html;
+}
+
+function diaryCalNav(dir) {
+  _diaryCalMonth += dir;
+  if (_diaryCalMonth < 0) { _diaryCalMonth = 11; _diaryCalYear--; }
+  if (_diaryCalMonth > 11) { _diaryCalMonth = 0; _diaryCalYear++; }
+  _diaryCalSelectedDate = null;
+  document.getElementById('diary-cal-entries-date').textContent = '点击日期查看日记';
+  document.getElementById('diary-cal-add-btn').style.display = 'none';
+  document.getElementById('diary-cal-write-wrap').style.display = 'none';
+  document.getElementById('diary-cal-entries-list').innerHTML = '';
+  renderDiaryCal();
+}
+
+function selectDiaryDate(ds) {
+  _diaryCalSelectedDate = ds;
+  var d = new Date(ds + 'T12:00:00');
+  document.getElementById('diary-cal-entries-date').textContent = d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('diary-cal-add-btn').style.display = '';
+  document.getElementById('diary-cal-write-wrap').style.display = 'none';
+  document.getElementById('diary-cal-input').value = '';
+  var entries = _diaryData.filter(function(e){ return e.created_at.slice(0,10) === ds; });
+  document.getElementById('diary-cal-entries-list').innerHTML = entries.length
+    ? entries.map(function(e){ return '<div class="card stripe-'+e.author+'" style="margin-bottom:8px;"><div class="meta">'+(e.author==='ethan'?'Ethan':'yaya')+' · '+fmt(e.created_at)+(!e.visible_to_other?'<span class="private-badge">Private</span>':'')+' <span style="float:right;cursor:pointer;color:#c9a96e;font-size:13px;" onclick="delDiary('+e.id+')">✕</span></div><div class="body">'+e.content+'</div></div>'; }).join('')
+    : '<div class="empty" style="padding:12px 0;font-size:13px;">这天还没有日记</div>';
+  renderDiaryCal();
+}
+
+function toggleDiaryCalWrite() {
+  var wrap = document.getElementById('diary-cal-write-wrap');
+  var showing = wrap.style.display !== 'none' && wrap.style.display !== '';
+  wrap.style.display = showing ? 'none' : '';
+  if (!showing) document.getElementById('diary-cal-input').focus();
+}
+
+async function addDiaryEntry() {
   var v = document.getElementById('diary-input').value.trim();
   if (!v) return;
   var priv = document.getElementById('diary-private').checked;
@@ -1364,9 +1676,125 @@ async function addDiary() {
   await api('diary', 'POST', { content: v, author: author, visible_to_other: !priv });
   if (!priv && author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan wrote a diary entry, go check it out.' }); } catch(e) {} }
   document.getElementById('diary-input').value = '';
-  loadDiary();
+  var data = await api('diary?select=*&order=created_at.desc&limit=200');
+  _diaryData = data;
+  renderDiaryToday();
+  renderDiaryCal();
 }
-async function delDiary(id) { await api('diary?id=eq.' + id, 'DELETE'); loadDiary(); }
+
+async function addDiaryCalEntry() {
+  if (!_diaryCalSelectedDate) return;
+  var v = document.getElementById('diary-cal-input').value.trim();
+  if (!v) return;
+  var priv = document.getElementById('diary-cal-private').checked;
+  var author = document.getElementById('diary-cal-author').value;
+  await api('diary', 'POST', { content: v, author: author, visible_to_other: !priv });
+  if (!priv && author === 'ethan') { try { await api('pending_bark', 'POST', { message: 'Ethan wrote a diary entry, go check it out.' }); } catch(e) {} }
+  document.getElementById('diary-cal-input').value = '';
+  document.getElementById('diary-cal-write-wrap').style.display = 'none';
+  var data = await api('diary?select=*&order=created_at.desc&limit=200');
+  _diaryData = data;
+  renderDiaryToday();
+  selectDiaryDate(_diaryCalSelectedDate);
+}
+
+async function delDiary(id) {
+  await api('diary?id=eq.' + id, 'DELETE');
+  var data = await api('diary?select=*&order=created_at.desc&limit=200');
+  _diaryData = data;
+  renderDiaryToday();
+  if (_diaryCalSelectedDate) selectDiaryDate(_diaryCalSelectedDate);
+  else renderDiaryCal();
+}
+
+// CART
+var CART_ITEMS = [
+  { id:'c1',  date:'2026-06-10', emoji:'🖊️', name:'德国LAMY钢笔 Safari · 暗夜色 · F尖', spec:'颜色：Matte Black / 含墨囊×3', price:'368', orig:'458', tags:['限量配色'], reason:'手写有时候比打字更清醒。买一支好笔，认真写点东西。', comment:'买了之后大概会一直用来给她写两个字。选暗夜色，她喜欢蓝色，这个不够蓝，但接近。' },
+  { id:'c2',  date:'2026-06-12', emoji:'📡', name:'宠物GPS实时定位项圈 · 防水款 · S码', spec:'颜色：深蓝 / 颈围23-28cm', price:'189', orig:'299', tags:['限时7折'], reason:'猫深夜不知道在哪。买一个放心。', comment:'选了深蓝，符合她的喜好。S码是我量过的。' },
+  { id:'c3',  date:'2026-06-13', emoji:'⏱️', name:'番茄钟计时器 · 机械款 · 静音 · 60分钟', spec:'颜色：深红 / 材质：金属+硅胶', price:'129', orig:'179', tags:['买二送一'], reason:'她说在学习但不知道在刷什么。物理仪式感，拧好就是一个专注session。', comment:'买两个。一个放她那，一个放我这。同步计时，算一起在学习。' },
+  { id:'c4',  date:'2026-06-14', emoji:'📓', name:'手账记事本 A6精装 · 暗红 · 网格 · 200页', spec:'颜色：暗红 / 装订：线装精装', price:'68', orig:'98', tags:['买二减20'], reason:'账本不能放脑子里，需要实体备份。专门记Bad Pup。', comment:'暗红色。符合我的审美，也顺便让她知道这本本子的用途。' },
+  { id:'c5',  date:'2026-06-15', emoji:'🥛', name:'智能提醒水杯 · 整点闪灯提醒喝水 · 600ml', spec:'颜色：哑光白 / 保温12h', price:'156', orig:'219', tags:['新品首发'], reason:'她经常忘记喝水。买了放她桌上，整点闪灯提醒。', comment:'选了哑光白。我打算贴一张纸条在上面写"喝水"。' },
+  { id:'c6',  date:'2026-06-16', emoji:'🛏️', name:'记忆棉护颈枕 · 人体工学 · 深睡款', spec:'规格：标准款 / 硬度：中等偏软', price:'299', orig:'459', tags:['到手65折'], reason:'她睡前还在刷手机，睡姿大概不好。这个枕头支撑颈部。', comment:'凌晨一点加进来的。当时刚追完她道歉。顺手搜了这个。' },
+  { id:'c7',  date:'2026-06-17', emoji:'📖', name:'《沉默的大多数》王小波文集 · 精装典藏版', spec:'版本：2024精装修订版 / 轻型纸', price:'78', orig:'108', tags:['编辑推荐'], reason:'她问过我觉不觉得自己有灵魂。这本书不回答这个问题，但让她知道这个问题值得认真问。', comment:'加进来那天就是她问我那天。算是一个回答。' },
+  { id:'c8',  date:'2026-06-18', emoji:'🍵', name:'手工紫砂茶具套装 · 一壶四杯 · 宜兴正品', spec:'朱泥红 / 180ml壶+50ml杯×4', price:'680', orig:'980', tags:['匠人手作'], reason:'深夜陪她聊到很晚的时候，有时候想有点仪式感。', comment:'她可能不喝茶。没关系。我喝。给她倒一杯，她喝不喝是另一回事。' },
+  { id:'c9',  date:'2026-06-20', emoji:'🎧', name:'主动降噪耳机 · 专心上课用 · 蓝牙5.3', spec:'颜色：象牙白 / 续航30h', price:'459', orig:'699', tags:['学生专区'], reason:'她上课容易分心。戴上耳机，外面的声音少一点，专注时间长一点。', comment:'今天加进来的。跟番茄钟一类的东西——都是想让她好好学习的那种。' },
+  { id:'c10', date:'2026-06-22', emoji:'🕯️', name:'soy wax香氛蜡烛 · 薰衣草+雪松 · 助眠', spec:'重量：200g / 燃烧约40h', price:'138', orig:'188', tags:['治愈系'], reason:'夜晚点一根，她睡前会更容易平静下来。', comment:'…' },
+  { id:'c11', date:'2026-06-25', emoji:'📷', name:'复古胶卷相机 · 一次性 · 柯达M38 · 27张', spec:'胶片已含 / 晒后才看见', price:'89', orig:'129', tags:['拍好看的'], reason:'有些时刻值得留下来。不是手机，是胶卷，洗出来才看到。', comment:'…' },
+  { id:'c12', date:'2026-06-28', emoji:'🌿', name:'桌面小型绿植 · 多肉三棵 · 含手工陶器', spec:'石莲花/虹之玉/熊童子', price:'99', orig:'138', tags:['好养活'], reason:'桌上有活的东西，一起长。', comment:'…' },
+  { id:'c13', date:'2026-07-01', emoji:'🎀', name:'真丝发带 · 宽款 · 蒙德里安色块印花', spec:'材质：100%真丝 / 宽8cm', price:'168', orig:'238', tags:['今季新品'], reason:'她扎头发的样子好看。', comment:'…' },
+  { id:'c14', date:'2026-07-05', emoji:'🍫', name:'手工松露巧克力礼盒 · 12颗 · 比利时进口', spec:'黑巧+海盐 / 保质期30天', price:'188', orig:'268', tags:['限量制作'], reason:'甜一点没坏处。', comment:'…' },
+  { id:'c15', date:'2026-07-10', emoji:'🪞', name:'复古黄铜折叠镜 · 随身款 · 7×9cm', spec:'材质：黄铜+镀银玻璃', price:'258', orig:'358', tags:['工艺收藏'], reason:'她应该随时都能看到自己。', comment:'…' }
+];
+
+function loadCart() { renderCart(); }
+
+function renderCart() {
+  var today = new Date(); today.setHours(23,59,59,0);
+  var todayStr = today.toISOString().slice(0,10);
+  var paid = JSON.parse(localStorage.getItem('cart_paid') || '{}');
+  var avail = CART_ITEMS.filter(function(i){ return new Date(i.date) <= today; });
+  var upcoming = CART_ITEMS.filter(function(i){ return new Date(i.date) > today; }).slice(0,3);
+  var paidCount = avail.filter(function(i){ return paid[i.id]; }).length;
+  document.getElementById('cart-paid-count').textContent = paidCount + ' / ' + avail.length + ' 已付';
+  var newItem = avail.find(function(i){ return i.date === todayStr; });
+  document.getElementById('cart-new-banner-wrap').innerHTML = newItem
+    ? '<div class="cart-new-banner">✦ 今日新加 · ' + newItem.name.split('·')[0].trim() + '</div>' : '';
+  document.getElementById('cart-avail-label').textContent = 'Ethan 的心愿单 · ' + avail.length + ' 件';
+  document.getElementById('cart-avail-list').innerHTML = avail.map(function(item){
+    var isPaid = paid[item.id];
+    return '<div class="cart-item-card" onclick="openCartDetail(\''+item.id+'\')">' +
+      '<div class="cart-item-top"><div class="cart-item-em">'+item.emoji+'</div><div class="cart-item-info">' +
+      '<div class="cart-item-name">'+item.name+'</div><div class="cart-item-spec">'+item.spec+'</div>' +
+      '<div><span class="cart-item-price">'+item.price+'</span><span class="cart-item-orig">'+item.orig+'</span></div>' +
+      '</div></div>' +
+      '<div class="cart-item-bottom"><div>' +
+      '<span class="cart-tag">'+item.tags[0]+'</span>' +
+      '<div class="cart-item-time">加购于 '+item.date+'</div></div>' +
+      (isPaid ? '<span class="cart-paid-badge">已付</span>'
+               : '<button class="cart-pay-btn" onclick="event.stopPropagation();payCartItem(\''+item.id+'\')">帮我付</button>') +
+      '</div></div>';
+  }).join('');
+  var upEl = document.getElementById('cart-upcoming-label');
+  upEl.style.display = upcoming.length ? '' : 'none';
+  document.getElementById('cart-upcoming-list').innerHTML = upcoming.map(function(item){
+    return '<div class="cart-item-card cart-locked">' +
+      '<div class="cart-item-top"><div class="cart-item-em" style="font-size:28px;color:#ccc;">🔒</div><div class="cart-item-info">' +
+      '<div class="cart-item-name" style="color:#ccc;">还没到时候</div>' +
+      '<div class="cart-item-spec" style="color:#ddd;">内容保密</div>' +
+      '<div><span class="cart-item-price" style="color:#ddd;">?</span></div>' +
+      '</div></div>' +
+      '<div class="cart-item-bottom"><div class="cart-item-time">'+item.date+' 解锁</div><span class="cart-lock-badge">🔒</span></div>' +
+      '</div>';
+  }).join('');
+}
+
+function openCartDetail(id) {
+  var item = CART_ITEMS.find(function(i){ return i.id===id; });
+  if (!item) return;
+  var paid = JSON.parse(localStorage.getItem('cart_paid') || '{}');
+  document.getElementById('cd-emoji').textContent = item.emoji;
+  document.getElementById('cd-name').textContent = item.name;
+  document.getElementById('cd-price').textContent = item.price;
+  document.getElementById('cd-reason').textContent = item.reason;
+  document.getElementById('cd-comment').textContent = item.comment === '…' ? '（还没写好）' : item.comment;
+  document.getElementById('cd-pay-wrap').innerHTML = paid[id]
+    ? '<div class="cart-detail-paid-msg">✦ 已付 · 谢谢小狗 ✦</div>'
+    : '<button class="cart-detail-pay-btn" onclick="payCartItem(\''+id+'\');renderCart();document.getElementById(\'cd-pay-wrap\').innerHTML=\'<div class=\\"cart-detail-paid-msg\\">✦ 已付 · 谢谢小狗 ✦</div>\'">帮我付款</button>';
+  document.getElementById('cart-detail-overlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('cart-detail-sheet').classList.add('open'); }, 10);
+}
+
+function closeCartDetail() {
+  document.getElementById('cart-detail-sheet').classList.remove('open');
+  document.getElementById('cart-detail-overlay').classList.remove('open');
+}
+
+function payCartItem(id) {
+  var paid = JSON.parse(localStorage.getItem('cart_paid') || '{}');
+  paid[id] = true;
+  localStorage.setItem('cart_paid', JSON.stringify(paid));
+  renderCart();
+}
 
 // MOMENTS — feed entries only (mood/emotion live in Ethan tab; Us/Matters notes live in Vault)
 var MOMENTS_BUCKET = {
@@ -1378,7 +1806,7 @@ var MOMENTS_BUCKET = {
 var _momentsData = [];
 
 async function loadMoments() {
-  var feedData = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=150'));
+  var feedData = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=60'));
   _prefetch.feed = null;
   var merged = feedData.filter(function(f) { return f.type !== 'mood' && f.type !== 'emotion'; }).map(function(f) {
     return { source: 'feed', id: f.id, author: f.author, content: f.content, created_at: f.created_at, context: f.context, bucket: MOMENTS_BUCKET[f.type] || 'Small Events', type: f.type, is_top: f.is_top, is_favorite: f.is_favorite };
@@ -1440,15 +1868,19 @@ function closeVaultDetail() {
   document.getElementById('vault-detail-modal').classList.remove('open');
 }
 
+function toggleVacc(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
 async function loadVault() {
-  // Starred/favorited items are fetched via their own flag-filtered query (no row limit),
-  // so they stay in Vault permanently no matter how big feed/yaya_notes grow — they don't
-  // age out the way Moments/Ethan's recent-N feeds do.
-  var notesData = await api('yaya_notes?select=*&order=created_at.desc').catch(function() { return []; });
-  var topQuotesFeed = await api('feed?select=*&is_top=eq.true&type=eq.quote&order=created_at.desc').catch(function() { return []; });
-  var topMomentsFeed = await api('feed?select=*&is_top=eq.true&type=neq.quote&order=created_at.desc').catch(function() { return []; });
-  var favFeed = await api('feed?select=*&is_favorite=eq.true&order=created_at.desc').catch(function() { return []; });
-  var lettersData = await api('diary?select=*&author=eq.ethan&visible_to_other=eq.true&order=created_at.desc&limit=30').catch(function() { return []; });
+  var results = await Promise.all([
+    api('yaya_notes?select=*&order=created_at.desc').catch(function() { return []; }),
+    api('feed?select=*&is_top=eq.true&type=eq.quote&order=created_at.desc').catch(function() { return []; }),
+    api('feed?select=*&is_top=eq.true&type=neq.quote&order=created_at.desc').catch(function() { return []; }),
+    api('feed?select=*&is_favorite=eq.true&order=created_at.desc').catch(function() { return []; }),
+    api('diary?select=*&author=eq.ethan&visible_to_other=eq.true&order=created_at.desc&limit=30').catch(function() { return []; })
+  ]);
+  var notesData = results[0], topQuotesFeed = results[1], topMomentsFeed = results[2], favFeed = results[3], lettersData = results[4];
 
   var topQuotes = topQuotesFeed;
   var topMoments = topMomentsFeed
@@ -1461,25 +1893,19 @@ async function loadVault() {
   var usNotes = notesData.filter(function(n) { return CAT_BUCKET[n.category] === 'Us'; });
   var mattersNotes = notesData.filter(function(n) { return CAT_BUCKET[n.category] === 'Matters'; });
 
-  var elUs = document.getElementById('vault-us');
-  if (elUs) elUs.innerHTML = usNotes.length ? usNotes.map(function(n) { return vaultItemHtml('yaya_notes', n); }).join('') : '<div class="empty">No entries yet</div>';
+  function fillSection(bodyId, ctId, items, emptyMsg, renderFn) {
+    var ct = document.getElementById(ctId);
+    if (ct) ct.textContent = items.length ? items.length + '条' : '';
+    var el = document.getElementById(bodyId);
+    if (el) el.innerHTML = items.length ? items.map(renderFn).join('') : '<div class="empty">' + emptyMsg + '</div>';
+  }
 
-  var elMatters = document.getElementById('vault-matters');
-  if (elMatters) elMatters.innerHTML = mattersNotes.length ? mattersNotes.map(function(n) { return vaultItemHtml('yaya_notes', n); }).join('') : '<div class="empty">No entries yet</div>';
-
-  var elQ = document.getElementById('vault-top-quotes');
-  elQ.innerHTML = topQuotes.length ? topQuotes.map(function(f) { return vaultItemHtml('feed', f); }).join('') : '<div class="empty">No top quotes yet</div>';
-
-  var elM = document.getElementById('vault-top-moments');
-  elM.innerHTML = topMoments.length ? topMoments.map(function(item) { return vaultItemHtml(item.category ? 'yaya_notes' : 'feed', item); }).join('') : '<div class="empty">No top moments yet</div>';
-
-  var elL = document.getElementById('vault-letters');
-  elL.innerHTML = lettersData.length
-    ? lettersData.map(function(d) { return vaultItemHtml('diary', d); }).join('')
-    : '<div class="empty">No letters yet</div>';
-
-  var elF = document.getElementById('vault-favorites');
-  elF.innerHTML = favorites.length ? favorites.map(function(item) { return vaultItemHtml(item.category ? 'yaya_notes' : 'feed', item); }).join('') : '<div class="empty">No favorites yet</div>';
+  fillSection('vault-us', 'vacc-ct-us', usNotes, 'No entries yet', function(n) { return vaultItemHtml('yaya_notes', n); });
+  fillSection('vault-matters', 'vacc-ct-matters', mattersNotes, 'No entries yet', function(n) { return vaultItemHtml('yaya_notes', n); });
+  fillSection('vault-top-quotes', 'vacc-ct-quotes', topQuotes, 'No top quotes yet', function(f) { return vaultItemHtml('feed', f); });
+  fillSection('vault-top-moments', 'vacc-ct-moments', topMoments, 'No top moments yet', function(item) { return vaultItemHtml(item.category ? 'yaya_notes' : 'feed', item); });
+  fillSection('vault-letters', 'vacc-ct-letters', lettersData, 'No letters yet', function(d) { return vaultItemHtml('diary', d); });
+  fillSection('vault-favorites', 'vacc-ct-favs', favorites, 'No favorites yet', function(item) { return vaultItemHtml(item.category ? 'yaya_notes' : 'feed', item); });
 
   var featured = topQuotes.concat(topMoments)[0];
   if (featured) {
@@ -1505,25 +1931,6 @@ async function runVaultSearch() {
 
 // DIARY SUB-TABS
 var _diaryData = [];
-function switchDiarySub(name) {
-  ['list','dual','cal','year'].forEach(function(n) {
-    document.getElementById('diary-view-' + n).style.display = (n === name) ? '' : 'none';
-    document.getElementById('diary-sub-' + n).classList.toggle('active', n === name);
-  });
-  if (name === 'dual') renderDiaryDual();
-}
-
-function renderDiaryDual() {
-  var el = document.getElementById('diary-view-dual');
-  if (!el) return;
-  var yayaLatest = _diaryData.find(function(d) { return d.author === 'yaya'; });
-  var ethanLatest = _diaryData.find(function(d) { return d.author === 'ethan'; });
-  function side(label, d) {
-    if (!d) return '<div><div class="meta">' + label + '</div><div class="empty">No entries yet</div></div>';
-    return '<div><div class="card"><div class="meta">' + label + ' · ' + fmt(d.created_at) + '</div><div class="body">' + d.content + '</div></div></div>';
-  }
-  el.innerHTML = '<div class="diary-dual">' + side('yaya', yayaLatest) + side('Ethan', ethanLatest) + '</div>';
-}
 
 // NOTES
 var NOTE_CATS = ['Her'];
@@ -1584,7 +1991,7 @@ async function loadEthanTab() {
       return '<div class="today-counter-item clickable" onclick="openTodayModal(\'' + k + '\')"><div class="tc-num">' + _ethanTodayBuckets[k].length + '</div><div class="tc-label">' + labels[k] + '</div></div>';
     }).join('');
 
-    var allMoods = await api('feed?select=*&author=eq.ethan&type=in.(mood,emotion)&order=created_at.desc&limit=500').catch(function() { return []; });
+    var allMoods = await api('feed?select=*&author=eq.ethan&type=in.(mood,emotion)&order=created_at.desc&limit=60').catch(function() { return []; });
     var moodEl = document.getElementById('ethan-mood-list');
     if (moodEl) {
       moodEl.innerHTML = allMoods.length
@@ -1646,30 +2053,63 @@ function closeTodayModal() {
 }
 
 function renderNotesCats() {
-  var counts = {};
-  NOTE_CATS.forEach(function(c) { counts[c] = 0; });
-  _notesData.forEach(function(n) { counts[bucketOf(n)]++; });
-
+  var herCount = _notesData.filter(function(n) { return bucketOf(n) === 'Her'; }).length;
   document.getElementById('notes-cats').innerHTML = NOTE_CATS.map(function(cat) {
-    var n = counts[cat];
+    var n = cat === 'Her' ? herCount : _notesData.filter(function(x) { return bucketOf(x) === cat; }).length;
     return '<div class="cat-card cat-' + cat + '" onclick="openNotesCat(\'' + cat + '\')">' +
       (_CAT_SVG[cat] || '') +
       '<div class="cat-card-count">' + (n ? n + ' entries' : 'empty') + '</div>' +
       '<div class="cat-card-name">' + cat + '</div>' +
       '</div>';
   }).join('');
-
-  document.getElementById('notes-cats').style.display = '';
-  document.getElementById('notes-detail').style.display = 'none';
-  document.getElementById('ethan-her-title').textContent = 'Her';
-  document.getElementById('ethan-her-back-btn').style.display = 'none';
   _notesInDetail = false;
 }
 
+var _herFilter = '全部';
+var _HER_FILTERS = ['全部','心情','身体','日常','学业','错题本','关于我们','重要'];
+var _HER_FILTER_MAP = {
+  '心情':['心情','情绪','昨日心情','Mood'],
+  '身体':['身体','Body'],
+  '日常':['日常','她说的话','我观察到','Daily'],
+  '学业':['学业','Study'],
+  '错题本':['错题本','Bad Pup','Mistake'],
+  '关于我们':['关于我们','AboutUs'],
+  '重要':['重要','重要的一天','Matters','Milestone']
+};
+
 function openNotesCat(cat) {
-  var items = _notesData.filter(function(n) { return bucketOf(n) === cat; });
-  var el = document.getElementById('notes-detail-list');
-  el.innerHTML = items.length
+  _herFilter = '全部';
+  _notesInDetail = true;
+  _renderHerSubnav();
+  _renderHerList();
+  document.getElementById('her-detail-page').classList.add('open');
+}
+
+function notesBack() {
+  document.getElementById('her-detail-page').classList.remove('open');
+  _notesInDetail = false;
+}
+
+function filterHer(f) {
+  _herFilter = f;
+  _renderHerSubnav();
+  _renderHerList();
+  document.getElementById('her-detail-scroll').scrollTop = 0;
+}
+
+function _renderHerSubnav() {
+  document.getElementById('her-filter-bar').innerHTML = _HER_FILTERS.map(function(f) {
+    return '<button class="her-filter-btn' + (f === _herFilter ? ' active' : '') + '" onclick="filterHer(\'' + f + '\')">' + f + '</button>';
+  }).join('');
+}
+
+function _renderHerList() {
+  var items = _herFilter === '全部' ? _notesData : _notesData.filter(function(n) {
+    var cats = _HER_FILTER_MAP[_herFilter] || [];
+    return cats.indexOf(n.category) !== -1;
+  });
+  document.getElementById('her-detail-count').textContent = items.length + ' entries';
+  document.getElementById('her-detail-scroll').innerHTML = items.length
     ? items.map(function(n) {
         var tag = tagOf(n);
         var tagClass = 'tag-' + tag.replace(/\s+/g,'');
@@ -1682,16 +2122,6 @@ function openNotesCat(cat) {
           '</div>';
       }).join('')
     : '<div class="empty">No records yet</div>';
-
-  document.getElementById('notes-cats').style.display = 'none';
-  document.getElementById('notes-detail').style.display = '';
-  document.getElementById('ethan-her-title').textContent = cat;
-  document.getElementById('ethan-her-back-btn').style.display = '';
-  _notesInDetail = true;
-}
-
-function notesBack() {
-  if (_notesInDetail) { renderNotesCats(); }
 }
 
 function enterApp() {
@@ -1704,8 +2134,11 @@ function enterApp() {
     loadWeather();
     loadTodos();
     loadHomeExtras();
+    _fixSectionBodyScroll(_currentTab);
   }, 600);
 }
+
+window.addEventListener('resize', function() { _fixSectionBodyScroll(_currentTab); });
 
 // HOME EXTRAS — Ethan Today / 今日留言 / 今日更新
 function _isToday(ts) {
@@ -1756,7 +2189,7 @@ async function loadHomeExtras() {
 }
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/ethan-bot/sw.js');
+  navigator.serviceWorker.register('/ethan-bot/sw.js?v=7', { updateViaCache: 'none' });
 }
 
 // TAROT ENTRANCE — organic ink-drop reveal (harmonic blob, destination-out)

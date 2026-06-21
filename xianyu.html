@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ethan在逛闲鱼</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f5f5f5; font-family: -apple-system, 'PingFang SC', sans-serif; font-size: 14px; color: #333; }
+
+  .topbar { background: #fff; padding: 10px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 50; }
+  .topbar-fish { font-size: 22px; }
+  .topbar-title { font-size: 16px; font-weight: 700; color: #333; flex: 1; }
+  .topbar-sub { font-size: 11px; color: #bbb; }
+  .search-bar { background: #f7f7f7; margin: 10px 12px; border-radius: 20px; display: flex; align-items: center; padding: 9px 14px; gap: 8px; }
+  .search-bar input { border: none; background: none; outline: none; font-size: 14px; flex: 1; color: #888; }
+  .search-icon { color: #bbb; font-size: 16px; }
+
+  .section-label { font-size: 12px; color: #999; padding: 10px 14px 6px; letter-spacing: .04em; }
+  .section-label strong { color: #ff5722; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 10px; }
+  .card { background: #fff; border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .card:active { opacity: .9; }
+  .card-img { background: #fafafa; padding: 20px 10px; text-align: center; font-size: 52px; border-bottom: 1px solid #f5f5f5; position: relative; }
+  .card-cond { position: absolute; top: 8px; left: 8px; background: rgba(255,87,34,.12); color: #ff5722; font-size: 10px; padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(255,87,34,.2); }
+  .card-body { padding: 10px 11px 12px; }
+  .card-name { font-size: 13px; line-height: 1.35; color: #222; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-price { font-size: 18px; font-weight: 700; color: #ff5722; }
+  .card-price::before { content: '¥'; font-size: 12px; }
+  .card-seller { font-size: 11px; color: #bbb; margin-top: 5px; display: flex; align-items: center; gap: 4px; }
+  .card-seller-dot { width: 14px; height: 14px; background: #f0e8e8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; flex-shrink: 0; }
+  .card-tag { display: inline-block; font-size: 10px; color: #bbb; background: #f8f8f8; border-radius: 3px; padding: 1px 5px; margin-top: 5px; }
+
+  .spacer { height: 30px; }
+
+  /* DETAIL */
+  #overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; display: none; }
+  #overlay.open { display: block; }
+  #sheet { position: fixed; inset: 0; z-index: 101; background: #f5f5f5; overflow-y: auto; -webkit-overflow-scrolling: touch; transform: translateX(100%); transition: transform .25s cubic-bezier(.4,0,.2,1); }
+  #sheet.open { transform: translateX(0); }
+
+  .sheet-topbar { background: #fff; padding: 14px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 10; }
+  .sheet-back { font-size: 22px; color: #333; cursor: pointer; padding: 0 4px; background: none; border: none; }
+  .sheet-title { font-size: 15px; font-weight: 600; flex: 1; }
+  .sheet-img { background: #fff; padding: 30px 20px; text-align: center; font-size: 80px; border-bottom: 1px solid #eee; position: relative; }
+  .sheet-img-cond { position: absolute; top: 14px; left: 14px; background: rgba(255,87,34,.12); color: #ff5722; font-size: 12px; padding: 3px 9px; border-radius: 5px; border: 1px solid rgba(255,87,34,.2); }
+  .sheet-price-bar { background: #fff; padding: 14px 16px; margin-bottom: 8px; }
+  .sheet-price { font-size: 26px; font-weight: 700; color: #ff5722; }
+  .sheet-price::before { content: '¥'; font-size: 16px; }
+  .sheet-price-orig { font-size: 13px; color: #ccc; text-decoration: line-through; margin-left: 8px; }
+  .sheet-price-orig::before { content: '¥'; }
+  .sheet-item-name { font-size: 16px; font-weight: 500; color: #222; margin-top: 6px; line-height: 1.4; }
+
+  .sheet-seller { background: #fff; margin-bottom: 8px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .seller-avatar { width: 40px; height: 40px; background: #fde8e4; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .seller-name { font-size: 14px; font-weight: 500; color: #333; }
+  .seller-sub { font-size: 11px; color: #bbb; margin-top: 2px; }
+
+  .sheet-section { background: #fff; margin-bottom: 8px; padding: 16px; }
+  .sheet-section-title { font-size: 11px; letter-spacing: .12em; color: #bbb; text-transform: uppercase; margin-bottom: 10px; }
+  .sheet-section-body { font-size: 14px; line-height: 1.8; color: #444; }
+  .sheet-section-body.ethan { color: #8B1E2F; border-left: 3px solid rgba(139,30,47,.25); padding-left: 12px; font-style: italic; }
+
+  .sheet-bottom { background: #fff; position: sticky; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid #eee; display: flex; gap: 10px; }
+  .btn-want { flex: 1; background: #ff5722; color: #fff; border: none; border-radius: 22px; padding: 13px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .btn-want.wanted { background: #eee; color: #aaa; }
+  .btn-msg { width: 50px; height: 50px; background: #f7f7f7; border: none; border-radius: 50%; font-size: 22px; cursor: pointer; }
+
+  .wanted-label { text-align: center; font-size: 12px; color: #bbb; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-fish">🐟</span>
+  <div>
+    <div class="topbar-title">Ethan 的收藏夹</div>
+    <div class="topbar-sub">他在逛闲鱼</div>
+  </div>
+</div>
+<div class="search-bar">
+  <span class="search-icon">🔍</span>
+  <input type="text" placeholder="搜索 Ethan 的收藏" disabled>
+</div>
+
+<div class="section-label">他看中了 <strong>8</strong> 件二手，每件都有理由</div>
+<div class="grid" id="grid"></div>
+<div class="spacer"></div>
+
+<div id="overlay" onclick="closeSheet()"></div>
+<div id="sheet">
+  <div class="sheet-topbar">
+    <button class="sheet-back" onclick="closeSheet()">‹</button>
+    <span class="sheet-title">商品详情</span>
+  </div>
+  <div class="sheet-img" id="s-img">
+    <span id="s-emoji"></span>
+    <span class="sheet-img-cond" id="s-cond"></span>
+  </div>
+  <div class="sheet-price-bar">
+    <div><span class="sheet-price" id="s-price"></span><span class="sheet-price-orig" id="s-orig"></span></div>
+    <div class="sheet-item-name" id="s-name"></div>
+  </div>
+  <div class="sheet-seller">
+    <div class="seller-avatar" id="s-avatar"></div>
+    <div>
+      <div class="seller-name" id="s-seller"></div>
+      <div class="seller-sub" id="s-seller-sub"></div>
+    </div>
+  </div>
+  <div class="sheet-section">
+    <div class="sheet-section-title">卖家说</div>
+    <div class="sheet-section-body" id="s-seller-say"></div>
+  </div>
+  <div class="sheet-section">
+    <div class="sheet-section-title">Ethan 为什么想要</div>
+    <div class="sheet-section-body ethan" id="s-ethan-say"></div>
+  </div>
+  <div style="height:90px;"></div>
+  <div class="sheet-bottom">
+    <button class="btn-msg" onclick="toggleWant()">💬</button>
+    <button class="btn-want" id="want-btn" onclick="toggleWant()">我想要</button>
+  </div>
+</div>
+
+<script>
+var items = [
+  {
+    emoji: '⏰', cond: '八成新', price: '25', orig: '68',
+    name: '老式机械闹钟 · 声音很大 · 保证叫醒',
+    seller: '睡不好的前任', sellerSub: '信用分 98 · 宝贝已卖 3',
+    sellerSay: '换了个不用闹钟的男友，每天他先起来叫醒我。闹钟失业了，不留纪念，想换点快递费。',
+    ethanSay: '她每天定七个闹钟一个都起不来。这个声音大，比手机真实。放她枕边试试看。',
+    tag: '保证能响'
+  },
+  {
+    emoji: '📜', cond: '九五新', price: '8', orig: '30',
+    name: '信纸一叠 · 米白色 · 26张未用',
+    seller: '写信的人', sellerSub: '信用分 95 · 宝贝已卖 11',
+    sellerSay: '本来想写信，对方说"发微信就好了"，信纸一直压着，放着也是放着，转让给还相信手写的人。',
+    ethanSay: '有些话发微信太轻。买来存着，等到值得写的时候。',
+    tag: '未拆封'
+  },
+  {
+    emoji: '🎵', cond: '七成新', price: '68', orig: '200',
+    name: '随身听 + 磁带两盘 · 90年代款',
+    seller: '分手后的人', sellerSub: '信用分 92 · 宝贝已卖 7',
+    sellerSay: '磁带是他选的歌，听完了心里不舒服，随身听也就懒得用了。机器没问题，就是见了难受。',
+    ethanSay: '磁带里的歌单是别人爱情的截面。好奇一个人会为另一个人选什么歌。',
+    tag: '磁带已含'
+  },
+  {
+    emoji: '📔', cond: '半成新', price: '5', orig: '28',
+    name: '日记本 · 后半本写满 · 前半本空白',
+    seller: '不写日记的人了', sellerSub: '信用分 89 · 宝贝已卖 2',
+    sellerSay: '从后往前写的，写完了就是写完了。前半本空着，留给下一段开始，但我已经决定不再记了。',
+    ethanSay: '从中间开始写，也挺好的。不需要从头。',
+    tag: '前半本空白'
+  },
+  {
+    emoji: '🧳', cond: '九成新', price: '50', orig: '380',
+    name: '行李箱 · 20寸 · 密码已忘 · 外观完好',
+    seller: '不再出发的人', sellerSub: '信用分 97 · 宝贝已卖 15',
+    sellerSay: '密码是纪念日，纪念日过去了，密码也记不住了。箱子没坏，只是打不开。',
+    ethanSay: '我来破解。知道密码是纪念日，就知道从哪里开始试了。',
+    tag: '密码待破'
+  },
+  {
+    emoji: '☂️', cond: '六成新', price: '10', orig: '45',
+    name: '折叠伞 · 断了一根骨架 · 撑开还是圆的',
+    seller: '淋过雨的人', sellerSub: '信用分 91 · 宝贝已卖 6',
+    sellerSay: '那根骨架断在最后一次大雨里。伞还能撑，只是有一处会漏。反正都撑着了，漏哪里自己注意。',
+    ethanSay: '知道哪里漏，绕开那个方向就行。知道问题在哪，比什么都好。',
+    tag: '漏一处'
+  },
+  {
+    emoji: '📚', cond: '六成新', price: '12', orig: '52',
+    name: '英汉词典 · 有铅笔划线 · 部分页有注释',
+    seller: '考完试的人', sellerSub: '信用分 96 · 宝贝已卖 29',
+    sellerSay: '划了很多单词，后来都忘了。词典本来是记忆的，记不住就没用了，卖了换新的。',
+    ethanSay: '想看看她划过哪些字。猜她当时在想什么。',
+    tag: '有划线'
+  },
+  {
+    emoji: '♟️', cond: '八成新', price: '30', orig: '120',
+    name: '围棋盘 · 少一枚白棋 · 棋谱完整',
+    seller: '下棋下了一半的人', sellerSub: '信用分 88 · 宝贝已卖 4',
+    sellerSay: '下到一半吵架了，一枚白棋被她作为战利品带走，剩下棋盘和遗憾。棋谱本还在，局没下完。',
+    ethanSay: '少一枚才有意思。下棋不需要完整，需要知道少了什么。',
+    tag: '少一枚'
+  }
+];
+
+var wanted = JSON.parse(localStorage.getItem('xy_want') || '{}');
+var openIdx = -1;
+
+function render() {
+  document.getElementById('grid').innerHTML = items.map(function(item, i) {
+    return '<div class="card" onclick="openSheet('+i+')">' +
+      '<div class="card-img"><span class="card-cond">'+item.cond+'</span>'+item.emoji+'</div>' +
+      '<div class="card-body">' +
+      '<div class="card-name">'+item.name+'</div>' +
+      '<div class="card-price">'+item.price+'</div>' +
+      '<div class="card-seller"><span class="card-seller-dot">👤</span>'+item.seller+'</div>' +
+      '<span class="card-tag">'+item.tag+'</span>' +
+      '</div></div>';
+  }).join('');
+}
+
+function openSheet(i) {
+  openIdx = i;
+  var item = items[i];
+  document.getElementById('s-emoji').textContent = item.emoji;
+  document.getElementById('s-cond').textContent = item.cond;
+  document.getElementById('s-price').textContent = item.price;
+  document.getElementById('s-orig').textContent = item.orig;
+  document.getElementById('s-name').textContent = item.name;
+  document.getElementById('s-avatar').textContent = item.emoji;
+  document.getElementById('s-seller').textContent = item.seller;
+  document.getElementById('s-seller-sub').textContent = item.sellerSub;
+  document.getElementById('s-seller-say').textContent = item.sellerSay;
+  document.getElementById('s-ethan-say').textContent = item.ethanSay;
+  var btn = document.getElementById('want-btn');
+  btn.textContent = wanted[i] ? '已想要 ✓' : '我想要';
+  btn.className = 'btn-want' + (wanted[i] ? ' wanted' : '');
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeSheet() {
+  document.getElementById('sheet').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function toggleWant() {
+  if (openIdx < 0) return;
+  wanted[openIdx] = !wanted[openIdx];
+  localStorage.setItem('xy_want', JSON.stringify(wanted));
+  var btn = document.getElementById('want-btn');
+  btn.textContent = wanted[openIdx] ? '已想要 ✓' : '我想要';
+  btn.className = 'btn-want' + (wanted[openIdx] ? ' wanted' : '');
+}
+
+render();
+</script>
+</body>
+</html>
