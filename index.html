@@ -577,16 +577,16 @@
   .ethan-her-tag { padding: 5px 12px; border-radius: 14px; font-size: 11px; border: 1px solid rgba(201,168,76,.3); background: rgba(255,253,249,.9); cursor: pointer; color: var(--text-2); font-family: 'Cinzel', sans-serif; letter-spacing: .04em; }
   .ethan-her-tag.active { background: linear-gradient(135deg,#8B1E2F,#A02540); color: #F4EAD4; border-color: transparent; }
   /* ETHAN CHIBI WALKER */
-  .ethan-hero { display: flex; align-items: flex-start; padding: 0; gap: 10px; }
+  .ethan-hero { display: flex; align-items: flex-start; padding: 12px 16px 0; gap: 0; }
   .ethan-chibi-box { flex: 0 0 128px; display: flex; align-items: flex-start; justify-content: center; }
-  .ethan-chibi-img { width: 120px; height: 218px; image-rendering: pixelated; image-rendering: crisp-edges; display: block; } to { background-position: -1250px 0; } }
-  .ethan-hero-right { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; padding-bottom: 4px; gap: 2px; }
-  .ethan-hero-right .ethan-section-label { margin: 0 0 6px; }
-  .ethan-hero-counters { display: flex; flex-direction: column; gap: 4px; }
-  .ethan-hero-counter { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: rgba(201,168,76,.08); border: 1px solid rgba(201,168,76,.15); cursor: pointer; transition: .15s; }
-  .ethan-hero-counter:active { background: rgba(201,168,76,.18); }
-  .ehc-num { font-size: 20px; font-weight: 600; color: #c9a96e; min-width: 28px; font-family: 'Cinzel', sans-serif; }
-  .ehc-label { font-size: 11px; color: rgba(240,230,210,.7); letter-spacing: .08em; font-family: 'Cinzel', sans-serif; text-transform: uppercase; }
+  .ethan-chibi-img { width: 120px; height: 218px; image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  .ethan-today-col { flex: 1; margin-left: 10px; display: flex; flex-direction: column; gap: 0; }
+  .ethan-today-col .ethan-section-label { text-align: center; margin: 5px 0; }
+  .ethan-today-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .ethan-hero-counter { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 96px; border-radius: 12px; background: rgba(201,168,76,.08); border: 1px solid rgba(201,168,76,.15); cursor: pointer; transition: .15s; }
+  .ethan-hero-counter:active { background: rgba(201,168,76,.2); }
+  .ehc-num { font-size: 26px; font-weight: 700; color: #c9a96e; font-family: 'Cinzel', sans-serif; line-height: 1; }
+  .ehc-label { font-size: 10px; color: #9c7a30; letter-spacing: .06em; font-family: 'Cinzel', sans-serif; text-transform: uppercase; margin-top: 6px; }
 
   /* TIMELINE (Moments) */
   .timeline { padding: 4px 16px 24px; position: relative; }
@@ -810,13 +810,15 @@
         <div class="ethan-chibi-box">
           <img class="ethan-chibi-img" src="data:image/png;base64,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" />
         </div>
-        <div class="ethan-hero-right">
+        <div class="ethan-today-col" id="ethan-today-counters">
+          <div class="ethan-today-row">
+            <div class="ethan-hero-counter" onclick="openTodayModal('us_moment')"><span class="ehc-num" id="ehc-us_moment">0</span><span class="ehc-label">Us Moment</span></div>
+            <div class="ethan-hero-counter" onclick="openTodayModal('mood')"><span class="ehc-num" id="ehc-mood">0</span><span class="ehc-label">Mood</span></div>
+          </div>
           <div class="ethan-section-label">今 日 更 新</div>
-          <div class="ethan-hero-counters" id="ethan-today-counters">
-            <div class="ethan-hero-counter" onclick="openTodayModal('us_moment')"><span class="ehc-num">0</span><span class="ehc-label">Us Moment</span></div>
-            <div class="ethan-hero-counter" onclick="openTodayModal('mood')"><span class="ehc-num">0</span><span class="ehc-label">Mood</span></div>
-            <div class="ethan-hero-counter" onclick="openNotesCat('Her')"><span class="ehc-num">0</span><span class="ehc-label">Her</span></div>
-            <div class="ethan-hero-counter" onclick="openTodayModal('us')"><span class="ehc-num">0</span><span class="ehc-label">Us</span></div>
+          <div class="ethan-today-row">
+            <div class="ethan-hero-counter" onclick="openNotesCat('Her')"><span class="ehc-num" id="ehc-her">0</span><span class="ehc-label">Her</span></div>
+            <div class="ethan-hero-counter" onclick="openTodayModal('us')"><span class="ehc-num" id="ehc-us">0</span><span class="ehc-label">Us</span></div>
           </div>
         </div>
       </div>
@@ -2005,12 +2007,10 @@ async function loadEthanTab() {
     _ethanTodayBuckets.her = notesData.filter(function(n) { return bucketOf(n) === 'Her' && _isToday(n.created_at || n.date_ref); });
     _ethanTodayBuckets.us = notesData.filter(function(n) { return bucketOf(n) === 'Us' && _isToday(n.created_at || n.date_ref); });
 
-    var row = document.getElementById('ethan-today-counters');
-    var labels = { us_moment: 'Us Moment', mood: 'Mood', her: 'Her', us: 'Us' };
-    row.innerHTML = Object.keys(labels).map(function(k) {
-      var fn = k === 'her' ? 'openNotesCat(\'Her\')' : 'openTodayModal(\'' + k + '\')';
-      return '<div class="ethan-hero-counter" onclick="' + fn + '"><span class="ehc-num">' + _ethanTodayBuckets[k].length + '</span><span class="ehc-label">' + labels[k] + '</span></div>';
-    }).join('');
+    ['us_moment', 'mood', 'her', 'us'].forEach(function(k) {
+      var el = document.getElementById('ehc-' + k);
+      if (el) el.textContent = _ethanTodayBuckets[k].length;
+    });
 
     var allMoods = await api('feed?select=*&author=eq.ethan&type=in.(mood,emotion)&order=created_at.desc&limit=60').catch(function() { return []; });
     var moodEl = document.getElementById('ethan-mood-list');
