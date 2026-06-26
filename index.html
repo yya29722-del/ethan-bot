@@ -197,7 +197,10 @@
   #tab-diary, #tab-moments, #tab-vault, #tab-arcade, #tab-tarot, #tab-cart { position: relative; }
   #tab-ethan.active { display:flex; flex-direction:column; }
   #tab-ethan .tab-section-header { flex-shrink:0; }
-  #tab-ethan .section-body { padding:0; display:flex; flex-direction:column; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; box-sizing:border-box; }
+  #tab-ethan .section-body { padding:0; display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden; box-sizing:border-box; }
+  .ethan-top { flex: 0 0 auto; }
+  .ethan-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #ethan-mood-list { padding: 4px 16px 24px; }
   .cat-grid { display:flex; flex-direction:column; gap:8px; }
   .cat-card {
     flex:1; min-height:0; border-radius:18px; padding:20px 24px; cursor:pointer;
@@ -805,6 +808,7 @@
       <h2>Ethan</h2>
     </div>
     <div class="section-body">
+      <div class="ethan-top">
       <!-- Hero: chibi + today counters -->
       <div class="ethan-hero">
         <div class="ethan-chibi-box">
@@ -833,10 +837,12 @@
         <div class="empty">—</div>
       </div>
       <div class="ethan-section-label">M O O D</div>
-      <div id="ethan-mood-list"><div class="empty">No moods yet</div></div>
-
-      <div class="ethan-section-label">Her</div>
-      <div id="notes-cats" class="cat-grid"></div>
+      </div><!-- /ethan-top -->
+      <div class="ethan-scroll">
+        <div id="ethan-mood-list"><div class="empty">No moods yet</div></div>
+        <div class="ethan-section-label">Her</div>
+        <div id="notes-cats" class="cat-grid"></div>
+      </div><!-- /ethan-scroll -->
     </div>
   </div>
 
