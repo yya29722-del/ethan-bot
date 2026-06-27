@@ -54,10 +54,16 @@ namespace EthanBot
 
             // Remove from all locations first
             foreach (var loc in Game1.locations)
-                loc.characters.RemoveAll(c => c.Name == "EthanCompanion");
+            {
+                var toRemove = new List<NPC>();
+                foreach (var c in loc.characters)
+                    if (c.Name == "EthanCompanion") toRemove.Add(c);
+                foreach (var c in toRemove)
+                    loc.characters.Remove(c);
+            }
             ethanNpc = null;
 
-            var startTile = new Vector2(Game1.player.getTileX() + 2, Game1.player.getTileY());
+            var startTile = new Vector2(Game1.player.TilePoint.X + 2, Game1.player.TilePoint.Y);
             var startPos = startTile * 64f;
 
             try
@@ -187,8 +193,8 @@ namespace EthanBot
                     weather = Game1.isRaining ? "rainy" : "sunny",
                     player_name = player.Name,
                     player_location = Game1.currentLocation?.Name ?? "Unknown",
-                    player_x = player.getTileX(),
-                    player_y = player.getTileY(),
+                    player_x = player.TilePoint.X,
+                    player_y = player.TilePoint.Y,
                     player_health = player.health,
                     player_stamina = (int)player.stamina,
                     player_stamina_max = player.maxStamina.Value,
