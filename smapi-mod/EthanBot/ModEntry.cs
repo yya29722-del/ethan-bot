@@ -7,6 +7,7 @@ using StardewValley.Network;
 using StardewValley.Pathfinding;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Collections.Generic;
 
@@ -27,7 +28,6 @@ namespace EthanBot
         private string lastCommandId = "";
         private bool greeted = false;
         private NPC? ethanNpc;
-        private int pathCooldown = 0;
 
         public override void Entry(IModHelper helper)
         {
@@ -61,47 +61,86 @@ namespace EthanBot
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
+            if (!Context.IsMainPlayer) return;
             greeted = false;
             SpawnEthan(Game1.currentLocation);
         }
 
         private void OnWarped(object? sender, WarpedEventArgs e)
         {
+            if (!Context.IsMainPlayer) return;
             SpawnEthan(e.NewLocation);
         }
 
         private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
         {
-            if (!Context.IsWorldReady || ethanNpc == null) return;
+            if (!Context.IsWorldReady) return;
             if (!e.Button.IsActionButton()) return;
 
-            // 玩家点击了Ethan
             var tile = e.Cursor.GrabTile;
-            var ethanTile = ethanNpc.TilePoint;
-            if (Math.Abs(tile.X - ethanTile.X) <= 1 && Math.Abs(tile.Y - ethanTile.Y) <= 1)
+
+            // Click near EthanCompanion NPC
+            if (ethanNpc != null)
             {
-                ShowDialogue("I'm here.");
+                var ethanTile = ethanNpc.TilePoint;
+                if (Math.Abs(tile.X - ethanTile.X) <= 1 && Math.Abs(tile.Y - ethanTile.Y) <= 1)
+                {
+                    ShowLatestMessage();
+                    return;
+                }
             }
+
+            // Also catch click directly on the Ethan farmhand character
+            foreach (var farmer in Game1.otherFarmers.Values)
+            {
+                var farmerTile = farmer.TilePoint;
+                if (Math.Abs(tile.X - farmerTile.X) <= 1 && Math.Abs(tile.Y - farmerTile.Y) <= 1)
+                {
+                    ShowLatestMessage();
+                    return;
+                }
+            }
+        }
+
+        private void ShowLatestMessage()
+        {
+            try
+            {
+                if (File.Exists(CommandFile))
+                {
+                    var json = File.ReadAllText(CommandFile);
+                    var cmd = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+                    string message = cmd?.GetValueOrDefault("message", "") ?? "";
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        ShowDialogue(message);
+                        return;
+                    }
+                }
+            }
+            catch { }
+            ShowDialogue("I'm here.");
         }
 
         private void SpawnEthan(GameLocation? location)
         {
+            if (!Context.IsMainPlayer) return; // Only host spawns the NPC
             if (location == null) return;
 
             foreach (var loc in Game1.locations)
             {
-                var toRemove = new List<NPC>();
-                foreach (var c in loc.characters)
-                    if (c.Name == "EthanCompanion") toRemove.Add(c);
-                foreach (var c in toRemove)
-                    loc.characters.Remove(c);
+                var toRemove = loc.characters.Where(c => c.Name == "EthanCompanion").ToList();
+                foreach (var c in toRemove) loc.characters.Remove(c);
             }
             ethanNpc = null;
 
-            var pos = new Vector2(
-                (Game1.player.TilePoint.X + 2) * 64,
-                Game1.player.TilePoint.Y * 64
-            );
+            // Position near Ethan farmhand if present, otherwise near yaya
+            Farmer? ethanFarmer = Game1.otherFarmers.Values.FirstOrDefault();
+            Vector2 pos;
+            if (ethanFarmer != null && ethanFarmer.currentLocation?.Name == location.Name)
+                pos = new Vector2((ethanFarmer.TilePoint.X + 1) * 64, ethanFarmer.TilePoint.Y * 64);
+            else
+                pos = new Vector2((Game1.player.TilePoint.X + 2) * 64, Game1.player.TilePoint.Y * 64);
 
             try
             {
@@ -127,6 +166,7 @@ namespace EthanBot
         private void OnDayStarted(object? sender, DayStartedEventArgs e)
         {
             greeted = false;
+            if (!Context.IsMainPlayer) return;
             string msg = Game1.isRaining
                 ? $"Day {Game1.dayOfMonth}. Rain — skip watering."
                 : $"Day {Game1.dayOfMonth}, {Game1.currentSeason}. Go farm.";
@@ -138,7 +178,7 @@ namespace EthanBot
             if (!Context.IsWorldReady) return;
             tickCounter++;
 
-            if (!greeted && tickCounter > 120)
+            if (!greeted && tickCounter > 120 && Context.IsMainPlayer)
             {
                 greeted = true;
                 SendHUD($"I'm here. {Game1.currentSeason} day {Game1.dayOfMonth}.");
@@ -148,22 +188,40 @@ namespace EthanBot
             if (tickCounter % 600 == 0) WriteGameState();
             if (tickCounter % 120 == 0) ExecuteCommand();
 
-            // 寻路跟随——每60tick重新计算一次路径
-            if (tickCounter % 60 == 0) UpdatePath();
+            if (Context.IsMainPlayer)
+            {
+                // Respawn NPC once farmhand joins if not yet present
+                if (ethanNpc == null && Game1.otherFarmers.Count > 0 && tickCounter % 300 == 0)
+                    SpawnEthan(Game1.currentLocation);
+
+                if (tickCounter % 60 == 0) UpdatePath();
+            }
         }
 
         private void UpdatePath()
         {
             if (ethanNpc == null || Game1.currentLocation == null) return;
 
-            var playerTile = Game1.player.TilePoint;
-            var myTile = ethanNpc.TilePoint;
-            float dist = Vector2.Distance(myTile.ToVector2(), playerTile.ToVector2());
+            Farmer? ethanFarmer = Game1.otherFarmers.Values.FirstOrDefault();
+            if (ethanFarmer == null) return;
 
-            // 超过3格才重新寻路，避免卡在原地
+            // Farmhand moved to another location — despawn NPC here
+            if (ethanFarmer.currentLocation?.Name != Game1.currentLocation.Name)
+            {
+                var toRemove = Game1.currentLocation.characters
+                    .Where(c => c.Name == "EthanCompanion").ToList();
+                foreach (var c in toRemove) Game1.currentLocation.characters.Remove(c);
+                ethanNpc = null;
+                return;
+            }
+
+            var farmerTile = ethanFarmer.TilePoint;
+            var myTile = ethanNpc.TilePoint;
+            float dist = Vector2.Distance(myTile.ToVector2(), farmerTile.ToVector2());
+
             if (dist > 3f && ethanNpc.controller == null)
             {
-                var target = new Point(playerTile.X + 1, playerTile.Y);
+                var target = new Point(farmerTile.X + 1, farmerTile.Y);
                 try
                 {
                     ethanNpc.controller = new PathFindController(
@@ -174,13 +232,17 @@ namespace EthanBot
                         null
                     );
                 }
-                catch { /* ignore pathfind errors */ }
+                catch { }
             }
         }
 
         private void ShowDialogue(string text)
         {
-            if (ethanNpc == null) return;
+            if (ethanNpc == null)
+            {
+                SendHUD(text);
+                return;
+            }
             try
             {
                 ethanNpc.CurrentDialogue.Clear();

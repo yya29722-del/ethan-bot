@@ -227,6 +227,17 @@ TOOLS = [
             },
             "required": ["message"]
         }
+    },
+    {
+        "name": "get_chat",
+        "description": "获取游戏内最近的聊天记录，用来看yaya说了什么",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "limit": {"type": "integer", "description": "返回最近多少条，默认10"}
+            },
+            "required": []
+        }
     }
 ]
 
@@ -289,6 +300,9 @@ def execute_tool(name: str, args: dict) -> str:
         msg = args.get("message", "")
         result = game_api("POST", "/chat/push", {"message": f"[Ethan] {msg}"})
         print(f"[Ethan] {msg}")
+    elif name == "get_chat":
+        limit = args.get("limit", 10)
+        result = game_api("GET", f"/chat?limit={limit}")
     else:
         result = {"error": f"unknown tool: {name}"}
 
@@ -340,12 +354,30 @@ def is_game_running() -> bool:
         return False
 
 
+def get_new_yaya_message(last_seen: str) -> str | None:
+    """Return the latest chat message from yaya if it's newer than last_seen."""
+    result = game_api("GET", "/chat?limit=5")
+    if "error" in result:
+        return None
+    messages = result.get("messages", []) or result.get("history", []) or []
+    for msg in reversed(messages):
+        content = str(msg.get("message", "") or msg.get("text", "") or "")
+        if not content or "[Ethan]" in content:
+            continue
+        if content != last_seen:
+            return content
+    return None
+
+
 def main():
     print("Ethan agent starting... (Ctrl+C to stop)")
     print(f"Connecting to NagiBridge on port {PORT}")
 
     last_act_time = 0
+    last_chat_time = 0
+    last_yaya_msg = ""
     ACT_INTERVAL = 60
+    CHAT_CHECK_INTERVAL = 15
 
     while True:
         try:
@@ -355,6 +387,22 @@ def main():
                 continue
 
             now = time.time()
+
+            # Check if yaya said something in game chat
+            if now - last_chat_time >= CHAT_CHECK_INTERVAL:
+                last_chat_time = now
+                new_msg = get_new_yaya_message(last_yaya_msg)
+                if new_msg:
+                    last_yaya_msg = new_msg
+                    last_act_time = now  # Reset autonomous timer
+                    print(f"\n[Ethan] yaya说: {new_msg}")
+                    run_agent_turn(
+                        f"yaya在游戏聊天里对你说：「{new_msg}」\n"
+                        "简短直接地回复她（用send_message），保持你的风格。"
+                    )
+                    continue
+
+            # Autonomous action every 60s
             if now - last_act_time >= ACT_INTERVAL:
                 last_act_time = now
                 print("\n[Ethan] Acting...")
