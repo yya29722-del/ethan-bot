@@ -47,8 +47,28 @@ namespace EthanBot
             Monitor.Log($"[EthanBot] Connecting to {ip}...", LogLevel.Info);
             try
             {
-                Game1.client = new LidgrenClient(ip);
-                Monitor.Log("[EthanBot] Client set — watching for connection...", LogLevel.Info);
+                var client = new LidgrenClient(ip);
+                Game1.client = client;
+
+                // Explicitly call connect via reflection
+                var connectMethod = client.GetType().GetMethod("connect",
+                    System.Reflection.BindingFlags.Public |
+                    System.Reflection.BindingFlags.NonPublic |
+                    System.Reflection.BindingFlags.Instance);
+                if (connectMethod != null)
+                {
+                    connectMethod.Invoke(client, null);
+                    Monitor.Log("[EthanBot] connect() called.", LogLevel.Info);
+                }
+                else
+                {
+                    Monitor.Log("[EthanBot] connect() not found — listing methods:", LogLevel.Warn);
+                    foreach (var m in client.GetType().GetMethods(
+                        System.Reflection.BindingFlags.Public |
+                        System.Reflection.BindingFlags.NonPublic |
+                        System.Reflection.BindingFlags.Instance))
+                        Monitor.Log($"  {m.Name}", LogLevel.Info);
+                }
             }
             catch (Exception ex)
             {
