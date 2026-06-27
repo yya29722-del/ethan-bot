@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Menus;
 using StardewValley.Network;
 using StardewValley.Pathfinding;
 using System;
@@ -44,31 +45,13 @@ namespace EthanBot
         private void JoinLanCommand(string cmd, string[] args)
         {
             string ip = args.Length > 0 ? args[0] : "127.0.0.1";
-            Monitor.Log($"[EthanBot] Connecting to {ip}...", LogLevel.Info);
+            Monitor.Log($"[EthanBot] Opening FarmhandMenu for {ip}...", LogLevel.Info);
             try
             {
                 var client = new LidgrenClient(ip);
                 Game1.client = client;
-
-                // Explicitly call connect via reflection
-                var connectMethod = client.GetType().GetMethod("connect",
-                    System.Reflection.BindingFlags.Public |
-                    System.Reflection.BindingFlags.NonPublic |
-                    System.Reflection.BindingFlags.Instance);
-                if (connectMethod != null)
-                {
-                    connectMethod.Invoke(client, null);
-                    Monitor.Log("[EthanBot] connect() called.", LogLevel.Info);
-                }
-                else
-                {
-                    Monitor.Log("[EthanBot] connect() not found — listing methods:", LogLevel.Warn);
-                    foreach (var m in client.GetType().GetMethods(
-                        System.Reflection.BindingFlags.Public |
-                        System.Reflection.BindingFlags.NonPublic |
-                        System.Reflection.BindingFlags.Instance))
-                        Monitor.Log($"  {m.Name}", LogLevel.Info);
-                }
+                Game1.activeClickableMenu = new FarmhandMenu(client);
+                Monitor.Log("[EthanBot] FarmhandMenu opened — select your character.", LogLevel.Info);
             }
             catch (Exception ex)
             {
