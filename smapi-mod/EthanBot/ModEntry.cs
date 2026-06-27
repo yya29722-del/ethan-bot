@@ -48,7 +48,8 @@ namespace EthanBot
             try
             {
                 Game1.client = new LidgrenClient(ip);
-                Monitor.Log("[EthanBot] Client set — SDV will begin connection.", LogLevel.Info);
+                Game1.activeClickableMenu = null;
+                Monitor.Log("[EthanBot] Client set, menu closed — connecting...", LogLevel.Info);
             }
             catch (Exception ex)
             {
