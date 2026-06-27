@@ -45,16 +45,50 @@ else
   echo "  NagiBridge already installed, skipping."
 fi
 
+# ── Mods-ethan (separate Mods dir for Ethan's SMAPI, port 7843) ──────────────
+echo ""
+echo "==> Setting up Ethan's Mods directory (NagiBridge port 7843)..."
+ETHAN_MODS="$HOME/Library/Application Support/Steam/steamapps/common/Stardew Valley/Contents/MacOS/Mods-ethan"
+
+mkdir -p "$ETHAN_MODS/NagiBridge/NagiBridge"
+mkdir -p "$ETHAN_MODS/EthanBot"
+
+# Copy EthanBot into Mods-ethan
+cp "$MODS_DIR/EthanBot/manifest.json" "$ETHAN_MODS/EthanBot/"
+cp "$MODS_DIR/EthanBot/EthanBot.dll"  "$ETHAN_MODS/EthanBot/" 2>/dev/null || true
+
+# Copy NagiBridge and patch port 7842 → 7843 in DLL (stored as UTF-16LE in .NET assembly)
+cp "$MODS_DIR/NagiBridge/NagiBridge/manifest.json" "$ETHAN_MODS/NagiBridge/NagiBridge/"
+cp "$MODS_DIR/NagiBridge/NagiBridge/config.json"   "$ETHAN_MODS/NagiBridge/NagiBridge/"
+python3 - <<'PYEOF'
+import os
+mods = os.path.expanduser(
+    "~/Library/Application Support/Steam/steamapps/common/Stardew Valley/Contents/MacOS/Mods"
+)
+src = f"{mods}/NagiBridge/NagiBridge/NagiBridge.dll"
+dst = os.path.expanduser(
+    "~/Library/Application Support/Steam/steamapps/common/Stardew Valley/Contents/MacOS/Mods-ethan/NagiBridge/NagiBridge/NagiBridge.dll"
+)
+data   = open(src, 'rb').read()
+old    = '7842'.encode('utf-16-le')
+new    = '7843'.encode('utf-16-le')
+count  = data.count(old)
+patched = data.replace(old, new)
+open(dst, 'wb').write(patched)
+print(f"  NagiBridge.dll patched: {count} occurrence(s) of 7842 → 7843")
+PYEOF
+
 # ── Python deps ───────────────────────────────────────────────────────────────
 echo ""
 echo "==> Installing Python dependencies..."
 pip3 install anthropic requests --quiet
 
 echo ""
-echo "╔══════════════════════════════════════════════════════╗"
-echo "║  Done! Restart Stardew Valley.                       ║"
-echo "║                                                      ║"
-echo "║  Then start Ethan:                                   ║"
-echo "║    export ANTHROPIC_API_KEY=sk-ant-...               ║"
-echo "║    python3 ~/ethan-bot/smapi-mod/ethan_agent.py      ║"
-echo "╚══════════════════════════════════════════════════════╝"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  Done! To use:                                               ║"
+echo "║                                                              ║"
+echo "║  1. Start YOUR Stardew Valley (host) normally via Steam.    ║"
+echo "║  2. In YOUR game: Multiplayer → Host a new farm.            ║"
+echo "║  3. Launch Ethan's SMAPI + agent:                           ║"
+echo "║       bash ~/ethan-bot/smapi-mod/launch-ethan.sh            ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
