@@ -1,43 +1,74 @@
-# EthanBot SMAPI Mod
+# EthanBot
 
-让 Ethan 在星露谷里陪你玩。
+Ethan plays Stardew Valley alongside yaya as a real autonomous player.
 
-## 安装步骤（Mac）
+## Architecture
 
-### 1. 安装 .NET 6 SDK
+| Component | What it does |
+|-----------|-------------|
+| **EthanBot** (this mod) | Spawns Ethan as an NPC companion that follows yaya |
+| **NagiBridge** (auto-installed) | Exposes HTTP API so Claude can control the game |
+| **ethan_agent.py** | Claude runs as Ethan, reads game state, executes actions |
 
-去这里下载 Mac 版：https://dotnet.microsoft.com/download/dotnet/6.0
-（选 macOS，Installer，x64 或 Arm64 看你的 Mac）
+## Install (Mac)
 
-装完后打开 Terminal 验证：
+### Prerequisites
+
+.NET SDK (needed to build EthanBot):
 ```bash
-dotnet --version
+brew install dotnet
 ```
 
-### 2. 编译 Mod
-
-```bash
-cd smapi-mod/EthanBot
-dotnet build
-```
-
-编译完成后会在 `bin/Debug/net6.0/` 里生成 `EthanBot.dll`。
-
-### 3. 安装到游戏
-
-把整个 `EthanBot` 文件夹（含 manifest.json + EthanBot.dll）复制到：
-```
-~/Library/Application Support/Steam/steamapps/common/Stardew Valley/Contents/MacOS/Mods/EthanBot/
-```
-
-### 4. 运行（可选：AI 回复）
-
-如果想让 Ethan 根据游戏状态说话，需要运行 Python 监控脚本：
+### One-command install
 
 ```bash
-pip install anthropic
-export ANTHROPIC_API_KEY=sk-ant-你的key
-python3 smapi-mod/ethan-watcher.py
+curl -fsSL https://raw.githubusercontent.com/yya29722-del/ethan-bot/main/smapi-mod/install.sh | bash
 ```
 
-没有这个脚本的话，Mod 也会自动说内置的台词（进入游戏时打招呼、换地图时评论等）。
+This will:
+1. Pull latest code
+2. Build and install EthanBot mod
+3. Download and install NagiBridge mod (prebuilt, no compile needed)
+4. Install Python dependencies
+
+### Start Ethan
+
+After restarting Stardew Valley:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-your-key-here
+python3 ~/ethan-bot/smapi-mod/ethan_agent.py
+```
+
+Ethan will check game state every 60 seconds and decide what to do — farming, mining, talking to yaya.
+
+## What Ethan can do
+
+Via NagiBridge's 18 game tools:
+
+- **Move**: walk anywhere, teleport to any location
+- **Farm**: till soil, plant seeds, water crops, harvest
+- **Mine**: go to the mines, swing pickaxe, collect ore
+- **Shop**: buy from Pierre, Willy, Clint, etc.
+- **Sell**: ship items via the shipping bin
+- **Interact**: talk to NPCs, use machines, open chests
+- **Craft**: make items from inventory
+- **Chat**: send messages to yaya in-game
+
+## How it works
+
+```
+Stardew Valley
+  └── SMAPI
+        ├── EthanBot.dll     → Ethan NPC companion (visual presence)
+        └── NagiBridge.dll   → HTTP server on localhost:7842
+
+ethan_agent.py
+  ├── GET  /state            → read game state
+  ├── POST /move             → walk to tile
+  ├── POST /warp             → teleport
+  ├── POST /tool             → use tool
+  ├── POST /interact         → interact with object/NPC
+  ├── POST /chat/push        → send message in-game
+  └── ... 13 more endpoints
+```
