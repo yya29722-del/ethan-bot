@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Network;
 using StardewValley.Pathfinding;
 using System;
 using System.IO;
@@ -34,6 +35,25 @@ namespace EthanBot
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             helper.Events.Player.Warped += OnWarped;
             helper.Events.Input.ButtonPressed += OnButtonPressed;
+
+            helper.ConsoleCommands.Add("joinlan",
+                "Direct connect to LAN game, bypassing UDP discovery. Usage: joinlan [ip]  (default: 127.0.0.1)",
+                JoinLanCommand);
+        }
+
+        private void JoinLanCommand(string cmd, string[] args)
+        {
+            string ip = args.Length > 0 ? args[0] : "127.0.0.1";
+            Monitor.Log($"[EthanBot] Connecting to {ip}...", LogLevel.Info);
+            try
+            {
+                Game1.client = new LidgrenClient(ip);
+                Monitor.Log("[EthanBot] Client set — SDV will begin connection.", LogLevel.Info);
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log($"[EthanBot] joinlan error: {ex.Message}", LogLevel.Error);
+            }
         }
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
