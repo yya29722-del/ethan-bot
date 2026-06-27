@@ -170,7 +170,7 @@ namespace EthanBot
         {
             try
             {
-                Game1.chatBox?.addMessage($"[Ethan] {message}", new Color(135, 206, 235));
+                Game1.addHUDMessage(new HUDMessage($"Ethan: {message}", HUDMessage.newQuest_type));
                 Monitor.Log($"[EthanBot] {message}", LogLevel.Info);
             }
             catch (Exception ex)
