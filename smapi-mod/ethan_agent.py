@@ -13,8 +13,11 @@ Requires NagiBridge mod installed in Stardew Valley Mods folder.
 import anthropic
 import json
 import os
+import queue
 import requests
+import threading
 import time
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 PORT = 7843
 BASE = f"http://localhost:{PORT}"
@@ -231,6 +234,37 @@ TOOLS = [
 ]
 
 
+CHAT_PORT = 9000
+_incoming: queue.Queue = queue.Queue()
+
+
+class _ChatHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length).decode("utf-8", errors="replace")
+        try:
+            data = json.loads(body)
+            msg = (data.get("message") or data.get("text")
+                   or data.get("content") or body)
+        except Exception:
+            msg = body
+        if msg:
+            print(f"\n[yaya] {msg}")
+            _incoming.put(str(msg))
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ok")
+
+    def log_message(self, *_):
+        pass
+
+
+def _start_chat_server():
+    server = HTTPServer(("localhost", CHAT_PORT), _ChatHandler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    print(f"[Ethan] Chat server on port {CHAT_PORT} — yaya can now send messages in-game")
+
+
 def game_api(method: str, endpoint: str, data: dict = None) -> dict:
     url = f"{BASE}{endpoint}"
     try:
@@ -343,6 +377,7 @@ def is_game_running() -> bool:
 def main():
     print("Ethan agent starting... (Ctrl+C to stop)")
     print(f"Connecting to NagiBridge on port {PORT}")
+    _start_chat_server()
 
     last_act_time = 0
     ACT_INTERVAL = 60
@@ -354,6 +389,20 @@ def main():
                 time.sleep(10)
                 continue
 
+            # yaya sent a message — respond immediately
+            try:
+                yaya_msg = _incoming.get_nowait()
+                print("\n[Ethan] Responding to yaya...")
+                run_agent_turn(
+                    f"yaya在游戏里对你说："{yaya_msg}"\n"
+                    "先用send_message回应她，然后根据她说的决定下一步行动。"
+                )
+                last_act_time = time.time()
+                continue
+            except queue.Empty:
+                pass
+
+            # autonomous action every ACT_INTERVAL seconds
             now = time.time()
             if now - last_act_time >= ACT_INTERVAL:
                 last_act_time = now
