@@ -16,7 +16,7 @@ import os
 import requests
 import time
 
-PORT = 7842
+PORT = int(os.environ.get("NAGI_PORT", "7843"))
 BASE = f"http://localhost:{PORT}"
 
 def _load_api_key() -> str:
