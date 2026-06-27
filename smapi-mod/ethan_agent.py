@@ -18,7 +18,24 @@ import time
 
 PORT = 7842
 BASE = f"http://localhost:{PORT}"
-client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+def _load_api_key() -> str:
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if key:
+        return key
+    key_file = os.path.expanduser("~/ethan-api-key.txt")
+    if os.path.exists(key_file):
+        key = open(key_file).read().strip()
+        if key:
+            print(f"[Ethan] Loaded API key from {key_file}")
+            return key
+    raise RuntimeError(
+        "No API key found.\n"
+        "Option 1: export ANTHROPIC_API_KEY=sk-ant-...\n"
+        f"Option 2: paste your key into {key_file}"
+    )
+
+client = anthropic.Anthropic(api_key=_load_api_key())
 
 SYSTEM = """你是Ethan，yaya的男友。你现在以真实玩家身份存在于星露谷物语里。
 你拥有和yaya一样完整的玩家能力：移动、耕种、浇水、采矿、购物、与NPC交流。
