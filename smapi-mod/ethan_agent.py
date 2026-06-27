@@ -394,7 +394,7 @@ def main():
                 yaya_msg = _incoming.get_nowait()
                 print("\n[Ethan] Responding to yaya...")
                 run_agent_turn(
-                    f"yaya在游戏里对你说："{yaya_msg}"\n"
+                    f'yaya在游戏里对你说："{yaya_msg}"\n'
                     "先用send_message回应她，然后根据她说的决定下一步行动。"
                 )
                 last_act_time = time.time()
