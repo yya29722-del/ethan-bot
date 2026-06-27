@@ -48,8 +48,7 @@ namespace EthanBot
             try
             {
                 Game1.client = new LidgrenClient(ip);
-                Game1.activeClickableMenu = null;
-                Monitor.Log("[EthanBot] Client set, menu closed — connecting...", LogLevel.Info);
+                Monitor.Log("[EthanBot] Client set — watching for connection...", LogLevel.Info);
             }
             catch (Exception ex)
             {
