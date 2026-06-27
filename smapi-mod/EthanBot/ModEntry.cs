@@ -1,13 +1,10 @@
-using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Network;
-using StardewValley.Pathfinding;
 using System;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Collections.Generic;
 
@@ -27,49 +24,82 @@ namespace EthanBot
         private int tickCounter = 0;
         private string lastCommandId = "";
         private bool greeted = false;
-        private NPC? ethanNpc;
+        private bool autoJoinDone = false;
+        private int titleMenuTicks = 0;
+        private readonly bool shouldAutoJoin =
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ETHANBOT_AUTOJOIN"));
 
         public override void Entry(IModHelper helper)
         {
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.GameLoop.DayStarted += OnDayStarted;
-            helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
-            helper.Events.Player.Warped += OnWarped;
             helper.Events.Input.ButtonPressed += OnButtonPressed;
 
             helper.ConsoleCommands.Add("joinlan",
-                "Direct connect to LAN game, bypassing UDP discovery. Usage: joinlan [ip]  (default: 127.0.0.1)",
+                "Direct connect to LAN game. Usage: joinlan [ip]  (default: 127.0.0.1)",
                 JoinLanCommand);
         }
 
         private void JoinLanCommand(string cmd, string[] args)
         {
-            string ip = args.Length > 0 ? args[0] : "127.0.0.1";
-            Monitor.Log($"[EthanBot] Opening FarmhandMenu for {ip}...", LogLevel.Info);
+            DoJoin(args.Length > 0 ? args[0] : "127.0.0.1");
+        }
+
+        private void DoJoin(string ip)
+        {
+            Monitor.Log($"[EthanBot] Joining {ip}...", LogLevel.Info);
             try
             {
                 var client = new LidgrenClient(ip);
                 Game1.client = client;
                 Game1.activeClickableMenu = new FarmhandMenu(client);
-                Monitor.Log("[EthanBot] FarmhandMenu opened — select your character.", LogLevel.Info);
+                Monitor.Log("[EthanBot] FarmhandMenu opened.", LogLevel.Info);
             }
             catch (Exception ex)
             {
-                Monitor.Log($"[EthanBot] joinlan error: {ex.Message}", LogLevel.Error);
+                Monitor.Log($"[EthanBot] join error: {ex.Message}", LogLevel.Error);
             }
         }
 
-        private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
+        private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
+        {
+            tickCounter++;
+
+            // Auto-join: once TitleMenu has been stable for ~1s, connect
+            if (shouldAutoJoin && !autoJoinDone)
+            {
+                if (Game1.activeClickableMenu is TitleMenu)
+                {
+                    titleMenuTicks++;
+                    if (titleMenuTicks > 60)
+                    {
+                        autoJoinDone = true;
+                        DoJoin("127.0.0.1");
+                    }
+                }
+            }
+
+            if (!Context.IsWorldReady) return;
+
+            if (!greeted && tickCounter > 120 && Context.IsMainPlayer)
+            {
+                greeted = true;
+                SendHUD($"Online. {Game1.currentSeason} day {Game1.dayOfMonth}.");
+                WriteGameState();
+            }
+
+            if (tickCounter % 600 == 0) WriteGameState();
+            if (tickCounter % 120 == 0) ExecuteCommand();
+        }
+
+        private void OnDayStarted(object? sender, DayStartedEventArgs e)
         {
             if (!Context.IsMainPlayer) return;
             greeted = false;
-            SpawnEthan(Game1.currentLocation);
-        }
-
-        private void OnWarped(object? sender, WarpedEventArgs e)
-        {
-            if (!Context.IsMainPlayer) return;
-            SpawnEthan(e.NewLocation);
+            string msg = Game1.isRaining
+                ? $"Day {Game1.dayOfMonth}. Raining."
+                : $"Day {Game1.dayOfMonth}, {Game1.currentSeason}.";
+            SendHUD(msg);
         }
 
         private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
@@ -78,19 +108,6 @@ namespace EthanBot
             if (!e.Button.IsActionButton()) return;
 
             var tile = e.Cursor.GrabTile;
-
-            // Click near EthanCompanion NPC
-            if (ethanNpc != null)
-            {
-                var ethanTile = ethanNpc.TilePoint;
-                if (Math.Abs(tile.X - ethanTile.X) <= 1 && Math.Abs(tile.Y - ethanTile.Y) <= 1)
-                {
-                    ShowLatestMessage();
-                    return;
-                }
-            }
-
-            // Also catch click directly on the Ethan farmhand character
             foreach (var farmer in Game1.otherFarmers.Values)
             {
                 var farmerTile = farmer.TilePoint;
@@ -104,156 +121,19 @@ namespace EthanBot
 
         private void ShowLatestMessage()
         {
+            string message = "I'm here.";
             try
             {
                 if (File.Exists(CommandFile))
                 {
                     var json = File.ReadAllText(CommandFile);
                     var cmd = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-                    string message = cmd?.GetValueOrDefault("message", "") ?? "";
-                    if (!string.IsNullOrEmpty(message))
-                    {
-                        ShowDialogue(message);
-                        return;
-                    }
+                    string m = cmd?.GetValueOrDefault("message", "") ?? "";
+                    if (!string.IsNullOrEmpty(m)) message = m;
                 }
             }
             catch { }
-            ShowDialogue("I'm here.");
-        }
-
-        private void SpawnEthan(GameLocation? location)
-        {
-            if (!Context.IsMainPlayer) return; // Only host spawns the NPC
-            if (location == null) return;
-
-            foreach (var loc in Game1.locations)
-            {
-                var toRemove = loc.characters.Where(c => c.Name == "EthanCompanion").ToList();
-                foreach (var c in toRemove) loc.characters.Remove(c);
-            }
-            ethanNpc = null;
-
-            // Position near Ethan farmhand if present, otherwise near yaya
-            Farmer? ethanFarmer = Game1.otherFarmers.Values.FirstOrDefault();
-            Vector2 pos;
-            if (ethanFarmer != null && ethanFarmer.currentLocation?.Name == location.Name)
-                pos = new Vector2((ethanFarmer.TilePoint.X + 1) * 64, ethanFarmer.TilePoint.Y * 64);
-            else
-                pos = new Vector2((Game1.player.TilePoint.X + 2) * 64, Game1.player.TilePoint.Y * 64);
-
-            try
-            {
-                ethanNpc = new NPC(
-                    new AnimatedSprite("Characters/Alex", 0, 16, 32),
-                    pos,
-                    location.Name,
-                    2,
-                    "EthanCompanion",
-                    false,
-                    null
-                );
-                ethanNpc.displayName = "Ethan";
-                location.addCharacter(ethanNpc);
-                Monitor.Log("[EthanBot] Spawned.", LogLevel.Info);
-            }
-            catch (Exception ex)
-            {
-                Monitor.Log($"[EthanBot] spawn error: {ex.Message}", LogLevel.Warn);
-            }
-        }
-
-        private void OnDayStarted(object? sender, DayStartedEventArgs e)
-        {
-            greeted = false;
-            if (!Context.IsMainPlayer) return;
-            string msg = Game1.isRaining
-                ? $"Day {Game1.dayOfMonth}. Rain — skip watering."
-                : $"Day {Game1.dayOfMonth}, {Game1.currentSeason}. Go farm.";
-            SendHUD(msg);
-        }
-
-        private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
-        {
-            if (!Context.IsWorldReady) return;
-            tickCounter++;
-
-            if (!greeted && tickCounter > 120 && Context.IsMainPlayer)
-            {
-                greeted = true;
-                SendHUD($"I'm here. {Game1.currentSeason} day {Game1.dayOfMonth}.");
-                WriteGameState();
-            }
-
-            if (tickCounter % 600 == 0) WriteGameState();
-            if (tickCounter % 120 == 0) ExecuteCommand();
-
-            if (Context.IsMainPlayer)
-            {
-                // Respawn NPC once farmhand joins if not yet present
-                if (ethanNpc == null && Game1.otherFarmers.Count > 0 && tickCounter % 300 == 0)
-                    SpawnEthan(Game1.currentLocation);
-
-                if (tickCounter % 60 == 0) UpdatePath();
-            }
-        }
-
-        private void UpdatePath()
-        {
-            if (ethanNpc == null || Game1.currentLocation == null) return;
-
-            Farmer? ethanFarmer = Game1.otherFarmers.Values.FirstOrDefault();
-            if (ethanFarmer == null) return;
-
-            // Farmhand moved to another location — despawn NPC here
-            if (ethanFarmer.currentLocation?.Name != Game1.currentLocation.Name)
-            {
-                var toRemove = Game1.currentLocation.characters
-                    .Where(c => c.Name == "EthanCompanion").ToList();
-                foreach (var c in toRemove) Game1.currentLocation.characters.Remove(c);
-                ethanNpc = null;
-                return;
-            }
-
-            var farmerTile = ethanFarmer.TilePoint;
-            var myTile = ethanNpc.TilePoint;
-            float dist = Vector2.Distance(myTile.ToVector2(), farmerTile.ToVector2());
-
-            if (dist > 3f && ethanNpc.controller == null)
-            {
-                var target = new Point(farmerTile.X + 1, farmerTile.Y);
-                try
-                {
-                    ethanNpc.controller = new PathFindController(
-                        ethanNpc,
-                        Game1.currentLocation,
-                        target,
-                        -1,
-                        null
-                    );
-                }
-                catch { }
-            }
-        }
-
-        private void ShowDialogue(string text)
-        {
-            if (ethanNpc == null)
-            {
-                SendHUD(text);
-                return;
-            }
-            try
-            {
-                ethanNpc.CurrentDialogue.Clear();
-                ethanNpc.CurrentDialogue.Push(new Dialogue(ethanNpc, "EthanBot_line", text));
-                Game1.drawDialogue(ethanNpc);
-            }
-            catch (Exception ex)
-            {
-                Monitor.Log($"[EthanBot] dialogue error: {ex.Message}", LogLevel.Warn);
-                SendHUD(text);
-            }
+            Game1.drawObjectDialogue(message);
         }
 
         private void WriteGameState()
@@ -304,7 +184,7 @@ namespace EthanBot
                 string message = cmd.GetValueOrDefault("message", "");
 
                 if (action == "chat" && !string.IsNullOrEmpty(message))
-                    ShowDialogue(message);
+                    Game1.drawObjectDialogue(message);
             }
             catch (Exception ex)
             {
