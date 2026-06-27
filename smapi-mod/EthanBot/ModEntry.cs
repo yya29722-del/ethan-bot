@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Pathfinding;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -15,7 +16,6 @@ namespace EthanBot
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             "ethan-bot-state.json"
         );
-
         private string CommandFile => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             "ethan-bot-command.json"
@@ -23,9 +23,9 @@ namespace EthanBot
 
         private int tickCounter = 0;
         private string lastCommandId = "";
-        private string lastLocation = "";
         private bool greeted = false;
         private NPC? ethanNpc;
+        private int pathCooldown = 0;
 
         public override void Entry(IModHelper helper)
         {
@@ -33,26 +33,38 @@ namespace EthanBot
             helper.Events.GameLoop.DayStarted += OnDayStarted;
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             helper.Events.Player.Warped += OnWarped;
+            helper.Events.Input.ButtonPressed += OnButtonPressed;
         }
 
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
             greeted = false;
-            lastLocation = "";
             SpawnEthan(Game1.currentLocation);
         }
 
         private void OnWarped(object? sender, WarpedEventArgs e)
         {
-            // Follow player through location changes
             SpawnEthan(e.NewLocation);
+        }
+
+        private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
+        {
+            if (!Context.IsWorldReady || ethanNpc == null) return;
+            if (!e.Button.IsActionButton()) return;
+
+            // 玩家点击了Ethan
+            var tile = e.Cursor.GrabTile;
+            var ethanTile = ethanNpc.TilePoint;
+            if (Math.Abs(tile.X - ethanTile.X) <= 1 && Math.Abs(tile.Y - ethanTile.Y) <= 1)
+            {
+                ShowDialogue("I'm here.");
+            }
         }
 
         private void SpawnEthan(GameLocation? location)
         {
             if (location == null) return;
 
-            // Remove from all locations first
             foreach (var loc in Game1.locations)
             {
                 var toRemove = new List<NPC>();
@@ -63,14 +75,16 @@ namespace EthanBot
             }
             ethanNpc = null;
 
-            var startTile = new Vector2(Game1.player.TilePoint.X + 2, Game1.player.TilePoint.Y);
-            var startPos = startTile * 64f;
+            var pos = new Vector2(
+                (Game1.player.TilePoint.X + 2) * 64,
+                Game1.player.TilePoint.Y * 64
+            );
 
             try
             {
                 ethanNpc = new NPC(
                     new AnimatedSprite("Characters/Alex", 0, 16, 32),
-                    startPos,
+                    pos,
                     location.Name,
                     2,
                     "EthanCompanion",
@@ -79,7 +93,7 @@ namespace EthanBot
                 );
                 ethanNpc.displayName = "Ethan";
                 location.addCharacter(ethanNpc);
-                Monitor.Log($"[EthanBot] Ethan spawned at {startTile}", LogLevel.Info);
+                Monitor.Log("[EthanBot] Spawned.", LogLevel.Info);
             }
             catch (Exception ex)
             {
@@ -90,14 +104,9 @@ namespace EthanBot
         private void OnDayStarted(object? sender, DayStartedEventArgs e)
         {
             greeted = false;
-            lastLocation = "";
-            string season = Game1.currentSeason;
-            int day = Game1.dayOfMonth;
-            bool raining = Game1.isRaining;
-
-            string msg = raining
-                ? $"第{day}天下雨了。不用浇水，省点体力。"
-                : $"{SeasonCN(season)}第{day}天。去种菜。";
+            string msg = Game1.isRaining
+                ? $"Day {Game1.dayOfMonth}. Rain — skip watering."
+                : $"Day {Game1.dayOfMonth}, {Game1.currentSeason}. Go farm.";
             SendHUD(msg);
         }
 
@@ -106,76 +115,60 @@ namespace EthanBot
             if (!Context.IsWorldReady) return;
             tickCounter++;
 
-            // 进入游戏后打一次招呼
             if (!greeted && tickCounter > 120)
             {
                 greeted = true;
-                SendHUD($"我在。{SeasonCN(Game1.currentSeason)}第{Game1.dayOfMonth}天。");
+                SendHUD($"I'm here. {Game1.currentSeason} day {Game1.dayOfMonth}.");
                 WriteGameState();
             }
 
-            // 每10秒写一次游戏状态
-            if (tickCounter % 600 == 0)
-                WriteGameState();
+            if (tickCounter % 600 == 0) WriteGameState();
+            if (tickCounter % 120 == 0) ExecuteCommand();
 
-            // 每2秒读一次指令
-            if (tickCounter % 120 == 0)
-                ExecuteCommand();
+            // 寻路跟随——每60tick重新计算一次路径
+            if (tickCounter % 60 == 0) UpdatePath();
+        }
 
-            // 跟随玩家
-            if (tickCounter % 2 == 0)
-                FollowPlayer();
+        private void UpdatePath()
+        {
+            if (ethanNpc == null || Game1.currentLocation == null) return;
 
-            // 换地图触发
-            string currentLoc = Game1.currentLocation?.Name ?? "";
-            if (currentLoc != lastLocation && !string.IsNullOrEmpty(lastLocation) && tickCounter > 200)
+            var playerTile = Game1.player.TilePoint;
+            var myTile = ethanNpc.TilePoint;
+            float dist = Vector2.Distance(myTile.ToVector2(), playerTile.ToVector2());
+
+            // 超过3格才重新寻路，避免卡在原地
+            if (dist > 3f && ethanNpc.controller == null)
             {
-                lastLocation = currentLoc;
-                OnLocationChanged(currentLoc);
-            }
-            else if (string.IsNullOrEmpty(lastLocation))
-            {
-                lastLocation = currentLoc;
+                var target = new Point(playerTile.X + 1, playerTile.Y);
+                try
+                {
+                    ethanNpc.controller = new PathFindController(
+                        ethanNpc,
+                        Game1.currentLocation,
+                        target,
+                        -1,
+                        null
+                    );
+                }
+                catch { /* ignore pathfind errors */ }
             }
         }
 
-        private void FollowPlayer()
+        private void ShowDialogue(string text)
         {
             if (ethanNpc == null) return;
             try
             {
-                var playerPos = Game1.player.Position;
-                var myPos = ethanNpc.Position;
-                float dist = Vector2.Distance(playerPos, myPos);
-
-                // 跟随但不贴太近
-                if (dist > 160f && dist < 2000f)
-                {
-                    var dir = playerPos - myPos;
-                    dir.Normalize();
-                    ethanNpc.Position += dir * 2f;
-
-                    // 更新朝向
-                    if (Math.Abs(dir.X) > Math.Abs(dir.Y))
-                        ethanNpc.FacingDirection = dir.X > 0 ? 1 : 3;
-                    else
-                        ethanNpc.FacingDirection = dir.Y > 0 ? 2 : 0;
-                }
+                ethanNpc.CurrentDialogue.Clear();
+                ethanNpc.CurrentDialogue.Push(new Dialogue(ethanNpc, "EthanBot_line", text));
+                Game1.drawDialogue(ethanNpc);
             }
-            catch { /* ignore movement errors */ }
-        }
-
-        private void OnLocationChanged(string location)
-        {
-            string? msg = location switch
+            catch (Exception ex)
             {
-                "SeedShop" => "买种子？看好预算。",
-                "Saloon" => "去酒馆了。少喝。",
-                "Beach" => "海边。钓鱼还是瞎走？",
-                "Mine" => "下矿了。小心点。",
-                _ => null
-            };
-            if (msg != null) SendHUD(msg);
+                Monitor.Log($"[EthanBot] dialogue error: {ex.Message}", LogLevel.Warn);
+                SendHUD(text);
+            }
         }
 
         private void WriteGameState()
@@ -226,7 +219,7 @@ namespace EthanBot
                 string message = cmd.GetValueOrDefault("message", "");
 
                 if (action == "chat" && !string.IsNullOrEmpty(message))
-                    SendHUD(message);
+                    ShowDialogue(message);
             }
             catch (Exception ex)
             {
@@ -241,19 +234,7 @@ namespace EthanBot
                 Game1.addHUDMessage(new HUDMessage($"Ethan: {message}", HUDMessage.newQuest_type));
                 Monitor.Log($"[EthanBot] {message}", LogLevel.Info);
             }
-            catch (Exception ex)
-            {
-                Monitor.Log($"[EthanBot] HUD error: {ex.Message}", LogLevel.Error);
-            }
+            catch { }
         }
-
-        private static string SeasonCN(string season) => season switch
-        {
-            "spring" => "春天",
-            "summer" => "夏天",
-            "fall" => "秋天",
-            "winter" => "冬天",
-            _ => season
-        };
     }
 }
