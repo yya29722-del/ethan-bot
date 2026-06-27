@@ -4,6 +4,6 @@
   "Version": "1.0.0",
   "Description": "Ethan's presence in Stardew Valley.",
   "UniqueID": "Ethan.EthanBot",
-  "EntryPoint": "EthanBot.ModEntry",
+  "EntryDll": "EthanBot.dll",
   "MinimumApiVersion": "4.0.0"
 }
