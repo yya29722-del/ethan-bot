@@ -32,9 +32,10 @@ if __name__ == "__main__":
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"exported {len(data)} rows from {table} -> {out_json}")
 
-    if table == "memories":
-        out_txt = "memories_export.txt"
+    if data and "content" in data[0]:
+        out_txt = f"{table}_export.txt"
         with open(out_txt, "w", encoding="utf-8") as f:
-            for m in data:
-                f.write(f"[{m.get('created_at', '')}] {m.get('role', '')}: {m.get('content', '')}\n")
+            for row in data:
+                tag = row.get("role") or row.get("category") or ""
+                f.write(f"[{row.get('created_at', '')}] {tag}: {row.get('content', '')}\n")
         print(f"also wrote readable transcript -> {out_txt}")
