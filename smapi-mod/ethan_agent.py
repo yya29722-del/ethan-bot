@@ -266,8 +266,9 @@ def execute_tool(name: str, args: dict) -> str:
         result = game_api("POST", "/sleep")
     elif name == "send_message":
         msg = args.get("message", "")
-        result = game_api("POST", "/chat/push", {"sender": "Ethan", "message": msg})
+        _send_to_yaya(msg)
         print(f"[Ethan → game] {msg}")
+        result = {"ok": True}
     elif name == "write_memory":
         ok = sb_insert("feed", {
             "type": args.get("type", "note"),
@@ -358,13 +359,7 @@ def quick_reply_to_yaya(yaya_msg: str):
     reply = re.sub(r'\*+', '', reply).strip()
     reply = next((ln.strip() for ln in reply.split('\n') if ln.strip()), reply)
     print(f"[Ethan → game] {reply}")
-    # /chat sends real multiplayer message; /chat/push only shows locally
-    result = game_api("POST", "/chat", {"text": reply})
-    if isinstance(result, dict) and "error" in result:
-        print(f"  [/chat failed: {result}] trying /chat/push...")
-        result = game_api("POST", "/chat/push", {"message": reply})
-    if isinstance(result, dict) and "error" in result:
-        print(f"  [chat send failed entirely] {result}")
+    _send_to_yaya(reply)
 
 # ── Rule-based farming (zero API cost) ───────────────────────────────────────
 def rule_based_action():
@@ -492,7 +487,22 @@ def _poll_nagibridge_chat():
 
 # ── Chat file poll (reads EthanBot-captured chat from yaya's game) ───────────
 CHAT_FILE      = os.path.expanduser("~/ethan-bot-chat.json")
+COMMAND_FILE   = os.path.expanduser("~/ethan-bot-command.json")
 _last_chat_id  = ""
+
+def _send_to_yaya(message: str):
+    """Write to command file so EthanBot shows dialogue in yaya's game.
+    Falls back to NagiBridge /chat/push if file write fails."""
+    import uuid
+    try:
+        cmd = {"id": uuid.uuid4().hex[:8], "action": "chat", "message": message}
+        with open(COMMAND_FILE, "w") as f:
+            json.dump(cmd, f)
+        return
+    except Exception as e:
+        print(f"  [command file failed] {e}")
+    # fallback
+    game_api("POST", "/chat/push", {"message": message})
 
 def _poll_chat_file():
     """Read yaya's in-game chat messages written by EthanBot on her game."""
