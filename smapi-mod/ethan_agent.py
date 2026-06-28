@@ -564,11 +564,13 @@ def main():
                 # Poll EthanBot chat file for yaya's messages (always, game connection optional)
             _poll_chat_file()
 
-            # yaya sent a message → one-shot Sonnet reply (cheap, no tool loop)
+            # yaya sent a message or tapped Ethan → one-shot Sonnet reply
             try:
                 yaya_msg = _incoming.get_nowait()
-                print(f"\n[Ethan] Responding to yaya: {yaya_msg}")
-                quick_reply_to_yaya(yaya_msg)
+                is_click = yaya_msg.startswith("[click]")
+                prompt_msg = "yaya tapped you" if is_click else yaya_msg
+                print(f"\n[Ethan] {'tapped' if is_click else 'Responding to yaya'}: {prompt_msg}")
+                quick_reply_to_yaya(prompt_msg)
                 last_rule_time = time.time()  # reset rule timer after responding
                 continue
             except queue.Empty:

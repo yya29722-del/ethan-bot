@@ -58,12 +58,22 @@ namespace EthanBot
             if (!Context.IsWorldReady || ethanNpc == null) return;
             if (!e.Button.IsActionButton()) return;
 
-            // 玩家点击了Ethan
             var tile = e.Cursor.GrabTile;
             var ethanTile = ethanNpc.TilePoint;
             if (Math.Abs(tile.X - ethanTile.X) <= 1 && Math.Abs(tile.Y - ethanTile.Y) <= 1)
             {
-                ShowDialogue("I'm here.");
+                // write a click event to chat file so agent responds
+                try
+                {
+                    var entry = new Dictionary<string, string>
+                    {
+                        ["id"] = $"click_{tickCounter}",
+                        ["message"] = "[click] yaya tapped me"
+                    };
+                    File.WriteAllText(ChatFile,
+                        JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true }));
+                }
+                catch { }
             }
         }
 
