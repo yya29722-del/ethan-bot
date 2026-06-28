@@ -126,11 +126,11 @@ def call_claude(prompt: str) -> str:
 
     try:
         result = subprocess.run(
-            [claude_bin, "--print", prompt],
+            [claude_bin, "--print", "--dangerously-skip-permissions", prompt],
             capture_output=True,
             text=True,
-            timeout=90,
-            cwd="/tmp",
+            timeout=120,
+            cwd=os.path.expanduser("~/ethan-bot"),  # 读取 CLAUDE.md，获得完整 Ethan 人格
             env=env,
         )
         print(f"  [claude exit={result.returncode}]")
