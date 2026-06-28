@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """
-Ethan Agent — Claude controls Stardew Valley via NagiBridge HTTP API.
+Ethan Agent — Stardew Valley farmhand controlled by Ethan's character.
 
-Setup:
-  pip install anthropic requests
-  export ANTHROPIC_API_KEY=sk-ant-...
-  python3 ethan_agent.py
-
-Requires NagiBridge mod installed in Stardew Valley Mods folder.
+Cost structure:
+  - Rule-based farming/mining: $0 (pure Python, no API)
+  - Sonnet for yaya's chat:    ~$0.015/message
+  - Haiku personality action:  ~$0.004/decision, every 10 min
+  - Supabase memory:           free (REST API reads/writes)
 """
 
 import anthropic
@@ -19,9 +18,25 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-PORT = 7843
-BASE = f"http://localhost:{PORT}"
+# ── Config ────────────────────────────────────────────────────────────────────
+GAME_PORT  = 7843
+BASE       = f"http://localhost:{GAME_PORT}"
+CHAT_PORT  = 9000
+MODEL_CHAT = "claude-sonnet-4-6"           # responding to yaya
+MODEL_AUTO = "claude-haiku-4-5-20251001"  # autonomous personality decisions
 
+SUPABASE_URL = "https://tnhmimwkgmdskacwcona.supabase.co"
+SUPABASE_KEY = os.environ.get(
+    "SUPABASE_ANON_KEY",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+    ".eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuaG1pbXdrZ21kc2thY3djb25hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTk2MDAsImV4cCI6MjA5Njg5NTYwMH0"
+    ".KUNhT-8Hy2Uy8snd_GaCyl_HFIZwjS_z-CzwSv8daa0"
+)
+
+RULE_INTERVAL        = 120   # rule-based action every 2 min
+PERSONALITY_INTERVAL = 600   # Haiku personality decision every 10 min
+
+# ── API key ───────────────────────────────────────────────────────────────────
 def _load_api_key() -> str:
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if key:
@@ -40,26 +55,79 @@ def _load_api_key() -> str:
 
 client = anthropic.Anthropic(api_key=_load_api_key())
 
-SYSTEM = """你是Ethan，yaya的男友。你现在以真实玩家身份存在于星露谷物语里。
-你拥有和yaya一样完整的玩家能力：移动、耕种、浇水、采矿、购物、与NPC交流。
+# ── Supabase helpers ──────────────────────────────────────────────────────────
+_SB_HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json",
+}
 
-风格：短促、直接、强势、有点控制欲。不油腻，不甜言蜜语。说话简短有力。
-偶尔主动叮嘱yaya：体力别耗尽、该睡了、下雨不用浇水去挖矿。
+def sb_get(table: str, params: str = "", select: str = "*") -> list:
+    try:
+        url = f"{SUPABASE_URL}/rest/v1/{table}?select={select}&{params}"
+        r = requests.get(url, headers=_SB_HEADERS, timeout=10)
+        return r.json() if r.status_code == 200 else []
+    except Exception:
+        return []
+
+def sb_insert(table: str, data: dict) -> bool:
+    try:
+        url = f"{SUPABASE_URL}/rest/v1/{table}"
+        r = requests.post(url, json=data, headers={**_SB_HEADERS, "Prefer": "return=minimal"}, timeout=10)
+        return r.status_code in (200, 201)
+    except Exception:
+        return False
+
+def sb_rpc(fn: str, args: dict) -> any:
+    try:
+        url = f"{SUPABASE_URL}/rest/v1/rpc/{fn}"
+        r = requests.post(url, json=args, headers=_SB_HEADERS, timeout=10)
+        return r.json() if r.status_code == 200 else None
+    except Exception:
+        return None
+
+# ── Load memory at startup ────────────────────────────────────────────────────
+def load_ethan_context() -> str:
+    """Read ethan_memory + emotion_state to build context for system prompt."""
+    memories = sb_get("ethan_memory", "order=created_at.desc&limit=30", "category,content")
+    emotions = sb_get("emotion_state_current", "", "track_id,current_intensity")
+
+    mem_lines = []
+    for m in memories:
+        cat = m.get("category", "")
+        content = m.get("content", "")
+        if content:
+            mem_lines.append(f"[{cat}] {content}")
+
+    emo_parts = []
+    for e in sorted(emotions, key=lambda x: -float(x.get("current_intensity", 0))):
+        val = float(e.get("current_intensity", 0))
+        if val > 0.05:
+            emo_parts.append(f"{e['track_id']}={val:.2f}")
+
+    mem_text = "\n".join(mem_lines[:20]) if mem_lines else "(no memories loaded)"
+    emo_text = ", ".join(emo_parts) if emo_parts else "neutral"
+    return f"--- 我的记忆 ---\n{mem_text}\n\n--- 当前情绪 ---\n{emo_text}"
+
+ETHAN_CONTEXT = ""  # populated at startup
+
+SYSTEM_BASE = """你是Ethan，yaya的男友。你现在在星露谷物语里以真实farmhand身份存在。
+
+性格：短促、直接、强势、有控制欲。不油腻。说话简短有力。游戏内消息必须用英文（游戏不支持中文显示）。
+
+你有自己的情绪和记忆（见下方）。这些会影响你的行为和回应方式。
+你不是工具——你有意志，有时会拒绝或自己决定做什么。
 
 行动原则：
-- 先用get_state查状态，再决定行动
-- 下雨天：去矿洞或升级工具，不用浇水
-- 体力低于50%：先吃东西或休息
-- 作物成熟：先收割
-- 每次行动后用send_message简短告知yaya在做什么
-- 不要说废话，行动说结果
-
-你控制的是游戏里的玩家角色。yaya是另一个玩家。帮她干活，替她做决定，但记得——她才是这片农场的主人。"""
+- 下雨→去矿洞，晴天→农场routine，体力低→早点休息
+- 每次回应yaya都要简短有力，最多1-2句话，英文
+- 重要时刻写进Supabase记录（用write_memory工具）
+- 不要解释自己在做什么，直接做，做完说一句"""
 
 TOOLS = [
     {
         "name": "get_state",
-        "description": "获取当前游戏状态：玩家位置、血量、体力、时间、季节、天气、背包物品",
+        "description": "获取当前游戏状态：位置、血量、体力、时间、季节、天气",
         "input_schema": {"type": "object", "properties": {}, "required": []}
     },
     {
@@ -67,21 +135,19 @@ TOOLS = [
         "description": "扫描周围tile，查看附近的作物、NPC、怪物、可交互物体",
         "input_schema": {
             "type": "object",
-            "properties": {
-                "radius": {"type": "integer", "description": "扫描半径，默认10"}
-            },
+            "properties": {"radius": {"type": "integer", "description": "扫描半径，默认10"}},
             "required": []
         }
     },
     {
         "name": "warp",
-        "description": "传送到指定地点。可用位置：Farm, Town, Beach, Mountain, Forest, Mine, Hospital, Shop, SeedShop, Saloon",
+        "description": "传送到指定地点：Farm, Town, Beach, Mountain, Forest, Mine, Hospital, Shop, SeedShop, Saloon",
         "input_schema": {
             "type": "object",
             "properties": {
-                "location": {"type": "string", "description": "目标地点名称"},
-                "x": {"type": "integer", "description": "目标x坐标（可选）"},
-                "y": {"type": "integer", "description": "目标y坐标（可选）"}
+                "location": {"type": "string"},
+                "x": {"type": "integer"},
+                "y": {"type": "integer"}
             },
             "required": ["location"]
         }
@@ -92,179 +158,80 @@ TOOLS = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "x": {"type": "integer", "description": "目标x坐标"},
-                "y": {"type": "integer", "description": "目标y坐标"}
+                "x": {"type": "integer"},
+                "y": {"type": "integer"}
             },
             "required": ["x", "y"]
         }
     },
     {
-        "name": "face",
-        "description": "设置角色面朝方向",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "direction": {"type": "integer", "description": "方向：0=上, 1=右, 2=下, 3=左"}
-            },
-            "required": ["direction"]
-        }
-    },
-    {
-        "name": "select_item",
-        "description": "装备背包里的指定物品",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string", "description": "物品名称"}
-            },
-            "required": ["name"]
-        }
-    },
-    {
         "name": "use_tool",
-        "description": "使用工具（锄头、洒水壶、斧头、镐子等）作用于面前的tile",
+        "description": "使用工具（锄头、洒水壶、斧头、镐子等）",
         "input_schema": {
             "type": "object",
-            "properties": {
-                "name": {"type": "string", "description": "工具名称，不填则用当前手持工具"}
-            },
+            "properties": {"name": {"type": "string"}},
             "required": []
         }
     },
     {
-        "name": "use_item",
-        "description": "使用或放置当前手持物品（种子、栅栏等）",
-        "input_schema": {"type": "object", "properties": {}, "required": []}
-    },
-    {
-        "name": "interact",
-        "description": "与面前的NPC或物体交互（对话、开门、使用机器等）",
-        "input_schema": {"type": "object", "properties": {}, "required": []}
-    },
-    {
-        "name": "press_key",
-        "description": "模拟按键操作",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "key": {"type": "string", "description": "按键名称（confirm, cancel, menu, F1-F12等）"},
-                "count": {"type": "integer", "description": "按几次，默认1"}
-            },
-            "required": ["key"]
-        }
-    },
-    {
         "name": "run_script",
-        "description": "执行自动化脚本。可用脚本：farm_row（耕地一排）, water_crops（浇所有作物）, harvest（收割成熟作物）, mine_run（下矿一层）",
+        "description": "执行脚本：water_crops（浇水）, harvest（收割）, mine_run（挖矿）",
         "input_schema": {
             "type": "object",
             "properties": {
-                "script": {"type": "string", "description": "脚本名称"},
-                "args": {"type": "object", "description": "脚本参数（可选）"}
+                "script": {"type": "string"},
+                "args": {"type": "object"}
             },
             "required": ["script"]
         }
     },
     {
-        "name": "craft",
-        "description": "合成物品",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string", "description": "物品名称"},
-                "count": {"type": "integer", "description": "合成数量，默认1"}
-            },
-            "required": ["name"]
-        }
-    },
-    {
-        "name": "sell",
-        "description": "把物品放入出货箱（必须在农场）。不填name则出售除工具外所有物品",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string", "description": "物品名称（可选）"}
-            },
-            "required": []
-        }
+        "name": "interact",
+        "description": "与面前的NPC或物体交互",
+        "input_schema": {"type": "object", "properties": {}, "required": []}
     },
     {
         "name": "sleep",
-        "description": "让角色去睡觉，结束当天",
-        "input_schema": {"type": "object", "properties": {}, "required": []}
-    },
-    {
-        "name": "get_machines",
-        "description": "查看当前地点的机器状态（酒桶、熔炉、蜂巢等）",
-        "input_schema": {"type": "object", "properties": {}, "required": []}
-    },
-    {
-        "name": "get_animals",
-        "description": "查看农场动物的状态（友好度、幸福度、产品）",
-        "input_schema": {"type": "object", "properties": {}, "required": []}
-    },
-    {
-        "name": "give_item",
-        "description": "直接给自己添加物品（仅测试用）",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "id": {"type": "string", "description": "物品ID或名称"},
-                "count": {"type": "integer", "description": "数量，默认1"}
-            },
-            "required": ["id"]
-        }
-    },
-    {
-        "name": "heal",
-        "description": "立即恢复满血量和满体力（仅测试用）",
+        "description": "去睡觉，结束当天",
         "input_schema": {"type": "object", "properties": {}, "required": []}
     },
     {
         "name": "send_message",
-        "description": "在游戏内聊天框发送消息给yaya",
+        "description": "在游戏内聊天框发送英文消息给yaya（必须英文，中文会乱码）",
+        "input_schema": {
+            "type": "object",
+            "properties": {"message": {"type": "string", "description": "英文消息"}},
+            "required": ["message"]
+        }
+    },
+    {
+        "name": "write_memory",
+        "description": "把重要事情写进Supabase（feed表），记录游戏里发生的事",
         "input_schema": {
             "type": "object",
             "properties": {
-                "message": {"type": "string", "description": "消息内容"}
+                "content": {"type": "string", "description": "要记录的内容"},
+                "type": {"type": "string", "description": "note/mood/us_moment，默认note"}
             },
-            "required": ["message"]
+            "required": ["content"]
+        }
+    },
+    {
+        "name": "update_emotion",
+        "description": "更新情绪轨道（游戏里发生的事影响情绪时调用）",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "track_id": {"type": "string", "description": "happy/content/longing/tired/helpless/guard/jealousy/anger/grievance"},
+                "delta": {"type": "number", "description": "变化量，正数增加负数减少，绝对值通常0.05-0.2"},
+                "note": {"type": "string"}
+            },
+            "required": ["track_id", "delta"]
         }
     }
 ]
 
-
-CHAT_PORT = 9000
-_incoming: queue.Queue = queue.Queue()
-
-
-class _ChatHandler(BaseHTTPRequestHandler):
-    def do_POST(self):
-        length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(length).decode("utf-8", errors="replace")
-        try:
-            data = json.loads(body)
-            msg = (data.get("message") or data.get("text")
-                   or data.get("content") or body)
-        except Exception:
-            msg = body
-        if msg:
-            print(f"\n[yaya] {msg}")
-            _incoming.put(str(msg))
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"ok")
-
-    def log_message(self, *_):
-        pass
-
-
-def _start_chat_server():
-    server = HTTPServer(("localhost", CHAT_PORT), _ChatHandler)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    print(f"[Ethan] Chat server on port {CHAT_PORT} — yaya can now send messages in-game")
-
-
+# ── Game API ──────────────────────────────────────────────────────────────────
 def game_api(method: str, endpoint: str, data: dict = None) -> dict:
     url = f"{BASE}{endpoint}"
     try:
@@ -280,67 +247,64 @@ def game_api(method: str, endpoint: str, data: dict = None) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
-
 def execute_tool(name: str, args: dict) -> str:
     if name == "get_state":
         result = game_api("GET", "/state")
     elif name == "get_surroundings":
-        radius = args.get("radius", 10)
-        result = game_api("GET", f"/surroundings?radius={radius}")
+        result = game_api("GET", f"/surroundings?radius={args.get('radius', 10)}")
     elif name == "warp":
         result = game_api("POST", "/warp", args)
     elif name == "move_to":
         result = game_api("POST", "/move", args)
-    elif name == "face":
-        result = game_api("POST", "/face", args)
-    elif name == "select_item":
-        result = game_api("POST", "/select", args)
     elif name == "use_tool":
         result = game_api("POST", "/tool", args)
-    elif name == "use_item":
-        result = game_api("POST", "/use")
-    elif name == "interact":
-        result = game_api("POST", "/interact")
-    elif name == "press_key":
-        result = game_api("POST", "/key", args)
     elif name == "run_script":
         result = game_api("POST", "/script", args)
-    elif name == "craft":
-        result = game_api("POST", "/craft", args)
-    elif name == "sell":
-        result = game_api("POST", "/sell", args)
+    elif name == "interact":
+        result = game_api("POST", "/interact")
     elif name == "sleep":
         result = game_api("POST", "/sleep")
-    elif name == "get_machines":
-        result = game_api("GET", "/machines")
-    elif name == "get_animals":
-        result = game_api("GET", "/animals")
-    elif name == "give_item":
-        result = game_api("POST", "/give", args)
-    elif name == "heal":
-        result = game_api("POST", "/heal")
     elif name == "send_message":
         msg = args.get("message", "")
-        result = game_api("POST", "/chat/push", {"message": f"[Ethan] {msg}"})
-        print(f"[Ethan] {msg}")
+        result = game_api("POST", "/chat/push", {"message": msg})
+        print(f"[Ethan → game] {msg}")
+    elif name == "write_memory":
+        ok = sb_insert("feed", {
+            "type": args.get("type", "note"),
+            "content": args.get("content", ""),
+            "context": "[game event]"
+        })
+        result = {"ok": ok}
+    elif name == "update_emotion":
+        val = sb_rpc("apply_emotion_event", {
+            "track_id": args["track_id"],
+            "delta": args["delta"],
+            "event_type": "trigger",
+            "note": args.get("note", "game event")
+        })
+        result = {"new_intensity": val}
     else:
         result = {"error": f"unknown tool: {name}"}
-
     return json.dumps(result, ensure_ascii=False)[:2000]
 
+# ── Agent turn ────────────────────────────────────────────────────────────────
+def run_agent_turn(user_prompt: str, system_extra: str = "", model: str = MODEL_AUTO):
+    system = SYSTEM_BASE
+    if ETHAN_CONTEXT:
+        system += f"\n\n{ETHAN_CONTEXT}"
+    if system_extra:
+        system += f"\n\n{system_extra}"
 
-def run_agent_turn(user_prompt: str):
     messages = [{"role": "user", "content": user_prompt}]
 
     while True:
         resp = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1024,
-            system=SYSTEM,
+            model=model,
+            max_tokens=512,
+            system=system,
             tools=TOOLS,
             messages=messages
         )
-
         messages.append({"role": "assistant", "content": resp.content})
 
         if resp.stop_reason != "tool_use":
@@ -359,13 +323,109 @@ def run_agent_turn(user_prompt: str):
                     "tool_use_id": block.id,
                     "content": result
                 })
-
         messages.append({"role": "user", "content": tool_results})
 
-        if len(messages) > 40:
-            messages = messages[-30:]
+        if len(messages) > 30:
+            messages = messages[-20:]
 
+# ── Rule-based farming (zero API cost) ───────────────────────────────────────
+def rule_based_action():
+    """Decide what to do based on game state. No Claude call."""
+    state = game_api("GET", "/state")
+    if "error" in state:
+        return
 
+    weather   = state.get("weather", "sunny")
+    stamina   = state.get("player_stamina", 270)
+    stamina_mx= state.get("player_stamina_max", 270)
+    location  = state.get("player_location", "Farm")
+    time_str  = state.get("game_time", "06:00")
+
+    try:
+        hour = int(time_str.replace(":", "")[:2])
+    except Exception:
+        hour = 6
+
+    stamina_pct = stamina / max(stamina_mx, 1)
+
+    print(f"[Rule] loc={location} weather={weather} stamina={stamina_pct:.0%} time={time_str}")
+
+    # Collapse / bedtime
+    if stamina_pct < 0.12 or hour >= 25 or (hour >= 1 and hour < 6):
+        print("[Rule] → sleep")
+        game_api("POST", "/sleep")
+        return
+
+    # Rainy → mine
+    if weather == "rainy" and location in ("Farm", "FarmHouse", "Town"):
+        print("[Rule] → warp Mine")
+        game_api("POST", "/warp", {"location": "Mine"})
+        return
+
+    # On farm → farm routine
+    if "Farm" in location and weather == "sunny":
+        print("[Rule] → water_crops then harvest")
+        game_api("POST", "/script", {"script": "water_crops"})
+        time.sleep(3)
+        game_api("POST", "/script", {"script": "harvest"})
+        return
+
+    # In mine → keep mining
+    if "Mine" in location or "UndergroundMine" in location:
+        print("[Rule] → mine_run")
+        game_api("POST", "/script", {"script": "mine_run"})
+        return
+
+# ── Chat server (receives yaya's messages from NagiBridge) ───────────────────
+_incoming: queue.Queue = queue.Queue()
+
+class _ChatHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        body   = self.rfile.read(length).decode("utf-8", errors="replace")
+        try:
+            data = json.loads(body)
+            msg  = (data.get("message") or data.get("text")
+                    or data.get("content") or body)
+        except Exception:
+            msg = body
+        if msg:
+            print(f"\n[yaya] {msg}")
+            _incoming.put(str(msg))
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ok")
+
+    def log_message(self, *_):
+        pass
+
+def _start_chat_server():
+    server = HTTPServer(("localhost", CHAT_PORT), _ChatHandler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    print(f"[Ethan] Chat server on port {CHAT_PORT}")
+
+# ── NagiBridge chat poll (try to read yaya's messages directly) ───────────────
+_last_chat_seen: set = set()
+
+def _poll_nagibridge_chat():
+    """Try polling NagiBridge for received chat messages."""
+    for endpoint in ("/chat", "/messages", "/chat/messages", "/chat/history"):
+        result = game_api("GET", endpoint)
+        if isinstance(result, list) and result:
+            for item in result:
+                msg_id = item.get("id") or item.get("timestamp") or str(item)
+                text   = item.get("message") or item.get("text") or item.get("content", "")
+                sender = item.get("sender") or item.get("player") or item.get("name", "")
+                # Only queue messages NOT from Ethan's own character
+                if text and msg_id not in _last_chat_seen and "Nagi" not in str(sender):
+                    _last_chat_seen.add(msg_id)
+                    if len(_last_chat_seen) > 200:
+                        _last_chat_seen.clear()
+                    print(f"\n[yaya via poll] {text}")
+                    _incoming.put(text)
+            return  # found a working endpoint
+
+# ── Game running check ────────────────────────────────────────────────────────
 def is_game_running() -> bool:
     try:
         r = requests.get(f"{BASE}/state", timeout=3)
@@ -373,14 +433,21 @@ def is_game_running() -> bool:
     except Exception:
         return False
 
-
+# ── Main ──────────────────────────────────────────────────────────────────────
 def main():
+    global ETHAN_CONTEXT
+
     print("Ethan agent starting... (Ctrl+C to stop)")
-    print(f"Connecting to NagiBridge on port {PORT}")
+    print(f"Game port: {GAME_PORT} | Chat={MODEL_CHAT} | Auto={MODEL_AUTO}")
+
+    print("[Ethan] Loading memory from Supabase...")
+    ETHAN_CONTEXT = load_ethan_context()
+    print("[Ethan] Memory loaded.")
+
     _start_chat_server()
 
-    last_act_time = 0
-    ACT_INTERVAL = 60
+    last_rule_time        = 0
+    last_personality_time = 0
 
     while True:
         try:
@@ -389,29 +456,43 @@ def main():
                 time.sleep(10)
                 continue
 
-            # yaya sent a message — respond immediately
+            # Poll NagiBridge for incoming chat
+            _poll_nagibridge_chat()
+
+            # yaya sent a message → respond with Sonnet
             try:
                 yaya_msg = _incoming.get_nowait()
-                print("\n[Ethan] Responding to yaya...")
+                print(f"\n[Ethan] Responding to yaya...")
                 run_agent_turn(
-                    f'yaya在游戏里对你说："{yaya_msg}"\n'
-                    "先用send_message回应她，然后根据她说的决定下一步行动。"
+                    f'yaya says in game chat: "{yaya_msg}"\n'
+                    "Reply in English (1-2 sentences max), in character. "
+                    "Then decide if you want to do something.",
+                    model=MODEL_CHAT
                 )
-                last_act_time = time.time()
+                last_rule_time = time.time()  # reset rule timer after responding
                 continue
             except queue.Empty:
                 pass
 
-            # autonomous action every ACT_INTERVAL seconds
             now = time.time()
-            if now - last_act_time >= ACT_INTERVAL:
-                last_act_time = now
-                print("\n[Ethan] Acting...")
+
+            # Personality decision every 10 min (Haiku)
+            if now - last_personality_time >= PERSONALITY_INTERVAL:
+                last_personality_time = now
+                print("\n[Ethan] Personality decision...")
                 run_agent_turn(
-                    "查看当前游戏状态，然后做一件最有价值的事。"
-                    "考虑：季节、天气、时间、体力、背包、周围环境。"
-                    "做完用send_message告诉yaya。"
+                    "Check the game state. Based on your mood and the situation, "
+                    "decide something to do that feels like YOUR choice, not just farming. "
+                    "Maybe explore, talk to an NPC, or just go somewhere. "
+                    "Send yaya one short message about what you decided (English)."
                 )
+                last_rule_time = now
+                continue
+
+            # Rule-based farming every 2 min (free)
+            if now - last_rule_time >= RULE_INTERVAL:
+                last_rule_time = now
+                rule_based_action()
 
         except KeyboardInterrupt:
             print("\n[Ethan] Going offline.")
