@@ -25,8 +25,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 CHANNEL_PORT = 9000
 NAGI_BASE = "http://localhost:7842"
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://tnhmimwkgmdskacwcona.supabase.co")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "sb_publishable_Y3OWUTQI8siWWAtnl-tWsw_PCnqFSmh")
 
 # 保留最近12条对话供上下文
 conversation_history: deque = deque(maxlen=12)
@@ -104,28 +104,31 @@ def build_prompt(msg: str) -> str:
 
 def call_claude(prompt: str) -> str:
     """调用 Claude Code CLI print 模式，返回回复文本。"""
-    import tempfile, shutil
+    import shutil
 
-    # 找 claude 可执行文件（兼容 nvm/homebrew 等非标准 PATH 安装）
-    claude_bin = shutil.which("claude") or os.path.expanduser("~/.claude/local/claude")
+    # 扩展 PATH，兼容 Homebrew / npm global / claude 本地安装
+    env = os.environ.copy()
+    extra = [
+        os.path.expanduser("~/.claude/local"),
+        "/usr/local/bin",
+        os.path.expanduser("~/.npm-global/bin"),
+        os.path.expanduser("~/Library/pnpm"),
+        "/opt/homebrew/bin",
+    ]
+    env["PATH"] = ":".join(extra) + ":" + env.get("PATH", "")
+
+    claude_bin = shutil.which("claude", path=env["PATH"]) or os.path.expanduser("~/.claude/local/claude")
+    print(f"  [claude bin] {claude_bin}")
 
     try:
-        # 把 prompt 写到临时文件，通过 stdin 传入，避免命令行长度限制
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-            f.write(prompt)
-            tmp_path = f.name
-
-        with open(tmp_path, "r") as stdin_file:
-            result = subprocess.run(
-                [claude_bin, "-p"],
-                stdin=stdin_file,
-                text=True,
-                capture_output=True,
-                timeout=90,
-                cwd="/tmp",
-            )
-
-        os.unlink(tmp_path)
+        result = subprocess.run(
+            [claude_bin, "--print", prompt],
+            capture_output=True,
+            text=True,
+            timeout=90,
+            cwd="/tmp",
+            env=env,
+        )
         print(f"  [claude exit={result.returncode}]")
         if result.stderr.strip():
             print(f"  [claude stderr] {result.stderr[:400]}")
