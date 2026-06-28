@@ -340,20 +340,25 @@ def quick_reply_to_yaya(yaya_msg: str):
     system = SYSTEM_BASE + (f"\n\n{ETHAN_CONTEXT}" if ETHAN_CONTEXT else "")
     resp = client.messages.create(
         model=MODEL_CHAT,
-        max_tokens=80,
+        max_tokens=60,
         system=system,
         messages=[{
             "role": "user",
             "content": (f'Game state:{ctx}\n'
                         f'yaya says in chat: "{yaya_msg}"\n'
-                        'Reply in English, 1-2 sentences max, in character as Ethan. Direct, no fluff.')
+                        'Output ONLY your reply, plain text, no markdown, no "Ethan:" prefix. '
+                        '1 sentence max, English, in character.')
         }]
     )
     reply = next((b.text.strip() for b in resp.content if hasattr(b, "text")), "")
     if not reply:
         return
+    # strip markdown and take first line only
+    import re
+    reply = re.sub(r'\*+', '', reply).strip()
+    reply = next((ln.strip() for ln in reply.split('\n') if ln.strip()), reply)
     print(f"[Ethan → game] {reply}")
-    result = game_api("POST", "/chat/push", {"sender": "Ethan", "message": reply})
+    result = game_api("POST", "/chat/push", {"message": reply})
     if isinstance(result, dict) and "error" in result:
         print(f"  [chat send failed] {result}")
 
