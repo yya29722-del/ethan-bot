@@ -531,6 +531,15 @@ def main():
     ETHAN_CONTEXT = load_ethan_context()
     print("[Ethan] Memory loaded.")
 
+    # skip any message already in the chat file from previous session
+    global _last_chat_id
+    try:
+        if os.path.exists(CHAT_FILE):
+            _last_chat_id = json.loads(open(CHAT_FILE).read()).get("id", "")
+            print(f"[Ethan] Skipping old chat (id={_last_chat_id})")
+    except Exception:
+        pass
+
     _start_chat_server()
 
     last_rule_time        = 0
