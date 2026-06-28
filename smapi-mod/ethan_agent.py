@@ -358,9 +358,13 @@ def quick_reply_to_yaya(yaya_msg: str):
     reply = re.sub(r'\*+', '', reply).strip()
     reply = next((ln.strip() for ln in reply.split('\n') if ln.strip()), reply)
     print(f"[Ethan → game] {reply}")
-    result = game_api("POST", "/chat/push", {"message": reply})
+    # /chat sends real multiplayer message; /chat/push only shows locally
+    result = game_api("POST", "/chat", {"text": reply})
     if isinstance(result, dict) and "error" in result:
-        print(f"  [chat send failed] {result}")
+        print(f"  [/chat failed: {result}] trying /chat/push...")
+        result = game_api("POST", "/chat/push", {"message": reply})
+    if isinstance(result, dict) and "error" in result:
+        print(f"  [chat send failed entirely] {result}")
 
 # ── Rule-based farming (zero API cost) ───────────────────────────────────────
 def rule_based_action():
