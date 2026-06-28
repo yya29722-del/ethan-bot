@@ -154,7 +154,18 @@
   .ctx-bubble { max-width: 78%; padding: 8px 12px; font-size: 14px; line-height: 1.55; word-break: break-word; position: relative; }
   .ctx-bubble.yaya { background: #fff; color: #111; border-radius: 0 10px 10px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
   .ctx-bubble.ethan { background: #dcf8c6; color: #111; border-radius: 10px 0 10px 10px; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+  .ctx-bubble.pending { opacity: .5; }
   .has-context { cursor: pointer; }
+  #chat-modal { position: fixed; inset: 0; z-index: 320; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; padding: 24px 16px; }
+  #chat-modal.open { display: flex; }
+  #chat-modal-sheet { width: 100%; max-width: 380px; height: 78vh; background: #ece5dd; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.25); animation: fadeScale .2s ease; }
+  #chat-modal-header { background: #075e54; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  #chat-modal-bubbles { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; }
+  #chat-modal-inputrow { flex-shrink: 0; display: flex; gap: 8px; padding: 10px 12px; background: #f0f0f0; }
+  #chat-modal-input { flex: 1; border: none; border-radius: 18px; padding: 9px 14px; font-size: 14px; outline: none; }
+  #chat-modal-send { background: #075e54; color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; flex-shrink: 0; font-size: 16px; cursor: pointer; }
+  #chat-modal-send:disabled { opacity: .5; }
+  .ethan-chibi-box { cursor: pointer; }
   .has-context::after { content: 'we were there ›'; position: absolute; bottom: 12px; right: 14px; font-size: 12px; color: #c9a96e; font-weight: 500; letter-spacing: 0.02em; }
 
   /* SECTION HEADER (inside tab pages) */
@@ -757,6 +768,21 @@
     </div>
   </div>
 
+  <!-- Chat Modal -->
+  <div id="chat-modal" onclick="closeChatModal()">
+    <div id="chat-modal-sheet" onclick="event.stopPropagation()">
+      <div id="chat-modal-header">
+        <span class="ctx-modal-title">Ethan</span>
+        <button class="ctx-modal-close" onclick="closeChatModal()">×</button>
+      </div>
+      <div id="chat-modal-bubbles"></div>
+      <div id="chat-modal-inputrow">
+        <input id="chat-modal-input" type="text" placeholder="跟Ethan说点什么…" onkeydown="if(event.key==='Enter')sendChatMessage()">
+        <button id="chat-modal-send" onclick="sendChatMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Today Counter Modal -->
   <div id="today-modal" onclick="closeTodayModal()">
     <div id="today-modal-sheet" onclick="event.stopPropagation()">
@@ -811,7 +837,7 @@
       <div class="ethan-top">
       <!-- Hero: chibi + today counters -->
       <div class="ethan-hero">
-        <div class="ethan-chibi-box">
+        <div class="ethan-chibi-box" onclick="openChatModal()">
           <img class="ethan-chibi-img" src="data:image/png;base64,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" />
         </div>
         <div class="ethan-today-col" id="ethan-today-counters">
@@ -1580,6 +1606,71 @@ function openCtxModal(encodedCtx) {
 }
 function closeCtxModal() {
   document.getElementById('ctx-modal').classList.remove('open');
+}
+
+var CHAT_FN_URL = SUPABASE_URL + '/functions/v1/chat';
+var _chatLoaded = false;
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function chatBubbleHtml(role, text, pending) {
+  var speaker = role === 'bot' ? 'ethan' : 'yaya';
+  return '<div class="ctx-row from-' + speaker + '"><div class="ctx-bubble ' + speaker + (pending ? ' pending' : '') + '">' + escapeHtml(text) + '</div></div>';
+}
+function scrollChatToBottom() {
+  var el = document.getElementById('chat-modal-bubbles');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function openChatModal() {
+  document.getElementById('chat-modal').classList.add('open');
+  if (!_chatLoaded) {
+    _chatLoaded = true;
+    try {
+      var rows = await api('memories?select=role,content,created_at&order=created_at.desc&limit=30');
+      rows.reverse();
+      document.getElementById('chat-modal-bubbles').innerHTML = rows.map(function(m) {
+        return chatBubbleHtml(m.role, m.content);
+      }).join('');
+    } catch (e) {}
+  }
+  scrollChatToBottom();
+  document.getElementById('chat-modal-input').focus();
+}
+function closeChatModal() {
+  document.getElementById('chat-modal').classList.remove('open');
+}
+
+async function sendChatMessage() {
+  var input = document.getElementById('chat-modal-input');
+  var text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  var bubbles = document.getElementById('chat-modal-bubbles');
+  bubbles.insertAdjacentHTML('beforeend', chatBubbleHtml('user', text));
+  var pendingId = 'chat-pending-' + Date.now();
+  bubbles.insertAdjacentHTML('beforeend', '<div class="ctx-row from-ethan" id="' + pendingId + '"><div class="ctx-bubble ethan pending">…</div></div>');
+  scrollChatToBottom();
+  document.getElementById('chat-modal-send').disabled = true;
+  try {
+    var res = await fetch(CHAT_FN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ message: text })
+    });
+    var data = await res.json();
+    document.getElementById(pendingId).remove();
+    bubbles.insertAdjacentHTML('beforeend', chatBubbleHtml('bot', data.reply || '…没听清，再说一遍？'));
+  } catch (e) {
+    document.getElementById(pendingId).remove();
+    bubbles.insertAdjacentHTML('beforeend', chatBubbleHtml('bot', '消息没发出去，再试一次'));
+  }
+  scrollChatToBottom();
+  document.getElementById('chat-modal-send').disabled = false;
+  input.focus();
 }
 
 // FEED (used by Moments tab)
