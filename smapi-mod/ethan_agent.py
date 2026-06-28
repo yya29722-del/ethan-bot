@@ -266,7 +266,7 @@ def execute_tool(name: str, args: dict) -> str:
         result = game_api("POST", "/sleep")
     elif name == "send_message":
         msg = args.get("message", "")
-        result = game_api("POST", "/chat", {"text": msg})
+        result = game_api("POST", "/chat/push", {"sender": "Ethan", "message": msg})
         print(f"[Ethan → game] {msg}")
     elif name == "write_memory":
         ok = sb_insert("feed", {
@@ -353,10 +353,7 @@ def quick_reply_to_yaya(yaya_msg: str):
     if not reply:
         return
     print(f"[Ethan → game] {reply}")
-    # try both field names NagiBridge might expect
-    result = game_api("POST", "/chat", {"text": reply})
-    if isinstance(result, dict) and "error" in result:
-        result = game_api("POST", "/chat", {"message": reply})
+    result = game_api("POST", "/chat/push", {"sender": "Ethan", "message": reply})
     if isinstance(result, dict) and "error" in result:
         print(f"  [chat send failed] {result}")
 
