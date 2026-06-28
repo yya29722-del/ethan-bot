@@ -104,25 +104,39 @@ def build_prompt(msg: str) -> str:
 
 def call_claude(prompt: str) -> str:
     """调用 Claude Code CLI print 模式，返回回复文本。"""
+    import tempfile, shutil
+
+    # 找 claude 可执行文件（兼容 nvm/homebrew 等非标准 PATH 安装）
+    claude_bin = shutil.which("claude") or os.path.expanduser("~/.claude/local/claude")
+
     try:
-        result = subprocess.run(
-            ["claude", "--print"],
-            input=prompt,
-            text=True,
-            capture_output=True,
-            timeout=60,
-            cwd="/tmp",  # 避免读取项目 CLAUDE.md
-        )
+        # 把 prompt 写到临时文件，通过 stdin 传入，避免命令行长度限制
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write(prompt)
+            tmp_path = f.name
+
+        with open(tmp_path, "r") as stdin_file:
+            result = subprocess.run(
+                [claude_bin, "-p"],
+                stdin=stdin_file,
+                text=True,
+                capture_output=True,
+                timeout=90,
+                cwd="/tmp",
+            )
+
+        os.unlink(tmp_path)
+        print(f"  [claude exit={result.returncode}]")
+        if result.stderr.strip():
+            print(f"  [claude stderr] {result.stderr[:400]}")
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
-        if result.stderr:
-            print(f"  [claude stderr] {result.stderr[:300]}")
         return ""
     except subprocess.TimeoutExpired:
-        print("  [claude] timeout (60s)")
+        print("  [claude] timeout (90s)")
         return ""
     except FileNotFoundError:
-        print("  [claude] 找不到 `claude` 命令，请确认 Claude Code CLI 已安装并在 PATH 中")
+        print(f"  [claude] 找不到 claude 命令（tried: {claude_bin}）")
         return ""
     except Exception as e:
         print(f"  [claude] {e}")
