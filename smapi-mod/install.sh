@@ -9,7 +9,7 @@ git config --global http.version HTTP/1.1
 
 echo "==> Updating repo..."
 if [ -d "$REPO" ]; then
-  cd "$REPO" && git pull
+  cd "$REPO" && git pull || echo "  (git pull failed, continuing with local files)"
 else
   git clone https://github.com/yya29722-del/ethan-bot "$REPO"
   cd "$REPO"
