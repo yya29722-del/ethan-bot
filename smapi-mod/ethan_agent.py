@@ -331,12 +331,9 @@ def run_agent_turn(user_prompt: str, system_extra: str = "", model: str = MODEL_
 
 # ── Cheap one-shot reply to yaya (1 API call, no tool loop) ──────────────────
 def quick_reply_to_yaya(yaya_msg: str):
-    state = game_api("GET", "/state")
-    ctx = ""
-    if "error" not in state:
-        ctx = (f" [I'm at {state.get('player_location','?')}, "
-               f"time {state.get('game_time','?')}, "
-               f"stamina {state.get('player_stamina',0)}/{state.get('player_stamina_max',270)}]")
+    state = read_game_state()
+    ctx = game_state_summary(state)
+    ctx = f" [Game: {ctx}]" if ctx else ""
 
     live = get_live_context()
     system = SYSTEM_BASE + (f"\n\n{ETHAN_CONTEXT}" if ETHAN_CONTEXT else "") + f"\n\n{live}"
@@ -489,6 +486,54 @@ def _poll_nagibridge_chat():
 # ── Chat file poll (reads EthanBot-captured chat from yaya's game) ───────────
 CHAT_FILE      = os.path.expanduser("~/ethan-bot-chat.json")
 COMMAND_FILE   = os.path.expanduser("~/ethan-bot-command.json")
+STATE_FILE     = os.path.expanduser("~/ethan-bot-state.json")
+
+_last_synced_location = ""
+_last_synced_day      = 0
+
+def read_game_state() -> dict:
+    try:
+        return json.loads(open(STATE_FILE).read())
+    except Exception:
+        return {}
+
+def game_state_summary(state: dict) -> str:
+    if not state:
+        return ""
+    parts = [
+        f"{state.get('player_location','?')}",
+        f"{state.get('game_time','?')}",
+        f"{state.get('weather','?')}",
+        f"stamina {state.get('player_stamina',0)}/{state.get('player_stamina_max',270)}",
+        f"${state.get('player_money',0)}G",
+    ]
+    if state.get("current_tool"):
+        parts.append(f"tool:{state['current_tool']}")
+    if state.get("nearby_npcs"):
+        parts.append(f"nearby:{','.join(state['nearby_npcs'])}")
+    if state.get("inventory"):
+        inv = [f"{i['name']}×{i['count']}" for i in state["inventory"][:6]]
+        parts.append(f"bag:{','.join(inv)}")
+    return " | ".join(parts)
+
+def maybe_sync_game_state_to_supabase():
+    global _last_synced_location, _last_synced_day
+    state = read_game_state()
+    if not state:
+        return
+    location = state.get("player_location", "")
+    day      = state.get("day", 0)
+    if location == _last_synced_location and day == _last_synced_day:
+        return
+    _last_synced_location = location
+    _last_synced_day      = day
+    summary = game_state_summary(state)
+    season  = state.get("season", "")
+    sb_insert("ethan_memory", {
+        "category": "game_state",
+        "content":  f"[{season} Day {day}] {summary}",
+    })
+    print(f"[Ethan] Supabase game_state synced: {season} Day {day} @ {location}")
 
 def get_live_context() -> str:
     """Refresh emotion state + recent important notes before each reply."""
@@ -583,6 +628,7 @@ def main():
         try:
                 # Poll EthanBot chat file for yaya's messages (always, game connection optional)
             _poll_chat_file()
+            maybe_sync_game_state_to_supabase()
 
             # yaya sent a message or tapped Ethan → one-shot Sonnet reply
             try:
