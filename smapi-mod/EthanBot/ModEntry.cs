@@ -32,9 +32,20 @@ namespace EthanBot
         private NPC? ethanNpc;
         private int pathCooldown = 0;
         private int lastChatCount = 0;
+        private Microsoft.Xna.Framework.Graphics.Texture2D? ethanPortrait = null;
 
         public override void Entry(IModHelper helper)
         {
+            try
+            {
+                ethanPortrait = helper.ModContent.Load<Microsoft.Xna.Framework.Graphics.Texture2D>("assets/Ethan.png");
+                Monitor.Log("[EthanBot] Portrait loaded.", LogLevel.Info);
+            }
+            catch
+            {
+                Monitor.Log("[EthanBot] No portrait found (assets/Ethan.png missing).", LogLevel.Warn);
+            }
+
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.GameLoop.DayStarted += OnDayStarted;
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
@@ -108,6 +119,8 @@ namespace EthanBot
                     null
                 );
                 ethanNpc.displayName = "Ethan";
+                if (ethanPortrait != null)
+                    ethanNpc.Portrait = ethanPortrait;
                 location.addCharacter(ethanNpc);
                 Monitor.Log("[EthanBot] Spawned.", LogLevel.Info);
             }

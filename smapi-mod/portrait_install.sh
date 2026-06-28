@@ -4,7 +4,7 @@ set -e
 
 SRC="${1:-$HOME/Desktop/Ethan.png}"
 MODS_DIR="$HOME/Library/Application Support/Steam/steamapps/common/Stardew Valley/Contents/MacOS/Mods"
-DEST="$MODS_DIR/EthanNPC/assets/Ethan.png"
+DEST="$MODS_DIR/EthanBot/assets/Ethan.png"
 
 if [ ! -f "$SRC" ]; then
   echo "Error: file not found: $SRC"
@@ -23,8 +23,9 @@ img.save(dst)
 print(f"  Saved to: {dst}")
 PYEOF
 
-echo "==> Also saving to repo for git..."
-REPO_DEST="$HOME/ethan-bot/smapi-mod/EthanNPC/assets/Ethan.png"
+echo "==> Also saving to repo (EthanBot/assets)..."
+REPO_DEST="$HOME/ethan-bot/smapi-mod/EthanBot/assets/Ethan.png"
+mkdir -p "$(dirname "$REPO_DEST")"
 python3 - "$SRC" "$REPO_DEST" <<'PYEOF'
 import sys
 from PIL import Image
@@ -32,6 +33,7 @@ src, dst = sys.argv[1], sys.argv[2]
 img = Image.open(src).convert("RGBA")
 img = img.resize((128, 128), Image.LANCZOS)
 img.save(dst)
+print(f"  Saved to: {dst}")
 PYEOF
 
 echo ""

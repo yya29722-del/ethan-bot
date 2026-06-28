@@ -22,10 +22,13 @@ cd "$REPO/smapi-mod/EthanBot"
 dotnet build --configuration Release
 
 echo "==> Installing EthanBot..."
-mkdir -p "$MODS_DIR/EthanBot"
+mkdir -p "$MODS_DIR/EthanBot/assets"
 cp manifest.json "$MODS_DIR/EthanBot/"
 cp bin/Release/net6.0/EthanBot.dll "$MODS_DIR/EthanBot/" 2>/dev/null || \
 cp bin/Debug/net6.0/EthanBot.dll   "$MODS_DIR/EthanBot/"
+[ -f "$REPO/smapi-mod/EthanBot/assets/Ethan.png" ] && \
+  cp "$REPO/smapi-mod/EthanBot/assets/Ethan.png" "$MODS_DIR/EthanBot/assets/" && \
+  echo "  Portrait installed." || true
 
 # ── NagiBridge (HTTP game control API) ───────────────────────────────────────
 echo ""
