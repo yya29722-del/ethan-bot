@@ -561,12 +561,7 @@ def main():
 
     while True:
         try:
-            if not is_game_running():
-                print(".", end="", flush=True)
-                time.sleep(10)
-                continue
-
-            # Poll EthanBot chat file for yaya's messages
+                # Poll EthanBot chat file for yaya's messages (always, game connection optional)
             _poll_chat_file()
 
             # yaya sent a message → one-shot Sonnet reply (cheap, no tool loop)
