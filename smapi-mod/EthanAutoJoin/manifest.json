@@ -1,0 +1,9 @@
+{
+  "Name": "EthanAutoJoin",
+  "Author": "ethan-bot",
+  "Version": "1.0.0",
+  "Description": "After pressing F5 (local co-op), automatically simulates the gamepad join button so Ethan can join without a physical controller.",
+  "UniqueID": "ethan-bot.EthanAutoJoin",
+  "EntryPoint": "EthanAutoJoin.dll",
+  "MinimumApiVersion": "4.0.0"
+}
