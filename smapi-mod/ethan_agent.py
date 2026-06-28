@@ -409,23 +409,40 @@ _last_chat_seen: set = set()
 
 def _poll_nagibridge_chat():
     """Poll /chat/history for new messages from yaya."""
-    result = game_api("GET", "/chat/history")
-    if not isinstance(result, list):
+    raw = game_api("GET", "/chat/history")
+
+    # normalize to list
+    if isinstance(raw, dict):
+        items = raw.get("messages") or raw.get("history") or raw.get("data") or list(raw.values())
+        if not isinstance(items, list):
+            items = [raw]
+    elif isinstance(raw, list):
+        items = raw
+    else:
         return
-    for item in result:
-        # history items can be dicts or strings
+
+    if not items:
+        return
+
+    # debug: print first time we get something unexpected
+    if not hasattr(_poll_nagibridge_chat, "_debugged"):
+        _poll_nagibridge_chat._debugged = True
+        print(f"[DEBUG /chat/history] type={type(raw).__name__} sample={str(raw)[:300]}")
+
+    for item in items:
         if isinstance(item, str):
             msg_id = item
             text   = item
             sender = ""
         else:
             msg_id = item.get("id") or item.get("timestamp") or str(item)
-            text   = item.get("message") or item.get("text") or item.get("content", "")
-            sender = item.get("sender") or item.get("player") or item.get("name", "")
+            text   = (item.get("message") or item.get("text")
+                      or item.get("content") or item.get("msg") or "")
+            sender = (item.get("sender") or item.get("player")
+                      or item.get("name") or item.get("from") or "")
 
         if not text or msg_id in _last_chat_seen:
             continue
-        # skip our own messages (NagiBridge farmhand shows as "Nagi" or our player name)
         sender_str = str(sender).lower()
         if "nagi" in sender_str or "ethan" in sender_str:
             continue
