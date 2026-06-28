@@ -78,6 +78,19 @@ open(dst, 'wb').write(patched)
 print(f"  NagiBridge.dll patched: {count} occurrence(s) of 7842 → 7843")
 PYEOF
 
+# ── EthanNPC (Content Patcher — portrait) ────────────────────────────────────
+echo ""
+echo "==> Installing EthanNPC portrait mod..."
+mkdir -p "$MODS_DIR/EthanNPC/assets"
+cp "$REPO/smapi-mod/EthanNPC/manifest.json" "$MODS_DIR/EthanNPC/"
+cp "$REPO/smapi-mod/EthanNPC/content.json"  "$MODS_DIR/EthanNPC/"
+if [ -f "$REPO/smapi-mod/EthanNPC/assets/Ethan.png" ]; then
+  cp "$REPO/smapi-mod/EthanNPC/assets/Ethan.png" "$MODS_DIR/EthanNPC/assets/"
+  echo "  Portrait installed."
+else
+  echo "  ⚠  No portrait yet — put Ethan.png in smapi-mod/EthanNPC/assets/ and re-run."
+fi
+
 # ── Python deps ───────────────────────────────────────────────────────────────
 echo ""
 echo "==> Installing Python dependencies..."

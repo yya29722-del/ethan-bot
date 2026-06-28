@@ -1,0 +1,10 @@
+{
+  "Name": "EthanNPC",
+  "Author": "yaya",
+  "Version": "1.0.0",
+  "Description": "Loads Ethan's portrait into the game.",
+  "UniqueID": "yaya.EthanNPC",
+  "ContentPackFor": {
+    "UniqueID": "Pathoschild.ContentPatcher"
+  }
+}
