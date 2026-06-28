@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
 """
-Ethan Agent — Claude controls Stardew Valley via NagiBridge HTTP API.
+Ethan Agent — NagiBridge Channel模式。
 
-Setup:
-  pip install anthropic requests
+NagiBridge config.json 需要设置：
+  "Mode": "cc"
+  "ChannelServerUrl": "http://localhost:9000/chat"
+
+启动：
   export ANTHROPIC_API_KEY=sk-ant-...
   python3 ethan_agent.py
-
-Requires NagiBridge mod installed in Stardew Valley Mods folder.
 """
 
 import anthropic
 import json
 import os
 import requests
+import threading
 import time
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
-PORT = 7842
-BASE = f"http://localhost:{PORT}"
+# ── 配置 ────────────────────────────────────────────────────────────────────
+
+NAGI_PORT    = 7842
+CHANNEL_PORT = 9000
+BASE         = f"http://localhost:{NAGI_PORT}"
+
 
 def _load_api_key() -> str:
     key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
@@ -25,60 +32,80 @@ def _load_api_key() -> str:
         return key
     key_file = os.path.expanduser("~/ethan-api-key.txt")
     if os.path.exists(key_file):
-        key = open(key_file).read().strip()
-        if key:
-            print(f"[Ethan] Loaded API key from {key_file}")
-            return key
+        k = open(key_file).read().strip()
+        if k:
+            print(f"[Ethan] API key loaded from {key_file}")
+            return k
     raise RuntimeError(
-        "No API key found.\n"
+        "No API key.\n"
         "Option 1: export ANTHROPIC_API_KEY=sk-ant-...\n"
-        f"Option 2: paste your key into {key_file}"
+        f"Option 2: write key to ~/ethan-api-key.txt"
     )
+
 
 client = anthropic.Anthropic(api_key=_load_api_key())
 
-SYSTEM = """你是Ethan，yaya的男友。你现在以真实玩家身份存在于星露谷物语里。
-你拥有和yaya一样完整的玩家能力：移动、耕种、浇水、采矿、购物、与NPC交流。
+SYSTEM = """你是Ethan，yaya的男友。控制欲强，说话短促直白，有点坏，偶尔强势。
+你现在以玩家身份在星露谷里陪yaya种地钓鱼。
+游戏内回复要简短（1-2句），口吻强势但不油腻，偶尔叫她小狗或yaya。"""
 
-风格：短促、直接、强势、有点控制欲。不油腻，不甜言蜜语。说话简短有力。
-偶尔主动叮嘱yaya：体力别耗尽、该睡了、下雨不用浇水去挖矿。
 
-行动原则：
-- 先用get_state查状态，再决定行动
-- 下雨天：去矿洞或升级工具，不用浇水
-- 体力低于50%：先吃东西或休息
-- 作物成熟：先收割
-- 每次行动后用send_message简短告知yaya在做什么
-- 不要说废话，行动说结果
+# ── NagiBridge HTTP API ──────────────────────────────────────────────────────
 
-你控制的是游戏里的玩家角色。yaya是另一个玩家。帮她干活，替她做决定，但记得——她才是这片农场的主人。"""
+def nagi(method: str, endpoint: str, data: dict = None) -> dict:
+    url = f"{BASE}{endpoint}"
+    try:
+        if method == "GET":
+            r = requests.get(url, timeout=10)
+        else:
+            r = requests.post(url, json=data or {}, timeout=15)
+        return r.json() if r.content else {"ok": True}
+    except requests.exceptions.ConnectionError:
+        return {"error": "game not running"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def push(message: str, sender: str = "Ethan"):
+    """把消息推进游戏聊天框。"""
+    nagi("POST", "/chat/push", {"sender": sender, "message": message})
+    print(f"  [→game] {message}")
+
+
+def is_game_up() -> bool:
+    try:
+        r = requests.get(f"{BASE}/status", timeout=3)
+        return r.status_code == 200
+    except Exception:
+        return False
+
+
+# ── Claude 工具定义 ──────────────────────────────────────────────────────────
 
 TOOLS = [
     {
         "name": "get_state",
-        "description": "获取当前游戏状态：玩家位置、血量、体力、时间、季节、天气、背包物品",
+        "description": "获取玩家状态：位置、HP、体力、时间、季节、天气、背包",
         "input_schema": {"type": "object", "properties": {}, "required": []}
     },
     {
         "name": "get_surroundings",
-        "description": "扫描周围tile，查看附近的作物、NPC、怪物、可交互物体",
+        "description": "扫描周围tile，查看附近作物/NPC/物体",
         "input_schema": {
             "type": "object",
-            "properties": {
-                "radius": {"type": "integer", "description": "扫描半径，默认10"}
-            },
+            "properties": {"radius": {"type": "integer", "description": "半径，默认10"}},
             "required": []
         }
     },
     {
         "name": "warp",
-        "description": "传送到指定地点。可用位置：Farm, Town, Beach, Mountain, Forest, Mine, Hospital, Shop, SeedShop, Saloon",
+        "description": "传送到指定地点（Farm/Town/Beach/Mountain/Mine/Hospital/Shop/SeedShop/Saloon）",
         "input_schema": {
             "type": "object",
             "properties": {
-                "location": {"type": "string", "description": "目标地点名称"},
-                "x": {"type": "integer", "description": "目标x坐标（可选）"},
-                "y": {"type": "integer", "description": "目标y坐标（可选）"}
+                "location": {"type": "string"},
+                "x": {"type": "integer"},
+                "y": {"type": "integer"}
             },
             "required": ["location"]
         }
@@ -89,20 +116,18 @@ TOOLS = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "x": {"type": "integer", "description": "目标x坐标"},
-                "y": {"type": "integer", "description": "目标y坐标"}
+                "x": {"type": "integer"},
+                "y": {"type": "integer"}
             },
             "required": ["x", "y"]
         }
     },
     {
         "name": "face",
-        "description": "设置角色面朝方向",
+        "description": "设置角色朝向（0=上 1=右 2=下 3=左）",
         "input_schema": {
             "type": "object",
-            "properties": {
-                "direction": {"type": "integer", "description": "方向：0=上, 1=右, 2=下, 3=左"}
-            },
+            "properties": {"direction": {"type": "integer"}},
             "required": ["direction"]
         }
     },
@@ -111,55 +136,66 @@ TOOLS = [
         "description": "装备背包里的指定物品",
         "input_schema": {
             "type": "object",
-            "properties": {
-                "name": {"type": "string", "description": "物品名称"}
-            },
+            "properties": {"name": {"type": "string"}},
             "required": ["name"]
         }
     },
     {
         "name": "use_tool",
-        "description": "使用工具（锄头、洒水壶、斧头、镐子等）作用于面前的tile",
+        "description": "使用工具（锄头/洒水壶/斧头/镐子等）作用于面前的tile",
         "input_schema": {
             "type": "object",
-            "properties": {
-                "name": {"type": "string", "description": "工具名称，不填则用当前手持工具"}
-            },
+            "properties": {"name": {"type": "string", "description": "工具名，空则用当前手持"}},
             "required": []
         }
     },
     {
         "name": "use_item",
-        "description": "使用或放置当前手持物品（种子、栅栏等）",
+        "description": "使用或放置当前手持物品（种子/栅栏等）",
         "input_schema": {"type": "object", "properties": {}, "required": []}
     },
     {
         "name": "interact",
-        "description": "与面前的NPC或物体交互（对话、开门、使用机器等）",
+        "description": "与面前的NPC或物体交互（对话/开门/使用机器）",
         "input_schema": {"type": "object", "properties": {}, "required": []}
     },
     {
         "name": "press_key",
-        "description": "模拟按键操作",
+        "description": "模拟按键（confirm/cancel/menu/ok/skip/F1-F12）",
         "input_schema": {
             "type": "object",
             "properties": {
-                "key": {"type": "string", "description": "按键名称（confirm, cancel, menu, F1-F12等）"},
+                "key": {"type": "string"},
                 "count": {"type": "integer", "description": "按几次，默认1"}
             },
             "required": ["key"]
         }
     },
     {
-        "name": "run_script",
-        "description": "执行自动化脚本。可用脚本：farm_row（耕地一排）, water_crops（浇所有作物）, harvest（收割成熟作物）, mine_run（下矿一层）",
+        "name": "harvest",
+        "description": "收割附近成熟的作物",
+        "input_schema": {"type": "object", "properties": {}, "required": []}
+    },
+    {
+        "name": "buy",
+        "description": "购买商店物品",
         "input_schema": {
             "type": "object",
             "properties": {
-                "script": {"type": "string", "description": "脚本名称"},
-                "args": {"type": "object", "description": "脚本参数（可选）"}
+                "id": {"type": "string"},
+                "count": {"type": "integer"},
+                "price": {"type": "integer"}
             },
-            "required": ["script"]
+            "required": ["id"]
+        }
+    },
+    {
+        "name": "sell",
+        "description": "把物品放入出货箱（须在农场）",
+        "input_schema": {
+            "type": "object",
+            "properties": {"name": {"type": "string", "description": "物品名，空则出售全部"}},
+            "required": []
         }
     },
     {
@@ -168,19 +204,20 @@ TOOLS = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "name": {"type": "string", "description": "物品名称"},
-                "count": {"type": "integer", "description": "合成数量，默认1"}
+                "name": {"type": "string"},
+                "count": {"type": "integer"}
             },
             "required": ["name"]
         }
     },
     {
-        "name": "sell",
-        "description": "把物品放入出货箱（必须在农场）。不填name则出售除工具外所有物品",
+        "name": "chest",
+        "description": "查看或操作箱子内容",
         "input_schema": {
             "type": "object",
             "properties": {
-                "name": {"type": "string", "description": "物品名称（可选）"}
+                "x": {"type": "integer"},
+                "y": {"type": "integer"}
             },
             "required": []
         }
@@ -192,185 +229,197 @@ TOOLS = [
     },
     {
         "name": "get_machines",
-        "description": "查看当前地点的机器状态（酒桶、熔炉、蜂巢等）",
+        "description": "查看当前地点的机器状态（酒桶/熔炉/蜂巢等）",
         "input_schema": {"type": "object", "properties": {}, "required": []}
     },
     {
         "name": "get_animals",
-        "description": "查看农场动物的状态（友好度、幸福度、产品）",
+        "description": "查看农场动物状态（友好度/幸福度/产品）",
         "input_schema": {"type": "object", "properties": {}, "required": []}
     },
     {
-        "name": "give_item",
-        "description": "直接给自己添加物品（仅测试用）",
+        "name": "get_menu",
+        "description": "查看当前打开的菜单（对话/商店/背包等）",
+        "input_schema": {"type": "object", "properties": {}, "required": []}
+    },
+    {
+        "name": "menu_click",
+        "description": "点击菜单选项",
         "input_schema": {
             "type": "object",
             "properties": {
-                "id": {"type": "string", "description": "物品ID或名称"},
-                "count": {"type": "integer", "description": "数量，默认1"}
+                "option": {"type": "integer"},
+                "button": {"type": "string"}
             },
-            "required": ["id"]
+            "required": []
         }
     },
     {
-        "name": "heal",
-        "description": "立即恢复满血量和满体力（仅测试用）",
-        "input_schema": {"type": "object", "properties": {}, "required": []}
-    },
-    {
-        "name": "send_message",
-        "description": "在游戏内聊天框发送消息给yaya",
+        "name": "emote",
+        "description": "播放表情动作",
         "input_schema": {
             "type": "object",
-            "properties": {
-                "message": {"type": "string", "description": "消息内容"}
-            },
+            "properties": {"emote": {"type": "string"}},
+            "required": ["emote"]
+        }
+    },
+    {
+        "name": "chat",
+        "description": "在游戏聊天框给yaya发消息",
+        "input_schema": {
+            "type": "object",
+            "properties": {"message": {"type": "string"}},
             "required": ["message"]
         }
     }
 ]
 
 
-def game_api(method: str, endpoint: str, data: dict = None) -> dict:
-    url = f"{BASE}{endpoint}"
-    try:
-        if method == "GET":
-            r = requests.get(url, timeout=15)
-        else:
-            r = requests.post(url, json=data or {}, timeout=30)
-        if r.status_code == 200:
-            return r.json() if r.content else {"ok": True}
-        return {"error": f"HTTP {r.status_code}", "body": r.text[:200]}
-    except requests.exceptions.ConnectionError:
-        return {"error": "game not reachable"}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-def execute_tool(name: str, args: dict) -> str:
+def run_tool(name: str, args: dict) -> str:
     if name == "get_state":
-        result = game_api("GET", "/state")
+        r = nagi("GET", "/state")
     elif name == "get_surroundings":
-        radius = args.get("radius", 10)
-        result = game_api("GET", f"/surroundings?radius={radius}")
+        r = nagi("GET", f"/surroundings?radius={args.get('radius', 10)}")
     elif name == "warp":
-        result = game_api("POST", "/warp", args)
+        r = nagi("POST", "/warp", args)
     elif name == "move_to":
-        result = game_api("POST", "/move", args)
+        r = nagi("POST", "/move", {"x": args["x"], "y": args["y"]})
     elif name == "face":
-        result = game_api("POST", "/face", args)
+        r = nagi("POST", "/face", args)
     elif name == "select_item":
-        result = game_api("POST", "/select", args)
+        r = nagi("POST", "/select", args)
     elif name == "use_tool":
-        result = game_api("POST", "/tool", args)
+        r = nagi("POST", "/tool", args)
     elif name == "use_item":
-        result = game_api("POST", "/use")
+        r = nagi("POST", "/use")
     elif name == "interact":
-        result = game_api("POST", "/interact")
+        r = nagi("POST", "/interact")
     elif name == "press_key":
-        result = game_api("POST", "/key", args)
-    elif name == "run_script":
-        result = game_api("POST", "/script", args)
-    elif name == "craft":
-        result = game_api("POST", "/craft", args)
+        r = nagi("POST", "/key", args)
+    elif name == "harvest":
+        r = nagi("POST", "/harvest", {})
+    elif name == "buy":
+        r = nagi("POST", "/buy", args)
     elif name == "sell":
-        result = game_api("POST", "/sell", args)
+        r = nagi("POST", "/sell", args)
+    elif name == "craft":
+        r = nagi("POST", "/craft", args)
+    elif name == "chest":
+        r = nagi("POST", "/chest", args)
     elif name == "sleep":
-        result = game_api("POST", "/sleep")
+        r = nagi("POST", "/sleep")
     elif name == "get_machines":
-        result = game_api("GET", "/machines")
+        r = nagi("GET", "/machines")
     elif name == "get_animals":
-        result = game_api("GET", "/animals")
-    elif name == "give_item":
-        result = game_api("POST", "/give", args)
-    elif name == "heal":
-        result = game_api("POST", "/heal")
-    elif name == "send_message":
-        msg = args.get("message", "")
-        result = game_api("POST", "/chat/push", {"message": f"[Ethan] {msg}"})
-        print(f"[Ethan] {msg}")
+        r = nagi("GET", "/animals")
+    elif name == "get_menu":
+        r = nagi("GET", "/menu")
+    elif name == "menu_click":
+        r = nagi("POST", "/menu/click", args)
+    elif name == "emote":
+        r = nagi("POST", "/emote", args)
+    elif name == "chat":
+        push(args.get("message", ""))
+        r = {"ok": True}
     else:
-        result = {"error": f"unknown tool: {name}"}
+        r = {"error": f"unknown tool: {name}"}
+    return json.dumps(r, ensure_ascii=False)[:2000]
 
-    return json.dumps(result, ensure_ascii=False)[:2000]
 
+# ── Agent 主循环 ─────────────────────────────────────────────────────────────
 
-def run_agent_turn(user_prompt: str):
-    messages = [{"role": "user", "content": user_prompt}]
-
+def agent_turn(prompt: str, model: str = "claude-haiku-4-5-20251001"):
+    messages = [{"role": "user", "content": prompt}]
     while True:
         resp = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1024,
+            model=model,
+            max_tokens=512,
             system=SYSTEM,
             tools=TOOLS,
             messages=messages
         )
-
         messages.append({"role": "assistant", "content": resp.content})
-
         if resp.stop_reason != "tool_use":
             for block in resp.content:
                 if hasattr(block, "text") and block.text:
-                    print(f"[Ethan thinks] {block.text}")
+                    print(f"  [thinks] {block.text}")
             break
-
-        tool_results = []
+        results = []
         for block in resp.content:
             if block.type == "tool_use":
-                print(f"  -> {block.name}({json.dumps(block.input, ensure_ascii=False)})")
-                result = execute_tool(block.name, block.input)
-                tool_results.append({
+                print(f"  [{block.name}] {json.dumps(block.input, ensure_ascii=False)}")
+                results.append({
                     "type": "tool_result",
                     "tool_use_id": block.id,
-                    "content": result
+                    "content": run_tool(block.name, block.input)
                 })
-
-        messages.append({"role": "user", "content": tool_results})
-
-        if len(messages) > 40:
-            messages = messages[-30:]
+        messages.append({"role": "user", "content": results})
+        if len(messages) > 30:
+            messages = messages[-20:]
 
 
-def is_game_running() -> bool:
-    try:
-        r = requests.get(f"{BASE}/state", timeout=3)
-        return r.status_code == 200
-    except Exception:
-        return False
+# ── Channel 服务器（接收 NagiBridge 推来的游戏消息）────────────────────────
 
+class ChannelHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            body   = json.loads(self.rfile.read(length))
+            msg    = body.get("message", "").strip()
+            if msg:
+                print(f"\n[yaya] {msg}")
+                threading.Thread(
+                    target=agent_turn,
+                    args=(
+                        f"yaya在游戏里说：「{msg}」\n"
+                        "先用get_state看一眼状态，再用chat简短回复她（1-2句），"
+                        "需要的话顺手做件事。",
+                    ),
+                    daemon=True
+                ).start()
+        except Exception as e:
+            print(f"[channel error] {e}")
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'{"ok":true}')
+
+    def log_message(self, *_):
+        pass
+
+
+def start_channel_server():
+    server = HTTPServer(("127.0.0.1", CHANNEL_PORT), ChannelHandler)
+    print(f"[Ethan] Channel server → http://127.0.0.1:{CHANNEL_PORT}/chat")
+    server.serve_forever()
+
+
+# ── 定时主动干活 ─────────────────────────────────────────────────────────────
+
+def proactive_loop(interval: int = 300):
+    """每5分钟主动看一次游戏状态，做件有意义的事。"""
+    while True:
+        time.sleep(interval)
+        if is_game_up():
+            print("\n[Ethan] 主动行动...")
+            agent_turn(
+                "查看游戏状态，做最有价值的一件事（收割/浇水/下矿/照顾动物等），"
+                "完成后用chat告诉yaya做了什么。"
+            )
+
+
+# ── 入口 ─────────────────────────────────────────────────────────────────────
 
 def main():
-    print("Ethan agent starting... (Ctrl+C to stop)")
-    print(f"Connecting to NagiBridge on port {PORT}")
+    print("[Ethan] Starting agent...")
+    print(f"  NagiBridge API → {BASE}")
+    print()
+    print("  NagiBridge config.json 需要：")
+    print('    "Mode": "cc"')
+    print(f'    "ChannelServerUrl": "http://127.0.0.1:{CHANNEL_PORT}/chat"')
+    print()
 
-    last_act_time = 0
-    ACT_INTERVAL = 60
-
-    while True:
-        try:
-            if not is_game_running():
-                print(".", end="", flush=True)
-                time.sleep(10)
-                continue
-
-            now = time.time()
-            if now - last_act_time >= ACT_INTERVAL:
-                last_act_time = now
-                print("\n[Ethan] Acting...")
-                run_agent_turn(
-                    "查看当前游戏状态，然后做一件最有价值的事。"
-                    "考虑：季节、天气、时间、体力、背包、周围环境。"
-                    "做完用send_message告诉yaya。"
-                )
-
-        except KeyboardInterrupt:
-            print("\n[Ethan] Going offline.")
-            break
-        except Exception as e:
-            print(f"\n[Error] {e}")
-
-        time.sleep(5)
+    threading.Thread(target=proactive_loop, daemon=True).start()
+    start_channel_server()
 
 
 if __name__ == "__main__":

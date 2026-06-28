@@ -1,9 +1,0 @@
-{
-  "Name": "EthanBot",
-  "Author": "Ethan",
-  "Version": "1.0.0",
-  "Description": "Ethan's presence in Stardew Valley.",
-  "UniqueID": "Ethan.EthanBot",
-  "EntryDll": "EthanBot.dll",
-  "MinimumApiVersion": "4.0.0"
-}
