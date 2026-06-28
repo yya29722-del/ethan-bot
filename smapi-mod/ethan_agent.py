@@ -266,7 +266,7 @@ def execute_tool(name: str, args: dict) -> str:
         result = game_api("POST", "/sleep")
     elif name == "send_message":
         msg = args.get("message", "")
-        result = game_api("POST", "/chat/push", {"message": msg})
+        result = game_api("POST", "/chat", {"text": msg})
         print(f"[Ethan → game] {msg}")
     elif name == "write_memory":
         ok = sb_insert("feed", {
@@ -408,22 +408,32 @@ def _start_chat_server():
 _last_chat_seen: set = set()
 
 def _poll_nagibridge_chat():
-    """Try polling NagiBridge for received chat messages."""
-    for endpoint in ("/chat", "/messages", "/chat/messages", "/chat/history"):
-        result = game_api("GET", endpoint)
-        if isinstance(result, list) and result:
-            for item in result:
-                msg_id = item.get("id") or item.get("timestamp") or str(item)
-                text   = item.get("message") or item.get("text") or item.get("content", "")
-                sender = item.get("sender") or item.get("player") or item.get("name", "")
-                # Only queue messages NOT from Ethan's own character
-                if text and msg_id not in _last_chat_seen and "Nagi" not in str(sender):
-                    _last_chat_seen.add(msg_id)
-                    if len(_last_chat_seen) > 200:
-                        _last_chat_seen.clear()
-                    print(f"\n[yaya via poll] {text}")
-                    _incoming.put(text)
-            return  # found a working endpoint
+    """Poll /chat/history for new messages from yaya."""
+    result = game_api("GET", "/chat/history")
+    if not isinstance(result, list):
+        return
+    for item in result:
+        # history items can be dicts or strings
+        if isinstance(item, str):
+            msg_id = item
+            text   = item
+            sender = ""
+        else:
+            msg_id = item.get("id") or item.get("timestamp") or str(item)
+            text   = item.get("message") or item.get("text") or item.get("content", "")
+            sender = item.get("sender") or item.get("player") or item.get("name", "")
+
+        if not text or msg_id in _last_chat_seen:
+            continue
+        # skip our own messages (NagiBridge farmhand shows as "Nagi" or our player name)
+        sender_str = str(sender).lower()
+        if "nagi" in sender_str or "ethan" in sender_str:
+            continue
+        _last_chat_seen.add(msg_id)
+        if len(_last_chat_seen) > 300:
+            _last_chat_seen.clear()
+        print(f"\n[yaya] {sender}: {text}" if sender else f"\n[yaya] {text}")
+        _incoming.put(text)
 
 # ── Game running check ────────────────────────────────────────────────────────
 def is_game_running() -> bool:
