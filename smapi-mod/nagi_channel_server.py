@@ -117,8 +117,12 @@ def call_claude(prompt: str) -> str:
     ]
     env["PATH"] = ":".join(extra) + ":" + env.get("PATH", "")
 
-    claude_bin = shutil.which("claude", path=env["PATH"]) or os.path.expanduser("~/.claude/local/claude")
-    print(f"  [claude bin] {claude_bin}")
+    # ClashX 代理（如果环境里没有就用默认 7890）
+    if "https_proxy" not in env and "HTTPS_PROXY" not in env:
+        env["https_proxy"] = "http://127.0.0.1:7890"
+        env["http_proxy"] = "http://127.0.0.1:7890"
+
+    claude_bin = shutil.which("claude", path=env["PATH"]) or "/usr/local/bin/claude"
 
     try:
         result = subprocess.run(
