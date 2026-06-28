@@ -556,18 +556,21 @@ def get_live_context() -> str:
 _last_chat_id  = ""
 
 def _send_to_yaya(message: str):
-    """Write to command file so EthanBot shows dialogue in yaya's game.
-    Falls back to NagiBridge /chat/push if file write fails."""
+    """Send message to yaya.
+    In farmhand mode: use farmhand's multiplayer chat (visible to everyone).
+    Fallback: write to command file for NPC dialogue box."""
+    # Try farmhand multiplayer chat first (port 7843)
+    result = game_api("POST", "/chat", {"text": message})
+    if "error" not in result:
+        return
+    # Fallback: command file → EthanBot NPC dialogue
     import uuid
     try:
         cmd = {"id": uuid.uuid4().hex[:8], "action": "chat", "message": message}
         with open(COMMAND_FILE, "w") as f:
             json.dump(cmd, f)
-        return
     except Exception as e:
-        print(f"  [command file failed] {e}")
-    # fallback
-    game_api("POST", "/chat/push", {"message": message})
+        print(f"  [send failed] {e}")
 
 def _poll_chat_file():
     """Read yaya's in-game chat messages written by EthanBot on her game."""
