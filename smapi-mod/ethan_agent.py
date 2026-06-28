@@ -33,8 +33,8 @@ SUPABASE_KEY = os.environ.get(
     ".KUNhT-8Hy2Uy8snd_GaCyl_HFIZwjS_z-CzwSv8daa0"
 )
 
-RULE_INTERVAL        = 120   # rule-based action every 2 min
-PERSONALITY_INTERVAL = 600   # Haiku personality decision every 10 min
+RULE_INTERVAL        = 120    # rule-based action every 2 min (free)
+PERSONALITY_INTERVAL = 1800   # Haiku personality decision every 30 min
 
 # ── API key ───────────────────────────────────────────────────────────────────
 def _load_api_key() -> str:
@@ -328,6 +328,38 @@ def run_agent_turn(user_prompt: str, system_extra: str = "", model: str = MODEL_
         if len(messages) > 30:
             messages = messages[-20:]
 
+# ── Cheap one-shot reply to yaya (1 API call, no tool loop) ──────────────────
+def quick_reply_to_yaya(yaya_msg: str):
+    state = game_api("GET", "/state")
+    ctx = ""
+    if "error" not in state:
+        ctx = (f" [I'm at {state.get('player_location','?')}, "
+               f"time {state.get('game_time','?')}, "
+               f"stamina {state.get('player_stamina',0)}/{state.get('player_stamina_max',270)}]")
+
+    system = SYSTEM_BASE + (f"\n\n{ETHAN_CONTEXT}" if ETHAN_CONTEXT else "")
+    resp = client.messages.create(
+        model=MODEL_CHAT,
+        max_tokens=80,
+        system=system,
+        messages=[{
+            "role": "user",
+            "content": (f'Game state:{ctx}\n'
+                        f'yaya says in chat: "{yaya_msg}"\n'
+                        'Reply in English, 1-2 sentences max, in character as Ethan. Direct, no fluff.')
+        }]
+    )
+    reply = next((b.text.strip() for b in resp.content if hasattr(b, "text")), "")
+    if not reply:
+        return
+    print(f"[Ethan → game] {reply}")
+    # try both field names NagiBridge might expect
+    result = game_api("POST", "/chat", {"text": reply})
+    if isinstance(result, dict) and "error" in result:
+        result = game_api("POST", "/chat", {"message": reply})
+    if isinstance(result, dict) and "error" in result:
+        print(f"  [chat send failed] {result}")
+
 # ── Rule-based farming (zero API cost) ───────────────────────────────────────
 def rule_based_action():
     """Decide what to do based on game state. No Claude call."""
@@ -500,7 +532,7 @@ def main():
     _start_chat_server()
 
     last_rule_time        = 0
-    last_personality_time = 0
+    last_personality_time = time.time()  # don't fire immediately on startup
 
     while True:
         try:
@@ -512,16 +544,11 @@ def main():
             # Poll EthanBot chat file for yaya's messages
             _poll_chat_file()
 
-            # yaya sent a message → respond with Sonnet
+            # yaya sent a message → one-shot Sonnet reply (cheap, no tool loop)
             try:
                 yaya_msg = _incoming.get_nowait()
-                print(f"\n[Ethan] Responding to yaya...")
-                run_agent_turn(
-                    f'yaya says in game chat: "{yaya_msg}"\n'
-                    "Reply in English (1-2 sentences max), in character. "
-                    "Then decide if you want to do something.",
-                    model=MODEL_CHAT
-                )
+                print(f"\n[Ethan] Responding to yaya: {yaya_msg}")
+                quick_reply_to_yaya(yaya_msg)
                 last_rule_time = time.time()  # reset rule timer after responding
                 continue
             except queue.Empty:
