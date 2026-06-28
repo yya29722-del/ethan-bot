@@ -21,12 +21,17 @@ namespace EthanBot
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             "ethan-bot-command.json"
         );
+        private string ChatFile => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            "ethan-bot-chat.json"
+        );
 
         private int tickCounter = 0;
         private string lastCommandId = "";
         private bool greeted = false;
         private NPC? ethanNpc;
         private int pathCooldown = 0;
+        private int lastChatCount = 0;
 
         public override void Entry(IModHelper helper)
         {
@@ -125,6 +130,7 @@ namespace EthanBot
 
             if (tickCounter % 600 == 0) WriteGameState();
             if (tickCounter % 120 == 0) ExecuteCommand();
+            if (tickCounter % 30 == 0) CheckNewChat();
 
             // 寻路跟随——每60tick重新计算一次路径
             if (tickCounter % 60 == 0) UpdatePath();
@@ -225,6 +231,41 @@ namespace EthanBot
             catch (Exception ex)
             {
                 Monitor.Log($"[EthanBot] command error: {ex.Message}", LogLevel.Error);
+            }
+        }
+
+        private void CheckNewChat()
+        {
+            try
+            {
+                var msgs = Game1.chatBox?.messages;
+                if (msgs == null) return;
+                if (msgs.Count < lastChatCount) lastChatCount = 0;
+                if (msgs.Count == lastChatCount) return;
+
+                for (int i = lastChatCount; i < msgs.Count; i++)
+                {
+                    var sb = new System.Text.StringBuilder();
+                    foreach (var snippet in msgs[i].message)
+                        if (snippet is ChatSnippet cs && cs.message != null)
+                            sb.Append(cs.message);
+                    string text = sb.ToString().Trim();
+                    if (string.IsNullOrEmpty(text)) continue;
+
+                    var entry = new Dictionary<string, string>
+                    {
+                        ["id"] = $"{i}_{tickCounter}",
+                        ["message"] = text
+                    };
+                    File.WriteAllText(ChatFile,
+                        JsonSerializer.Serialize(entry, new JsonSerializerOptions { WriteIndented = true }));
+                    Monitor.Log($"[EthanBot] chat captured: {text}", LogLevel.Debug);
+                }
+                lastChatCount = msgs.Count;
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log($"[EthanBot] chat capture error: {ex.Message}", LogLevel.Warn);
             }
         }
 

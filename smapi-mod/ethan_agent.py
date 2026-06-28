@@ -452,6 +452,32 @@ def _poll_nagibridge_chat():
         print(f"\n[yaya] {sender}: {text}" if sender else f"\n[yaya] {text}")
         _incoming.put(text)
 
+# ── Chat file poll (reads EthanBot-captured chat from yaya's game) ───────────
+CHAT_FILE      = os.path.expanduser("~/ethan-bot-chat.json")
+_last_chat_id  = ""
+
+def _poll_chat_file():
+    """Read yaya's in-game chat messages written by EthanBot on her game."""
+    global _last_chat_id
+    try:
+        if not os.path.exists(CHAT_FILE):
+            return
+        data = json.loads(open(CHAT_FILE).read())
+        msg_id = data.get("id", "")
+        text   = data.get("message", "").strip()
+        if not msg_id or msg_id == _last_chat_id or not text:
+            return
+        # skip farmhand's own messages (show as "Ethan:" or "Nagi:")
+        low = text.lower()
+        if low.startswith("ethan:") or low.startswith("nagi:"):
+            _last_chat_id = msg_id
+            return
+        _last_chat_id = msg_id
+        print(f"\n[yaya] {text}")
+        _incoming.put(text)
+    except Exception:
+        pass
+
 # ── Game running check ────────────────────────────────────────────────────────
 def is_game_running() -> bool:
     try:
@@ -483,8 +509,8 @@ def main():
                 time.sleep(10)
                 continue
 
-            # Poll NagiBridge for incoming chat
-            _poll_nagibridge_chat()
+            # Poll EthanBot chat file for yaya's messages
+            _poll_chat_file()
 
             # yaya sent a message → respond with Sonnet
             try:
