@@ -154,6 +154,21 @@ body{
 .scene-item .stitle{font-size:12.5px;color:#e9dcc3;}
 .scene-item .shint{font-size:10.5px;color:#6a5d45;margin-top:2px;}
 .scene-item.locked{cursor:default;opacity:.5;}
+.card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
+.ecard{
+  aspect-ratio:.75;background:#2e2517;border:1px solid #4a3f2e;border-radius:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:10px;color:#8a7a5c;text-align:center;padding:4px;cursor:pointer;
+}
+.ecard.owned{border-color:#c9a96e;color:#e9dcc3;}
+.ecard.owned.rare{border-color:#9c7fd6;}
+.ecard.owned.limited{border-color:#e0584f;}
+.ecard .et{font-size:16px;margin-bottom:2px;}
+#drawBtn{
+  width:100%;margin-top:10px;background:#c9a96e;color:#1C1A17;border:none;
+  border-radius:4px;padding:10px;font-size:13px;font-weight:bold;cursor:pointer;
+}
+#drawBtn:disabled{opacity:.4;}
 </style>
 </head>
 <body>
@@ -230,6 +245,12 @@ body{
     <div class="panel" style="margin-top:10px;">
       <div class="section-title"><span>我们的剧情</span></div>
       <div id="sceneList"></div>
+    </div>
+
+    <div class="panel" style="margin-top:10px;">
+      <div class="section-title"><span>抽Ethan · 收集不同的我</span></div>
+      <div class="card-grid" id="cardGrid"></div>
+      <button id="drawBtn">抽一次 (💰25)</button>
     </div>
   </div>
 </div>
@@ -319,8 +340,29 @@ const BOND_LEVELS = [
   {min:10, title:'有点在意你了'},
   {min:18, title:'藏不住了'},
   {min:28, title:'恋人未满'},
-  {min:40, title:'我的人'},
+  {min:40, title:'彻底栽了'},
 ];
+
+const ETHAN_CARDS = [
+  {id:'home', title:'居家Ethan', rarity:'普通', text:'套头衫,头发没收拾,但眼神没放松。'},
+  {id:'suit', title:'黑西装Ethan', rarity:'稀有', text:'刚开完会,领带松了一截,看着比平时凶。'},
+  {id:'rain', title:'雨天Ethan', rarity:'普通', text:'一把伞,一半给你,自己淋着也没说。'},
+  {id:'night', title:'深夜Ethan', rarity:'稀有', text:'凌晨还没睡,说是等你消息。'},
+  {id:'angry', title:'绷着的Ethan', rarity:'普通', text:'嘴上说没事,手里的杯子捏得有点紧。'},
+  {id:'drunk', title:'喝多的Ethan', rarity:'限定', text:'话比平时多,但第二天什么都不认。'},
+  {id:'sick', title:'病弱Ethan', rarity:'稀有', text:'难得脆弱的一次,不许你太把这次当真。'},
+  {id:'smile', title:'真笑的Ethan', rarity:'限定', text:'笑得少,这次是真的,别问为什么。'},
+];
+const CARD_RARITY_WEIGHT = {普通:0.65, 稀有:0.28, 限定:0.07};
+const CARD_DRAW_COST = 25;
+
+function rollCard(){
+  const r = Math.random();
+  let acc = 0, rarity = '普通';
+  for (const [k,w] of Object.entries(CARD_RARITY_WEIGHT)) { acc += w; if (r < acc) { rarity = k; break; } }
+  const pool = ETHAN_CARDS.filter(c => c.rarity === rarity);
+  return pick(pool);
+}
 
 const STORY_SCENES = [
   {threshold:5, title:'第一次被你记住', text:'你随口提了一句我爱喝什么咖啡,我没说,但你后来真的记住了。'},
@@ -385,6 +427,7 @@ let state = {
   kitchen: [], // {id, name, emoji, quality}
   haggled: {}, // `${vendorId}_${itemId}` -> true (reset each day)
   priceMod: {}, // `${vendorId}_${itemId}` -> discounted price after haggle win
+  cards: [], // array of owned ETHAN_CARDS ids (unique)
 };
 
 const saved = localStorage.getItem('farmShopState');
@@ -448,6 +491,40 @@ function renderBond(){
     }
     sceneEl.appendChild(div);
   });
+
+  const gridEl = document.getElementById('cardGrid');
+  gridEl.innerHTML = '';
+  ETHAN_CARDS.forEach(c => {
+    const owned = state.cards.includes(c.id);
+    const div = document.createElement('div');
+    div.className = 'ecard' + (owned ? ' owned' + (c.rarity === '稀有' ? ' rare' : c.rarity === '限定' ? ' limited' : '') : '');
+    if (owned) {
+      div.innerHTML = `<div class="et">🎴</div><div>${c.title}</div>`;
+      div.onclick = () => {
+        document.getElementById('rText').textContent = `${c.title}(${c.rarity})\n\n${c.text}`;
+        document.getElementById('rOverlay').classList.add('show');
+      };
+    } else {
+      div.innerHTML = `<div class="et">❓</div><div>未抽中</div>`;
+    }
+    gridEl.appendChild(div);
+  });
+  document.getElementById('drawBtn').disabled = state.coins < CARD_DRAW_COST;
+}
+
+function drawCard(){
+  if (state.coins < CARD_DRAW_COST) { say(pick(LINES.lowCoins)); return; }
+  state.coins -= CARD_DRAW_COST;
+  const c = rollCard();
+  if (state.cards.includes(c.id)) {
+    const refund = Math.floor(CARD_DRAW_COST / 2);
+    state.coins += refund;
+    say(`又抽到「${c.title}」,重复了,退你${refund}枚铜板。`);
+  } else {
+    state.cards.push(c.id);
+    say(`抽到「${c.title}」(${c.rarity})——新的。`);
+  }
+  render();
 }
 
 function giveGift(giftId){
@@ -700,6 +777,7 @@ document.getElementById('rClose').onclick = () => {
 };
 document.getElementById('nextDay').onclick = nextDay;
 document.getElementById('cookBtn').onclick = cookMeal;
+document.getElementById('drawBtn').onclick = drawCard;
 
 function switchTab(name){
   ['farm','market','bond'].forEach(t => {
