@@ -119,7 +119,7 @@ def recall(query_text, match_count=5):
         return []
     results = sb_rpc("match_memory_vectors", {
         "query_embedding": vec,
-        "match_threshold": 0.6,
+        "match_threshold": 0.3,
         "match_count": match_count
     })
     print(f"recall({query_text[:20]}): {len(results)} results")
