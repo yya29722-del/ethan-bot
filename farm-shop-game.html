@@ -265,6 +265,12 @@ body{
     </div>
 
     <div class="panel" style="margin-top:10px;">
+      <div class="section-title"><span>今日客人 · 食材每天换</span></div>
+      <div id="ordersList"></div>
+      <div class="empty-hint" id="ordersEmpty"></div>
+    </div>
+
+    <div class="panel" style="margin-top:10px;">
       <div class="section-title"><span>记忆碎片</span><span id="fragCount">0/8</span></div>
       <div class="empty-hint">收钱、买菜、做饭的时候,偶尔会翻到点什么。</div>
       <div class="card-grid" id="fragGrid"></div>
@@ -297,27 +303,58 @@ const CROPS = [
   {id:'pumpkin', name:'南瓜', emoji:'🎃', growEmoji:'🌿', seedCost:45, growDays:4, sellPrice:90},
 ];
 
-const VENDORS = [
-  {id:'zhang', name:'张大爷', mood:'实在 · 讲价一般', haggleChance:0.5, items:[
-    {id:'baicai', name:'白菜', emoji:'🥬', price:4},
-    {id:'luobo2', name:'萝卜', emoji:'🥕', price:5},
-  ]},
-  {id:'wang', name:'王婶', mood:'热情话多 · 好讲价', haggleChance:0.7, items:[
-    {id:'fanqie2', name:'番茄', emoji:'🍅', price:6},
-    {id:'huanggua', name:'黄瓜', emoji:'🥒', price:5},
-  ]},
-  {id:'li', name:'老李', mood:'精明 · 不好讲', haggleChance:0.3, items:[
-    {id:'tudou', name:'土豆', emoji:'🥔', price:4},
-    {id:'qiezi', name:'茄子', emoji:'🍆', price:7},
-  ]},
-  {id:'liu', name:'鱼摊老刘', mood:'强硬 · 几乎不让价', haggleChance:0.15, items:[
-    {id:'yu', name:'鱼', emoji:'🐟', price:18},
-    {id:'xia', name:'虾', emoji:'🦐', price:22},
-  ]},
-  {id:'mystery', name:'神秘小贩', mood:'东西不稳定', haggleChance:0.4, items:[
-    {id:'mystery', name:'神秘食材', emoji:'❓', price:10},
-  ]},
+const ALL_INGREDIENTS = [
+  {id:'baicai', name:'白菜', emoji:'🥬'},
+  {id:'luobo2', name:'萝卜', emoji:'🥕'},
+  {id:'bocai', name:'菠菜', emoji:'🍃'},
+  {id:'dacong', name:'大葱', emoji:'🌿'},
+  {id:'fanqie2', name:'番茄', emoji:'🍅'},
+  {id:'huanggua', name:'黄瓜', emoji:'🥒'},
+  {id:'yangcong', name:'洋葱', emoji:'🧅'},
+  {id:'yumi', name:'玉米', emoji:'🌽'},
+  {id:'tudou', name:'土豆', emoji:'🥔'},
+  {id:'qiezi', name:'茄子', emoji:'🍆'},
+  {id:'lajiao', name:'辣椒', emoji:'🌶️'},
+  {id:'suan', name:'蒜', emoji:'🧄'},
+  {id:'yu', name:'鱼', emoji:'🐟'},
+  {id:'xia', name:'虾', emoji:'🦐'},
+  {id:'xie', name:'蟹', emoji:'🦀'},
+  {id:'daiyu', name:'带鱼', emoji:'🐠'},
+  {id:'mystery', name:'神秘食材', emoji:'❓'},
 ];
+const PRICE = {
+  baicai:4, luobo2:5, bocai:5, dacong:4,
+  fanqie2:6, huanggua:5, yangcong:5, yumi:6,
+  tudou:4, qiezi:7, lajiao:5, suan:4,
+  yu:18, xia:22, xie:28, daiyu:20, mystery:10,
+};
+function ingredient(id){ return ALL_INGREDIENTS.find(x=>x.id===id); }
+
+const VENDORS = [
+  {id:'zhang', name:'张大爷', mood:'实在 · 讲价一般', haggleChance:0.5, pool:['baicai','luobo2','bocai','dacong']},
+  {id:'wang', name:'王婶', mood:'热情话多 · 好讲价', haggleChance:0.7, pool:['fanqie2','huanggua','yangcong','yumi']},
+  {id:'li', name:'老李', mood:'精明 · 不好讲', haggleChance:0.3, pool:['tudou','qiezi','lajiao','suan']},
+  {id:'liu', name:'鱼摊老刘', mood:'强硬 · 几乎不让价', haggleChance:0.15, pool:['yu','xia','xie','daiyu']},
+  {id:'mystery', name:'神秘小贩', mood:'东西不稳定', haggleChance:0.4, pool:['mystery']},
+];
+
+const RECIPES = [
+  {id:'d1', name:'清炒白菜', emoji:'🥬', need:['baicai'], reward:18},
+  {id:'d2', name:'番茄黄瓜沙拉', emoji:'🥗', need:['fanqie2','huanggua'], reward:30},
+  {id:'d3', name:'地三鲜', emoji:'🍆', need:['tudou','qiezi','lajiao'], reward:42},
+  {id:'d4', name:'清蒸鱼', emoji:'🐟', need:['yu'], reward:38},
+  {id:'d5', name:'蒜蓉虾', emoji:'🦐', need:['xia','suan'], reward:46},
+  {id:'d6', name:'玉米浓汤', emoji:'🌽', need:['yumi'], reward:20},
+  {id:'d7', name:'蟹炒年糕', emoji:'🦀', need:['xie','dacong'], reward:55},
+  {id:'d8', name:'神秘小炒', emoji:'❓', need:['mystery'], reward:35},
+];
+
+const CUSTOMER_REACTIONS = {
+  极佳: ['客人当场加了钱,说不收都不行。','邻桌探头问是哪家秘方。','客人说,这家不开分店可惜了。'],
+  还行: ['客人吃完了,没多说什么。','客人点头,说还行。','客人结了账,没皱眉。'],
+  普通: ['客人吃完了,但没夸。','客人匆匆吃完就走了。','客人没说话,味道大概一般。'],
+  翻车: ['客人皱着眉没吃完。','客人小声跟同伴说别再来了。','差点被客人当场退单。'],
+};
 
 const LINES = {
   plant: ['种下了,剩下的交给老天。','行,这块我盯着。','听你的,老板。'],
@@ -469,12 +506,87 @@ let state = {
   renovationStep: 0, // index into RENOVATION_STAGES, how many completed
   restaurantOpen: false,
   fragments: [], // array of owned FRAGMENTS ids (unique)
+  vendorStock: {}, // vendorId -> array of ingredient ids on offer today
+  orders: [], // {id, recipeId, served}
 };
 
 const saved = localStorage.getItem('farmShopState');
 if (saved) { try { state = Object.assign(state, JSON.parse(saved)); } catch(e){} }
+if (!state.vendorStock || Object.keys(state.vendorStock).length === 0) rotateMarket();
 
 function save(){ localStorage.setItem('farmShopState', JSON.stringify(state)); }
+
+function rotateMarket(){
+  state.vendorStock = {};
+  VENDORS.forEach(v => {
+    const poolCopy = [...v.pool];
+    const count = Math.min(v.id === 'mystery' ? 1 : 2, poolCopy.length);
+    const chosen = [];
+    for (let i = 0; i < count; i++) {
+      const idx = Math.floor(Math.random() * poolCopy.length);
+      chosen.push(poolCopy.splice(idx, 1)[0]);
+    }
+    state.vendorStock[v.id] = chosen;
+  });
+}
+
+function generateOrders(){
+  const count = Math.random() < 0.5 ? 2 : 3;
+  const pool = [...RECIPES];
+  const orders = [];
+  for (let i = 0; i < count && pool.length; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    const r = pool.splice(idx, 1)[0];
+    orders.push({id: `${state.day}_${i}`, recipeId: r.id, served: false});
+  }
+  state.orders = orders;
+}
+
+function canServe(recipe){
+  const counts = {};
+  state.kitchen.forEach(it => counts[it.id] = (counts[it.id] || 0) + 1);
+  const needCounts = {};
+  recipe.need.forEach(id => needCounts[id] = (needCounts[id] || 0) + 1);
+  return Object.entries(needCounts).every(([id, n]) => (counts[id] || 0) >= n);
+}
+
+function serveOrder(orderId){
+  const order = state.orders.find(o => o.id === orderId);
+  if (!order || order.served) return;
+  const recipe = RECIPES.find(r => r.id === order.recipeId);
+  if (!canServe(recipe)) { say(`${recipe.name}的料还没备齐,先去市场买。`); return; }
+  const needCounts = {};
+  recipe.need.forEach(id => needCounts[id] = (needCounts[id] || 0) + 1);
+  const usedItems = [];
+  const remaining = [];
+  state.kitchen.forEach(it => {
+    if (needCounts[it.id] > 0) { usedItems.push(it); needCounts[it.id]--; }
+    else remaining.push(it);
+  });
+  state.kitchen = remaining;
+
+  const hasTrap = usedItems.some(it => it.quality === '坑');
+  let tier;
+  if (hasTrap) {
+    tier = '翻车';
+  } else {
+    const score = usedItems.reduce((s, it) => s + ({新鲜:3, 普通:2, 有点蔫:1}[it.quality] || 0), 0) / usedItems.length;
+    if (score >= 2.5) tier = '极佳';
+    else if (score >= 1.5) tier = '还行';
+    else tier = '普通';
+  }
+  const mult = {极佳:1.3, 还行:1, 普通:0.7, 翻车:0.3}[tier];
+  const earn = Math.round(recipe.reward * mult);
+  state.coins += earn;
+  if (tier === '极佳') state.rapport += 1;
+  order.served = true;
+  const frag = tryFindFragment();
+  render();
+  let msg = `「${recipe.name}」端上去了。\n\n${pick(CUSTOMER_REACTIONS[tier])}\n\nEthan: ${pick(COOK_REACTIONS[tier])}\n\n赚了💰${earn}`;
+  if (frag) msg += `\n\n🧩 收银时翻出了一片记忆碎片:\n${frag.text}`;
+  document.getElementById('rText').textContent = msg;
+  document.getElementById('rOverlay').classList.add('show');
+}
 function crop(id){ return CROPS.find(c=>c.id===id); }
 function say(text){ document.getElementById('dialogue').textContent = text; }
 function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
@@ -528,6 +640,33 @@ function renderRestaurant(){
     }
     listEl.appendChild(div);
   });
+
+  const ordersEl = document.getElementById('ordersList');
+  const ordersEmptyEl = document.getElementById('ordersEmpty');
+  ordersEl.innerHTML = '';
+  if (state.renovationStep < 5) {
+    ordersEmptyEl.textContent = '还没开始营业,把试营业那步过了才会有客人上门。';
+    ordersEmptyEl.style.display = 'block';
+  } else if (!state.orders || state.orders.length === 0) {
+    ordersEmptyEl.textContent = '今天客人还没来,过一天看看。';
+    ordersEmptyEl.style.display = 'block';
+  } else {
+    ordersEmptyEl.style.display = 'none';
+    state.orders.forEach(o => {
+      const recipe = RECIPES.find(r => r.id === o.recipeId);
+      const needText = recipe.need.map(id => ingredient(id).emoji).join('');
+      const div = document.createElement('div');
+      div.className = 'vitem';
+      if (o.served) {
+        div.innerHTML = `<div class="ic">${recipe.emoji}</div><div class="nm">${recipe.name} ${needText}</div><div class="pr">已上桌</div>`;
+      } else {
+        const ready = canServe(recipe);
+        div.innerHTML = `<div class="ic">${recipe.emoji}</div><div class="nm">${recipe.name} ${needText}</div>
+          <button class="vbtn buy" ${ready ? '' : 'disabled'} onclick="serveOrder('${o.id}')">端上</button>`;
+      }
+      ordersEl.appendChild(div);
+    });
+  }
 
   document.getElementById('fragCount').textContent = `${state.fragments.length}/${FRAGMENTS.length}`;
   const fragEl = document.getElementById('fragGrid');
@@ -711,10 +850,12 @@ function renderMarket(){
     const block = document.createElement('div');
     block.className = 'vendor';
     let itemsHtml = '';
-    v.items.forEach(it => {
+    const stock = state.vendorStock[v.id] || [];
+    stock.forEach(itemId => {
+      const it = ingredient(itemId);
       const key = `${v.id}_${it.id}`;
       const haggledToday = !!state.haggled[key];
-      const curPrice = state.priceMod[key] || it.price;
+      const curPrice = state.priceMod[key] || PRICE[it.id];
       itemsHtml += `
         <div class="vitem">
           <div class="ic">${it.emoji}</div>
@@ -814,12 +955,11 @@ function rollQuality(){
 
 function haggle(vendorId, itemId){
   const v = VENDORS.find(x=>x.id===vendorId);
-  const it = v.items.find(x=>x.id===itemId);
   const key = `${vendorId}_${itemId}`;
   if (state.haggled[key]) return;
   state.haggled[key] = true;
   if (Math.random() < v.haggleChance) {
-    state.priceMod[key] = Math.max(1, Math.round(it.price * 0.8));
+    state.priceMod[key] = Math.max(1, Math.round(PRICE[itemId] * 0.8));
     say(`${v.name}: ${pick(LINES.haggleWin)}`);
   } else {
     say(`${v.name}: ${pick(LINES.haggleLose)}`);
@@ -830,9 +970,9 @@ function haggle(vendorId, itemId){
 
 function buyIngredient(vendorId, itemId){
   const v = VENDORS.find(x=>x.id===vendorId);
-  const it = v.items.find(x=>x.id===itemId);
+  const it = ingredient(itemId);
   const key = `${vendorId}_${itemId}`;
-  const price = state.priceMod[key] || it.price;
+  const price = state.priceMod[key] || PRICE[itemId];
   if (state.coins < price) { say(pick(LINES.lowCoins)); return; }
   state.coins -= price;
   state.kitchen.push({id: it.id, name: it.name, emoji: it.emoji, quality: rollQuality()});
@@ -879,6 +1019,8 @@ function nextDay() {
   state.day += 1;
   state.haggled = {};
   state.priceMod = {};
+  rotateMarket();
+  if (state.renovationStep >= 5) generateOrders(); else state.orders = [];
   say(pick(LINES.nextDay));
   render();
   if (state.day % 3 === 0) {
