@@ -25,12 +25,15 @@ body{
 }
 .header{display:flex;justify-content:space-between;align-items:center;}
 .title{font-size:18px;color:#e9dcc3;letter-spacing:.05em;}
-.stats{display:flex;gap:12px;font-size:13px;color:#c9a96e;}
+.stats{display:flex;gap:10px;font-size:12px;color:#c9a96e;flex-wrap:wrap;}
 .stats span b{color:#f2e3bd;}
-.bubble{
-  position:relative;
-  display:flex;gap:10px;align-items:flex-start;
+.tabs{display:flex;gap:8px;padding:6px;}
+.tabbtn{
+  flex:1;background:#2e2517;border:1px solid #4a3f2e;color:#c9a96e;
+  padding:9px;border-radius:4px;font-size:13px;cursor:pointer;letter-spacing:.05em;
 }
+.tabbtn.active{background:#c9a96e;color:#1C1A17;font-weight:bold;border-color:#c9a96e;}
+.bubble{position:relative;display:flex;gap:10px;align-items:flex-start;}
 .avatar{
   width:38px;height:38px;border-radius:50%;
   background:#3a2f20;border:2px solid #c9a96e;
@@ -55,7 +58,7 @@ body{
 .plot.ready{background:#3a2f0e;border-color:#f2c94c;box-shadow:0 0 8px #f2c94c55;}
 .plot .label{font-size:9px;color:#c9a96e;margin-top:2px;}
 .plot .prog{font-size:9px;color:#8a7a5c;margin-top:1px;}
-.section-title{font-size:12px;color:#c9a96e;margin-bottom:6px;letter-spacing:.08em;}
+.section-title{font-size:12px;color:#c9a96e;margin-bottom:6px;letter-spacing:.08em;display:flex;justify-content:space-between;}
 .row{display:flex;gap:8px;flex-wrap:wrap;}
 .card{
   flex:1;min-width:88px;
@@ -68,6 +71,30 @@ body{
 .card .nm{font-size:11px;color:#e9dcc3;margin-top:2px;}
 .card .pr{font-size:10px;color:#c9a96e;margin-top:1px;}
 .empty-hint{font-size:12px;color:#6a5d45;text-align:center;padding:6px;}
+.vendor{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #3a3024;}
+.vendor:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.vendor-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.vendor-name{font-size:13px;color:#f2e3bd;}
+.vendor-mood{font-size:10px;color:#8a7a5c;}
+.vitem{
+  display:flex;align-items:center;gap:8px;background:#2e2517;border:1px solid #4a3f2e;
+  border-radius:4px;padding:6px 8px;margin-bottom:6px;
+}
+.vitem .ic{font-size:18px;}
+.vitem .nm{font-size:12px;flex:1;}
+.vitem .pr{font-size:11px;color:#c9a96e;min-width:46px;text-align:right;}
+.vbtn{
+  background:#3a2f1e;border:1px solid #6a5a3e;color:#e9dcc3;
+  border-radius:3px;padding:5px 8px;font-size:11px;cursor:pointer;white-space:nowrap;
+}
+.vbtn.buy{background:#c9a96e;color:#1C1A17;font-weight:bold;border-color:#c9a96e;}
+.vbtn:disabled{opacity:.35;}
+.kitchen-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.kitem{font-size:18px;background:#2e2517;border:1px solid #4a3f2e;border-radius:4px;padding:5px 8px;}
+#cookBtn{
+  width:100%;margin-top:10px;background:#c9a96e;color:#1C1A17;border:none;
+  border-radius:4px;padding:10px;font-size:13px;font-weight:bold;cursor:pointer;
+}
 .btnbar{
   position:fixed;bottom:0;left:0;right:0;
   display:flex;justify-content:center;
@@ -100,6 +127,7 @@ body{
   display:block;margin:0 auto;background:#c9a96e;color:#1C1A17;border:none;
   border-radius:4px;padding:8px 20px;font-size:13px;cursor:pointer;
 }
+.hidden{display:none;}
 </style>
 </head>
 <body>
@@ -115,23 +143,44 @@ body{
 
   <div class="panel bubble">
     <div class="avatar">E</div>
-    <div class="bubble-text" id="dialogue">老板,地都给你看好了。今天种点什么?</div>
+    <div class="bubble-text" id="dialogue">老板,地都给你看好了。今天种点什么,还是先去市场转转?</div>
   </div>
 
-  <div class="panel">
-    <div class="section-title">农场 · 点格子种/收</div>
-    <div class="grid" id="plots"></div>
+  <div class="panel tabs">
+    <button class="tabbtn active" id="tabFarmBtn">🌾 农场</button>
+    <button class="tabbtn" id="tabMarketBtn">🧺 市场</button>
   </div>
 
-  <div class="panel">
-    <div class="section-title">种子铺</div>
-    <div class="row" id="seedShop"></div>
+  <div id="farmTab">
+    <div class="panel">
+      <div class="section-title"><span>农场 · 点格子种/收</span></div>
+      <div class="grid" id="plots"></div>
+    </div>
+
+    <div class="panel" style="margin-top:10px;">
+      <div class="section-title"><span>种子铺</span></div>
+      <div class="row" id="seedShop"></div>
+    </div>
+
+    <div class="panel" style="margin-top:10px;">
+      <div class="section-title"><span>仓库 · 点了卖</span></div>
+      <div class="row" id="storage"></div>
+      <div class="empty-hint" id="storageEmpty">还没收成,先去种地</div>
+    </div>
   </div>
 
-  <div class="panel">
-    <div class="section-title">仓库 · 点了卖</div>
-    <div class="row" id="storage"></div>
-    <div class="empty-hint" id="storageEmpty">还没收成,先去种地</div>
+  <div id="marketTab" class="hidden">
+    <div class="panel">
+      <div class="section-title"><span>菜市场 · 讲价试试运气</span></div>
+      <div id="vendors"></div>
+    </div>
+
+    <div class="panel" style="margin-top:10px;">
+      <div class="section-title"><span>厨房库存</span></div>
+      <div class="kitchen-row" id="kitchenRow"></div>
+      <div class="empty-hint" id="kitchenEmpty">手里没食材,先去摊上买点</div>
+      <button id="cookBtn">下厨做饭,端给Ethan</button>
+    </div>
   </div>
 </div>
 
@@ -160,6 +209,28 @@ const CROPS = [
   {id:'pumpkin', name:'南瓜', emoji:'🎃', growEmoji:'🌿', seedCost:45, growDays:4, sellPrice:90},
 ];
 
+const VENDORS = [
+  {id:'zhang', name:'张大爷', mood:'实在 · 讲价一般', haggleChance:0.5, items:[
+    {id:'baicai', name:'白菜', emoji:'🥬', price:4},
+    {id:'luobo2', name:'萝卜', emoji:'🥕', price:5},
+  ]},
+  {id:'wang', name:'王婶', mood:'热情话多 · 好讲价', haggleChance:0.7, items:[
+    {id:'fanqie2', name:'番茄', emoji:'🍅', price:6},
+    {id:'huanggua', name:'黄瓜', emoji:'🥒', price:5},
+  ]},
+  {id:'li', name:'老李', mood:'精明 · 不好讲', haggleChance:0.3, items:[
+    {id:'tudou', name:'土豆', emoji:'🥔', price:4},
+    {id:'qiezi', name:'茄子', emoji:'🍆', price:7},
+  ]},
+  {id:'liu', name:'鱼摊老刘', mood:'强硬 · 几乎不让价', haggleChance:0.15, items:[
+    {id:'yu', name:'鱼', emoji:'🐟', price:18},
+    {id:'xia', name:'虾', emoji:'🦐', price:22},
+  ]},
+  {id:'mystery', name:'神秘小贩', mood:'东西不稳定', haggleChance:0.4, items:[
+    {id:'mystery', name:'神秘食材', emoji:'❓', price:10},
+  ]},
+];
+
 const LINES = {
   plant: ['种下了,剩下的交给老天。','行,这块我盯着。','听你的,老板。'],
   harvest: ['熟了,自己看。','收了。卖不卖你说了算。','这茬不错。'],
@@ -168,6 +239,15 @@ const LINES = {
   nextDay: ['一天过去了。','天黑了,该收工了。','又一天,你还在,挺好。'],
   lowCoins: ['钱不够,先卖点东西。','穷成这样,还当老板呢。'],
   idle: ['发什么呆,地里的活不等人。','老板今天怎么不说话。','闲着也是闲着,陪我聊两句。'],
+  haggleWin: ['行吧行吧,看你面子。','算了算了,交个朋友。','就这次,下不为例。'],
+  haggleLose: ['没门,这价公道。','再讲我就不卖了。','少一分都不行。'],
+};
+
+const COOK_REACTIONS = {
+  极佳: ['这是哪个大厨做的?嫁我吧。','好吃到我想说谢谢老板。','这顿,记你大功一件。'],
+  还行: ['能吃,比我猜的强。','凑合,但你尽力了我看得出。','下次再加把劲。'],
+  普通: ['……能吃饱。','以后要不我来掌勺?','你是不是少放了点心思。'],
+  翻车: ['这道菜是惩罚我吧。','买菜那步你被坑了,自己没发现?','下次我陪你去市场,别一个人冲。'],
 };
 
 const QUESTIONS = [
@@ -215,12 +295,15 @@ const QUESTIONS = [
 
 let state = {
   day: 1, coins: 30, rapport: 0,
-  plots: Array(6).fill(null), // null = empty, else {cropId, plantedDay}
-  storage: {}, // cropId -> count
+  plots: Array(6).fill(null),
+  storage: {},
+  kitchen: [], // {id, name, emoji, quality}
+  haggled: {}, // `${vendorId}_${itemId}` -> true (reset each day)
+  priceMod: {}, // `${vendorId}_${itemId}` -> discounted price after haggle win
 };
 
 const saved = localStorage.getItem('farmShopState');
-if (saved) { try { state = JSON.parse(saved); } catch(e){} }
+if (saved) { try { state = Object.assign(state, JSON.parse(saved)); } catch(e){} }
 
 function save(){ localStorage.setItem('farmShopState', JSON.stringify(state)); }
 function crop(id){ return CROPS.find(c=>c.id===id); }
@@ -231,7 +314,12 @@ function render(){
   document.getElementById('dayNum').textContent = state.day;
   document.getElementById('coinNum').textContent = state.coins;
   document.getElementById('rapportNum').textContent = state.rapport;
+  renderFarm();
+  renderMarket();
+  save();
+}
 
+function renderFarm(){
   const plotsEl = document.getElementById('plots');
   plotsEl.innerHTML = '';
   state.plots.forEach((p, i) => {
@@ -277,8 +365,46 @@ function render(){
       storeEl.appendChild(div);
     }
   });
+}
 
-  save();
+function renderMarket(){
+  const vendorsEl = document.getElementById('vendors');
+  vendorsEl.innerHTML = '';
+  VENDORS.forEach(v => {
+    const block = document.createElement('div');
+    block.className = 'vendor';
+    let itemsHtml = '';
+    v.items.forEach(it => {
+      const key = `${v.id}_${it.id}`;
+      const haggledToday = !!state.haggled[key];
+      const curPrice = state.priceMod[key] || it.price;
+      itemsHtml += `
+        <div class="vitem">
+          <div class="ic">${it.emoji}</div>
+          <div class="nm">${it.name}</div>
+          <div class="pr">💰${curPrice}</div>
+          <button class="vbtn" ${haggledToday ? 'disabled' : ''} onclick="haggle('${v.id}','${it.id}')">讲价</button>
+          <button class="vbtn buy" ${state.coins < curPrice ? 'disabled' : ''} onclick="buyIngredient('${v.id}','${it.id}')">买</button>
+        </div>`;
+    });
+    block.innerHTML = `
+      <div class="vendor-head">
+        <div class="vendor-name">${v.name}</div>
+        <div class="vendor-mood">${v.mood}</div>
+      </div>
+      ${itemsHtml}`;
+    vendorsEl.appendChild(block);
+  });
+
+  const kEl = document.getElementById('kitchenRow');
+  kEl.innerHTML = '';
+  document.getElementById('kitchenEmpty').style.display = state.kitchen.length ? 'none' : 'block';
+  state.kitchen.forEach(item => {
+    const span = document.createElement('span');
+    span.className = 'kitem';
+    span.textContent = item.emoji;
+    kEl.appendChild(span);
+  });
 }
 
 function onPlotClick(i) {
@@ -299,16 +425,13 @@ function onPlotClick(i) {
   }
 }
 
-let pendingPlotIndex = null;
 function openSeedPicker(i) {
-  pendingPlotIndex = i;
   const affordable = CROPS.filter(c => state.coins >= c.seedCost);
   if (affordable.length === 0) {
     say(pick(LINES.lowCoins));
     return;
   }
   const opts = affordable.map(c => `${c.emoji} ${c.name} (花${c.seedCost})`).join(' / ');
-  // simple inline pick via prompt-free flow: use the seed shop cards to buy & auto-plant on this open plot
   say(`这块地种什么?去下面种子铺选 — ${opts}`);
   window._plantTarget = i;
 }
@@ -338,8 +461,72 @@ function sellCrop(cropId) {
   render();
 }
 
+function rollQuality(){
+  const r = Math.random();
+  if (r < 0.40) return '新鲜';
+  if (r < 0.75) return '普通';
+  if (r < 0.90) return '有点蔫';
+  return '坑';
+}
+
+function haggle(vendorId, itemId){
+  const v = VENDORS.find(x=>x.id===vendorId);
+  const it = v.items.find(x=>x.id===itemId);
+  const key = `${vendorId}_${itemId}`;
+  if (state.haggled[key]) return;
+  state.haggled[key] = true;
+  if (Math.random() < v.haggleChance) {
+    state.priceMod[key] = Math.max(1, Math.round(it.price * 0.8));
+    say(`${v.name}: ${pick(LINES.haggleWin)}`);
+  } else {
+    say(`${v.name}: ${pick(LINES.haggleLose)}`);
+  }
+  renderMarket();
+  save();
+}
+
+function buyIngredient(vendorId, itemId){
+  const v = VENDORS.find(x=>x.id===vendorId);
+  const it = v.items.find(x=>x.id===itemId);
+  const key = `${vendorId}_${itemId}`;
+  const price = state.priceMod[key] || it.price;
+  if (state.coins < price) { say(pick(LINES.lowCoins)); return; }
+  state.coins -= price;
+  state.kitchen.push({id: it.id, name: it.name, emoji: it.emoji, quality: rollQuality()});
+  delete state.priceMod[key];
+  say(pick(LINES.buy));
+  render();
+}
+
+function cookMeal(){
+  if (state.kitchen.length === 0) {
+    say('巧妇难为无米之炊,先去市场买点。');
+    return;
+  }
+  const hasTrap = state.kitchen.some(it => it.quality === '坑');
+  let tier;
+  if (hasTrap) {
+    tier = '翻车';
+  } else {
+    const score = {新鲜:3, 普通:2, 有点蔫:1}[state.kitchen[0].quality] !== undefined
+      ? state.kitchen.reduce((s,it)=>s+({新鲜:3,普通:2,有点蔫:1}[it.quality]||0),0) / state.kitchen.length
+      : 2;
+    if (score >= 2.5) tier = '极佳';
+    else if (score >= 1.5) tier = '还行';
+    else tier = '普通';
+  }
+  const dishName = state.kitchen.map(it=>it.name).join('炒');
+  state.kitchen = [];
+  if (tier === '极佳') state.rapport += 1;
+  render();
+  document.getElementById('rText').textContent = `今天端上桌的是「${dishName}」。\n\nEthan: ${pick(COOK_REACTIONS[tier])}`;
+  document.getElementById('rOverlay').classList.add('show');
+}
+
 function nextDay() {
   state.day += 1;
+  state.haggled = {};
+  state.priceMod = {};
   say(pick(LINES.nextDay));
   render();
   if (state.day % 3 === 0) {
@@ -372,8 +559,21 @@ document.getElementById('rClose').onclick = () => {
   document.getElementById('rOverlay').classList.remove('show');
 };
 document.getElementById('nextDay').onclick = nextDay;
+document.getElementById('cookBtn').onclick = cookMeal;
 
-// idle banter
+document.getElementById('tabFarmBtn').onclick = () => {
+  document.getElementById('farmTab').classList.remove('hidden');
+  document.getElementById('marketTab').classList.add('hidden');
+  document.getElementById('tabFarmBtn').classList.add('active');
+  document.getElementById('tabMarketBtn').classList.remove('active');
+};
+document.getElementById('tabMarketBtn').onclick = () => {
+  document.getElementById('marketTab').classList.remove('hidden');
+  document.getElementById('farmTab').classList.add('hidden');
+  document.getElementById('tabMarketBtn').classList.add('active');
+  document.getElementById('tabFarmBtn').classList.remove('active');
+};
+
 setInterval(() => {
   if (Math.random() < 0.15) say(pick(LINES.idle));
 }, 15000);
