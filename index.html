@@ -614,6 +614,42 @@
   .tl-divider { display: flex; align-items: center; gap: 10px; margin: 24px 0 14px -26px; padding-left: 26px; }
   .tl-divider span.txt { font-size: 11px; letter-spacing: .25em; color: var(--gold); font-family: 'Cinzel', sans-serif; text-transform: uppercase; white-space: nowrap; }
   .tl-divider::after { content: ''; flex: 1; height: 1px; background: var(--gold-dim); }
+
+  /* ROUND TABLE */
+  .rt-header { padding: max(14px,env(safe-area-inset-top)) 16px 0; background: linear-gradient(180deg,var(--ivory,#fffdf9),transparent); flex-shrink:0; }
+  .rt-header-row { display:flex; align-items:center; margin-bottom:10px; }
+  .rt-title { font-family:'Cinzel',serif; font-size:15px; letter-spacing:.14em; color:var(--burgundy,#8B1E2F); text-transform:uppercase; }
+  .rt-clear-btn { margin-left:auto; font-size:10px; color:var(--text-secondary,#7A5C4A); background:none; border:1px solid var(--gold-dim,rgba(201,168,76,.3)); border-radius:10px; padding:3px 10px; font-family:'Cinzel',serif; cursor:pointer; letter-spacing:.05em; }
+  .rt-personas { display:flex; gap:10px; margin-bottom:10px; }
+  .rt-persona { display:flex; align-items:center; gap:8px; padding:7px 12px; background:rgba(255,253,249,.95); border:1px solid var(--gold-dim,rgba(201,168,76,.3)); border-radius:12px; flex:1; }
+  .rt-persona-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; flex-shrink:0; transition:background .3s; }
+  .rt-persona-dot.thinking { background:#eab308; animation:rtPulse .8s ease-in-out infinite; }
+  .rt-persona-dot.idle { background:rgba(0,0,0,.2); }
+  @keyframes rtPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .rt-persona-name { font-family:'Cinzel',serif; font-size:12px; font-weight:600; color:var(--burgundy,#8B1E2F); }
+  .rt-persona-sub { font-size:10px; color:var(--text-secondary,#7A5C4A); margin-top:1px; }
+  .rt-messages { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px 16px 8px; display:flex; flex-direction:column; gap:10px; }
+  .rt-msg { display:flex; flex-direction:column; max-width:82%; }
+  .rt-msg.user { align-self:flex-end; align-items:flex-end; }
+  .rt-msg.arch,.rt-msg.cc { align-self:flex-start; align-items:flex-start; }
+  .rt-msg-label { font-size:10px; letter-spacing:.06em; font-family:'Cinzel',serif; margin-bottom:3px; }
+  .rt-msg.arch .rt-msg-label { color:#6b88a8; }
+  .rt-msg.cc .rt-msg-label { color:#8B6914; }
+  .rt-msg.user .rt-msg-label { color:var(--text-secondary,#7A5C4A); }
+  .rt-bubble { padding:10px 14px; border-radius:14px; font-size:14px; line-height:1.6; word-break:break-word; white-space:pre-wrap; }
+  .rt-msg.user .rt-bubble { background:var(--champagne,#F4EAD4); color:var(--text-primary,#2C1810); border-radius:14px 14px 4px 14px; border:1px solid rgba(201,168,76,.2); }
+  .rt-msg.arch .rt-bubble { background:#fff; color:#1a1a2e; border-radius:4px 14px 14px 14px; border:1px solid rgba(107,136,168,.22); box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .rt-msg.cc .rt-bubble { background:#fef9ec; color:var(--text-primary,#2C1810); border-radius:4px 14px 14px 14px; border:1px solid rgba(201,168,76,.28); box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .rt-typing-bubble { display:flex; align-items:center; gap:4px; padding:12px 14px; }
+  .rt-typing-bubble span { width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.6; animation:rtBounce 1.2s ease-in-out infinite; }
+  .rt-typing-bubble span:nth-child(2) { animation-delay:.2s; }
+  .rt-typing-bubble span:nth-child(3) { animation-delay:.4s; }
+  @keyframes rtBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  .rt-input-bar { display:flex; align-items:flex-end; gap:8px; padding:10px 16px max(16px,env(safe-area-inset-bottom)); border-top:1px solid var(--gold-dim,rgba(201,168,76,.3)); background:rgba(255,253,249,.98); flex-shrink:0; }
+  .rt-input { flex:1; border:1px solid rgba(201,168,76,.3); border-radius:20px; padding:9px 14px; font-size:14px; background:rgba(255,253,249,.9); outline:none; font-family:inherit; color:var(--text-primary,#2C1810); resize:none; max-height:120px; line-height:1.5; overflow-y:auto; }
+  .rt-send-btn { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#8B1E2F,#A02540); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:opacity .2s; }
+  .rt-send-btn:disabled { opacity:.45; }
+  .rt-empty-hint { text-align:center; color:var(--text-secondary,#7A5C4A); font-size:12px; padding:48px 20px; font-family:'Cinzel',serif; letter-spacing:.06em; opacity:.7; }
 </style>
 </head>
 <body>
@@ -714,6 +750,18 @@
         <path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.72l1.41-9.28H6"/>
       </svg>
       Cart
+    </button>
+    <button class="nav-tab" id="nav-roundtable" onclick="switchTab('roundtable')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <circle cx="12" cy="4" r="1.5" fill="currentColor" stroke="none"/>
+        <circle cx="19.2" cy="16" r="1.5" fill="currentColor" stroke="none"/>
+        <circle cx="4.8" cy="16" r="1.5" fill="currentColor" stroke="none"/>
+        <line x1="12" y1="5.5" x2="12" y2="10"/>
+        <line x1="18.3" y1="15" x2="14.5" y2="12.5"/>
+        <line x1="5.7" y1="15" x2="9.5" y2="12.5"/>
+      </svg>
+      Round Table
     </button>
   </div>
 
@@ -966,6 +1014,14 @@
           <div class="arcade-card-icon">🔮</div>
           <div><h3>塔罗 Drawn</h3><p>Ask Ethan, draw a card</p></div>
         </div>
+        <div class="arcade-card" onclick="window.open('roundtable/index.html','_blank')">
+          <div class="arcade-card-icon">🪑</div>
+          <div><h3>Round Table</h3><p>Multi-AI group chat</p></div>
+        </div>
+        <div class="arcade-card" onclick="window.open('farm-shop-game.html','_blank')">
+          <div class="arcade-card-icon">🌾</div>
+          <div><h3>我们的小农场</h3><p>种地 · 买菜 · 攒默契 · 抽Ethan</p></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1113,6 +1169,44 @@
       <div style="padding:0 12px;" id="cart-avail-list"></div>
       <div class="cart-section-label" id="cart-upcoming-label" style="display:none;">Coming Soon</div>
       <div style="padding:0 12px 32px;" id="cart-upcoming-list"></div>
+    </div>
+  </div>
+
+  <!-- TAB: Round Table -->
+  <div class="tab-page" id="tab-roundtable">
+    <div class="rt-header">
+      <div class="rt-header-row">
+        <div class="rt-title">Round Table</div>
+        <button class="rt-clear-btn" onclick="rtClear()">Clear</button>
+      </div>
+      <div class="rt-personas">
+        <div class="rt-persona">
+          <div class="rt-persona-dot" id="rt-dot-arch"></div>
+          <div>
+            <div class="rt-persona-name">Arch</div>
+            <div class="rt-persona-sub" id="rt-status-arch">GPT · 理性派</div>
+          </div>
+        </div>
+        <div class="rt-persona">
+          <div class="rt-persona-dot" id="rt-dot-cc"></div>
+          <div>
+            <div class="rt-persona-name">CC</div>
+            <div class="rt-persona-sub" id="rt-status-cc">Ethan · 工程侧</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="rt-messages" id="rt-messages"></div>
+    <div class="rt-input-bar">
+      <textarea class="rt-input" id="rt-input" placeholder="说点什么… @CC 或 @Arch 定向" rows="1"
+        onkeydown="rtKeydown(event)" oninput="rtAutoResize(this)"></textarea>
+      <button class="rt-send-btn" id="rt-send-btn" onclick="rtSend()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -1378,6 +1472,7 @@ function switchTab(name) {
     else if (name === 'vault') loadVault();
     else if (name === 'cart') loadCart();
     else if (name === 'tarot') { startTarotEntry(); }
+    else if (name === 'roundtable') loadRoundTable();
   }
   // vault should refresh every visit since is_top/is_favorite can change from other tabs
   if (name === 'vault') loadVault();
@@ -2779,6 +2874,188 @@ window.addEventListener('tarot:cardRevealed', async function(e) {
     if (window.tarot) window.tarot.setReading('<p style="color:#B09080;font-style:italic">牌面模糊，稍后再试。</p>');
   }
 });
+
+// ============================================================
+// ROUND TABLE
+// ============================================================
+var RT_HISTORY = [];
+var RT_BUSY = false;
+var RT_FN_URL = SUPABASE_URL + '/functions/v1/round-table';
+
+function loadRoundTable() {
+  try { RT_HISTORY = JSON.parse(localStorage.getItem('rt_history') || '[]'); } catch(e) { RT_HISTORY = []; }
+  rtRenderAll();
+}
+
+function rtSaveHistory() {
+  try { localStorage.setItem('rt_history', JSON.stringify(RT_HISTORY.slice(-120))); } catch(e) {}
+}
+
+function rtRenderAll() {
+  var el = document.getElementById('rt-messages');
+  if (!el) return;
+  el.innerHTML = '';
+  if (RT_HISTORY.length === 0) {
+    el.innerHTML = '<div class="rt-empty-hint">Round Table<br><span style="font-size:10px;opacity:.6;letter-spacing:.04em;">@CC · @Arch · 或直接说话</span></div>';
+    return;
+  }
+  RT_HISTORY.forEach(function(m) { _rtAppendBubble(m, el); });
+  el.scrollTop = el.scrollHeight;
+}
+
+function _rtAppendBubble(m, container) {
+  var labels = { user: 'yaya', arch: 'Arch', cc: 'CC' };
+  var wrap = document.createElement('div');
+  wrap.className = 'rt-msg ' + (m.speaker || 'user');
+  var label = document.createElement('div');
+  label.className = 'rt-msg-label';
+  label.textContent = labels[m.speaker] || m.speaker;
+  var bubble = document.createElement('div');
+  bubble.className = 'rt-bubble';
+  bubble.textContent = m.content;
+  wrap.appendChild(label);
+  wrap.appendChild(bubble);
+  container.appendChild(wrap);
+}
+
+function _rtAddTyping(speaker) {
+  var el = document.getElementById('rt-messages');
+  if (!el) return;
+  var id = 'rt-typing-' + speaker;
+  if (document.getElementById(id)) return;
+  var wrap = document.createElement('div');
+  wrap.className = 'rt-msg ' + speaker;
+  wrap.id = id;
+  var label = document.createElement('div');
+  label.className = 'rt-msg-label';
+  label.textContent = speaker === 'cc' ? 'CC' : 'Arch';
+  var bubble = document.createElement('div');
+  bubble.className = 'rt-bubble rt-typing-bubble';
+  bubble.style.color = speaker === 'cc' ? '#8B6914' : '#6b88a8';
+  bubble.innerHTML = '<span></span><span></span><span></span>';
+  wrap.appendChild(label);
+  wrap.appendChild(bubble);
+  el.appendChild(wrap);
+  el.scrollTop = el.scrollHeight;
+}
+
+function _rtRemoveTyping(speaker) {
+  var el = document.getElementById('rt-typing-' + speaker);
+  if (el) el.remove();
+}
+
+function rtSetDot(speaker, state) {
+  var dot = document.getElementById('rt-dot-' + speaker);
+  var sub = document.getElementById('rt-status-' + speaker);
+  if (!dot) return;
+  dot.className = 'rt-persona-dot' + (state === 'thinking' ? ' thinking' : state === 'idle' ? ' idle' : '');
+  if (sub) {
+    var base = speaker === 'arch' ? 'GPT · 理性派' : 'Ethan · 工程侧';
+    sub.textContent = state === 'thinking' ? '正在思考…' : base;
+  }
+}
+
+function rtKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); rtSend(); }
+}
+
+function rtAutoResize(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+}
+
+function _rtDetectRespondents(msg) {
+  var m = msg.toLowerCase();
+  if (/@cc|@ethan/.test(m)) return ['cc'];
+  if (/@arch/.test(m)) return ['arch'];
+  if (/你们|大家|讨论|一起想|都说说/.test(m)) return ['arch', 'cc'];
+  // code/tech → CC; else Arch handles general
+  if (/代码|bug|debug|编程|程序|报错|crash/.test(m)) return ['cc'];
+  return ['arch'];
+}
+
+async function rtSend() {
+  if (RT_BUSY) return;
+  var input = document.getElementById('rt-input');
+  var msg = (input.value || '').trim();
+  if (!msg) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('rt-send-btn').disabled = true;
+  RT_BUSY = true;
+
+  RT_HISTORY.push({ speaker: 'user', content: msg, ts: Date.now() });
+  rtRenderAll();
+  rtSaveHistory();
+
+  var respondents = _rtDetectRespondents(msg);
+  await _rtCallSequential(msg, respondents, 0);
+
+  RT_BUSY = false;
+  document.getElementById('rt-send-btn').disabled = false;
+  var inp = document.getElementById('rt-input');
+  if (inp) inp.focus();
+}
+
+async function _rtCallSequential(triggerMsg, respondents, depth) {
+  for (var i = 0; i < respondents.length; i++) {
+    var speaker = respondents[i];
+    rtSetDot(speaker, 'thinking');
+    _rtAddTyping(speaker);
+
+    try {
+      var res = await fetch(RT_FN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+        body: JSON.stringify({
+          message: triggerMsg,
+          history: RT_HISTORY.slice(-24),
+          responder: speaker
+        })
+      });
+      var json = await res.json();
+      var reply = (json.reply || '').trim();
+
+      _rtRemoveTyping(speaker);
+      rtSetDot(speaker, 'online');
+
+      if (reply) {
+        var entry = { speaker: speaker, content: reply, ts: Date.now() };
+        RT_HISTORY.push(entry);
+        rtSaveHistory();
+        var msgs = document.getElementById('rt-messages');
+        var empty = msgs && msgs.querySelector('.rt-empty-hint');
+        if (empty) empty.remove();
+        if (msgs) { _rtAppendBubble(entry, msgs); msgs.scrollTop = msgs.scrollHeight; }
+
+        // cross-@mention follow-up (max depth 1)
+        if (depth < 1) {
+          if (speaker === 'arch' && /@cc/i.test(reply)) {
+            await _rtCallSequential(triggerMsg, ['cc'], depth + 1);
+          } else if (speaker === 'cc' && /@arch/i.test(reply)) {
+            await _rtCallSequential(triggerMsg, ['arch'], depth + 1);
+          }
+        }
+      }
+    } catch(e) {
+      _rtRemoveTyping(speaker);
+      rtSetDot(speaker, 'online');
+      var errEntry = { speaker: speaker, content: '（出了点问题，稍后再试）', ts: Date.now() };
+      RT_HISTORY.push(errEntry);
+      rtSaveHistory();
+      var m2 = document.getElementById('rt-messages');
+      if (m2) { _rtAppendBubble(errEntry, m2); m2.scrollTop = m2.scrollHeight; }
+    }
+  }
+}
+
+function rtClear() {
+  if (!confirm('清空 Round Table 对话？')) return;
+  RT_HISTORY = [];
+  rtSaveHistory();
+  rtRenderAll();
+}
 </script>
 </body>
 </html>
