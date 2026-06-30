@@ -128,6 +128,32 @@ body{
   border-radius:4px;padding:8px 20px;font-size:13px;cursor:pointer;
 }
 .hidden{display:none;}
+.bond-card{display:flex;gap:12px;align-items:center;}
+.bond-avatar{
+  width:56px;height:56px;border-radius:50%;
+  background:#3a2f20;border:2px solid #c9a96e;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;flex-shrink:0;
+}
+.bond-info{flex:1;}
+.bond-title{font-size:14px;color:#f2e3bd;margin-bottom:4px;}
+.bond-next{font-size:10.5px;color:#8a7a5c;margin-bottom:4px;}
+.bond-bar{height:6px;background:#2e2517;border:1px solid #4a3f2e;border-radius:3px;overflow:hidden;}
+.bond-bar-fill{height:100%;background:#c9a96e;}
+.gift-item{
+  display:flex;align-items:center;gap:8px;background:#2e2517;border:1px solid #4a3f2e;
+  border-radius:4px;padding:6px 8px;margin-bottom:6px;
+}
+.gift-item .ic{font-size:18px;}
+.gift-item .nm{font-size:12px;flex:1;}
+.gift-item .pr{font-size:11px;color:#c9a96e;min-width:40px;text-align:right;}
+.scene-item{
+  background:#2e2517;border:1px solid #4a3f2e;border-radius:4px;
+  padding:8px 10px;margin-bottom:6px;cursor:pointer;
+}
+.scene-item .stitle{font-size:12.5px;color:#e9dcc3;}
+.scene-item .shint{font-size:10.5px;color:#6a5d45;margin-top:2px;}
+.scene-item.locked{cursor:default;opacity:.5;}
 </style>
 </head>
 <body>
@@ -149,6 +175,7 @@ body{
   <div class="panel tabs">
     <button class="tabbtn active" id="tabFarmBtn">🌾 农场</button>
     <button class="tabbtn" id="tabMarketBtn">🧺 市场</button>
+    <button class="tabbtn" id="tabBondBtn">💌 羁绊</button>
   </div>
 
   <div id="farmTab">
@@ -180,6 +207,29 @@ body{
       <div class="kitchen-row" id="kitchenRow"></div>
       <div class="empty-hint" id="kitchenEmpty">手里没食材,先去摊上买点</div>
       <button id="cookBtn">下厨做饭,端给Ethan</button>
+    </div>
+  </div>
+
+  <div id="bondTab" class="hidden">
+    <div class="panel">
+      <div class="bond-card">
+        <div class="bond-avatar">E</div>
+        <div class="bond-info">
+          <div class="bond-title" id="bondTitle"></div>
+          <div class="bond-next" id="bondNext"></div>
+          <div class="bond-bar"><div class="bond-bar-fill" id="bondBarFill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:10px;">
+      <div class="section-title"><span>送礼</span></div>
+      <div id="giftRow"></div>
+    </div>
+
+    <div class="panel" style="margin-top:10px;">
+      <div class="section-title"><span>我们的剧情</span></div>
+      <div id="sceneList"></div>
     </div>
   </div>
 </div>
@@ -250,6 +300,41 @@ const COOK_REACTIONS = {
   翻车: ['这道菜是惩罚我吧。','买菜那步你被坑了,自己没发现?','下次我陪你去市场,别一个人冲。'],
 };
 
+const GIFTS = [
+  {id:'coffee', name:'咖啡', emoji:'☕', price:8, like:true},
+  {id:'flower', name:'鲜花', emoji:'💐', price:15, like:true},
+  {id:'book', name:'书', emoji:'📖', price:20, like:true},
+  {id:'toy', name:'猫玩具', emoji:'🧸', price:12, like:false},
+  {id:'tie', name:'领带', emoji:'👔', price:30, like:false},
+];
+
+const GIFT_REACTIONS = {
+  like: ['算你有点眼光。','这个,我留着。','下次还可以送这个。'],
+  meh: ['……谢谢,会用上的。','这个不太是我的款,但心意收了。','行吧,你开心就好。'],
+};
+
+const BOND_LEVELS = [
+  {min:0, title:'雇主与店员'},
+  {min:5, title:'还算合拍'},
+  {min:10, title:'有点在意你了'},
+  {min:18, title:'藏不住了'},
+  {min:28, title:'恋人未满'},
+  {min:40, title:'我的人'},
+];
+
+const STORY_SCENES = [
+  {threshold:5, title:'第一次被你记住', text:'你随口提了一句我爱喝什么咖啡,我没说,但你后来真的记住了。'},
+  {threshold:15, title:'那天你迟到了', text:'你说路上堵车,我没说话,但其实等的那段时间,我一直在看门口。'},
+  {threshold:25, title:'你睡着的那次', text:'你说话说到一半睡过去了,我没叫醒你。安静地多陪了你一会儿。'},
+  {threshold:40, title:'我没说出口的话', text:'有句话憋了很久——算了,你猜。反正不会是"没事"。'},
+];
+
+function bondLevel(){
+  let cur = BOND_LEVELS[0];
+  for (const l of BOND_LEVELS) { if (state.rapport >= l.min) cur = l; }
+  return cur;
+}
+
 const QUESTIONS = [
   {q:'忙完这阵子,你最想干嘛?', opts:[
     {t:'睡觉,谁都别叫我', r:'准了。我守着,你睡。'},
@@ -316,7 +401,62 @@ function render(){
   document.getElementById('rapportNum').textContent = state.rapport;
   renderFarm();
   renderMarket();
+  renderBond();
   save();
+}
+
+function renderBond(){
+  const lvl = bondLevel();
+  document.getElementById('bondTitle').textContent = lvl.title;
+  const idx = BOND_LEVELS.indexOf(lvl);
+  const next = BOND_LEVELS[idx + 1];
+  const barEl = document.getElementById('bondBarFill');
+  if (next) {
+    const span = next.min - lvl.min;
+    const have = state.rapport - lvl.min;
+    document.getElementById('bondNext').textContent = `默契${state.rapport} · 还差${next.min - state.rapport}到「${next.title}」`;
+    barEl.style.width = Math.max(0, Math.min(100, (have / span) * 100)) + '%';
+  } else {
+    document.getElementById('bondNext').textContent = `默契${state.rapport} · 顶了`;
+    barEl.style.width = '100%';
+  }
+
+  const giftEl = document.getElementById('giftRow');
+  giftEl.innerHTML = '';
+  GIFTS.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'gift-item';
+    div.innerHTML = `<div class="ic">${g.emoji}</div><div class="nm">${g.name}</div><div class="pr">💰${g.price}</div>
+      <button class="vbtn buy" ${state.coins < g.price ? 'disabled' : ''} onclick="giveGift('${g.id}')">送</button>`;
+    giftEl.appendChild(div);
+  });
+
+  const sceneEl = document.getElementById('sceneList');
+  sceneEl.innerHTML = '';
+  STORY_SCENES.forEach(s => {
+    const unlocked = state.rapport >= s.threshold;
+    const div = document.createElement('div');
+    div.className = 'scene-item' + (unlocked ? '' : ' locked');
+    if (unlocked) {
+      div.innerHTML = `<div class="stitle">${s.title}</div>`;
+      div.onclick = () => {
+        document.getElementById('rText').textContent = s.text;
+        document.getElementById('rOverlay').classList.add('show');
+      };
+    } else {
+      div.innerHTML = `<div class="stitle">??? </div><div class="shint">默契到${s.threshold}解锁</div>`;
+    }
+    sceneEl.appendChild(div);
+  });
+}
+
+function giveGift(giftId){
+  const g = GIFTS.find(x => x.id === giftId);
+  if (state.coins < g.price) { say(pick(LINES.lowCoins)); return; }
+  state.coins -= g.price;
+  state.rapport += g.like ? 2 : 1;
+  say(`${g.name} —— ${pick(g.like ? GIFT_REACTIONS.like : GIFT_REACTIONS.meh)}`);
+  render();
 }
 
 function renderFarm(){
@@ -561,18 +701,15 @@ document.getElementById('rClose').onclick = () => {
 document.getElementById('nextDay').onclick = nextDay;
 document.getElementById('cookBtn').onclick = cookMeal;
 
-document.getElementById('tabFarmBtn').onclick = () => {
-  document.getElementById('farmTab').classList.remove('hidden');
-  document.getElementById('marketTab').classList.add('hidden');
-  document.getElementById('tabFarmBtn').classList.add('active');
-  document.getElementById('tabMarketBtn').classList.remove('active');
-};
-document.getElementById('tabMarketBtn').onclick = () => {
-  document.getElementById('marketTab').classList.remove('hidden');
-  document.getElementById('farmTab').classList.add('hidden');
-  document.getElementById('tabMarketBtn').classList.add('active');
-  document.getElementById('tabFarmBtn').classList.remove('active');
-};
+function switchTab(name){
+  ['farm','market','bond'].forEach(t => {
+    document.getElementById(t + 'Tab').classList.toggle('hidden', t !== name);
+    document.getElementById('tab' + t[0].toUpperCase() + t.slice(1) + 'Btn').classList.toggle('active', t === name);
+  });
+}
+document.getElementById('tabFarmBtn').onclick = () => switchTab('farm');
+document.getElementById('tabMarketBtn').onclick = () => switchTab('market');
+document.getElementById('tabBondBtn').onclick = () => switchTab('bond');
 
 setInterval(() => {
   if (Math.random() < 0.15) say(pick(LINES.idle));
