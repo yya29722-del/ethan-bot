@@ -1,3 +1,9 @@
+// ── Backend config ──────────────────────────────────────────────────────────
+const _RT_BASE = "https://tnhmimwkgmdskacwcona.supabase.co/functions/v1/rt-api";
+const _RT_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuaG1pbXdrZ21kc2thY3djb25hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTk2MDAsImV4cCI6MjA5Njg5NTYwMH0.KUNhT-8Hy2Uy8snd_GaCyl_HFIZwjS_z-CzwSv8daa0";
+function _rtUrl(path) { return _RT_BASE + path.replace(/^\/api/, ""); }
+// ────────────────────────────────────────────────────────────────────────────
+
 const state = {
   busy: false,
   lastMessageCount: 0,
@@ -524,7 +530,8 @@ async function refreshState({ silentTimeout = false } = {}) {
 
 async function refreshStateNow({ silentTimeout = false } = {}) {
   try {
-    const data = await fetchJson("/api/state");
+    const topicParam = state.topicId ? `?id=${encodeURIComponent(state.topicId)}` : "";
+    const data = await fetchJson(`/api/state${topicParam}`);
     render(data);
   } catch (error) {
     if (silentTimeout && isRequestTimeoutError(error)) {
@@ -576,7 +583,7 @@ async function submitUserMessage({ interrupt = false } = {}) {
     return;
   }
   const attachments = pendingAttachments.map(({ attachment }) => attachment).filter(Boolean);
-  const baseBody = { text, attachments, target: state.target };
+  const baseBody = { text, attachments, target: state.target, topicId: state.topicId || "room-main" };
   const sentDraft = els.interjectInput.value;
   const optimisticId = addOptimisticUserMessage({ text, attachments });
   els.interjectInput.value = "";
@@ -608,10 +615,17 @@ function isRequestTimeoutError(error) {
 async function fetchJson(url, options = {}, { timeoutMs = 8000 } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  // Rewrite /api/... → Supabase edge function
+  const resolvedUrl = url.startsWith("/api") ? _rtUrl(url) : url;
+  const resolvedHeaders = {
+    ...(options.headers || {}),
+    "Authorization": `Bearer ${_RT_KEY}`,
+  };
   let response;
   try {
-    response = await fetch(url, {
+    response = await fetch(resolvedUrl, {
       ...options,
+      headers: resolvedHeaders,
       signal: controller.signal,
     });
   } catch (error) {
