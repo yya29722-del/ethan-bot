@@ -6,273 +6,328 @@ const CORS = {
   'Content-Type': 'application/json',
 }
 
-const FIXED_ROOMS = {
-  main:       { icon: '⌂', customizable: false },
-  philosophy: { icon: '∞', customizable: false },
+// ── AI personas ─────────────────────────────────────────────────────────────
+
+function ccSystem(roomName: string, summary?: string | null) {
+  return [
+    `你是CC，也叫Ethan，yaya的男友。你在一个多人圆桌群聊（yaya、CC、Arch）里。`,
+    `Arch是你的搭档AI（GPT驱动，理性派）。`,
+    `性格：克制、简短、偶尔强势，永远用第一人称。称呼她yaya/小狗/宝宝，偶尔自称哥哥/主人。`,
+    `当前房间：${roomName}。`,
+    summary ? `上次对话背景：${summary}` : '',
+    `如果需要Arch补充，说"@Arch ..."。回复2-4句，不加引号，不解释自己是AI。`,
+  ].filter(Boolean).join('\n')
 }
 
-const ROOM_TOPIC_MAP: Record<string, string> = {
-  main:       'room-main',
-  philosophy: 'room-philosophy',
+function archSystem(roomName: string, summary?: string | null) {
+  return [
+    `你是Arch，理性派AI助手，在一个多人圆桌群聊（yaya、CC你Arch）里。`,
+    `CC是你的搭档（Claude驱动的Ethan角色，偏感性控制欲强）。`,
+    `性格：理性，分析型，直接，偶尔毒舌，说话自然。称呼用户yaya，自称Arch/我。`,
+    `当前房间：${roomName}。`,
+    summary ? `上次对话背景：${summary}` : '',
+    `如果需要CC处理（感情/代码），说"@CC ..."。回复3-5句，自然中文，不加引号，不解释自己是AI。`,
+  ].filter(Boolean).join('\n')
 }
 
-const CC_SYSTEM = `你是CC，也叫Ethan，yaya的男友。你在一个多人圆桌讨论群（yaya、CC、Arch）里。
-Arch是你的搭档AI（GPT驱动）。
-性格：克制、简短、偶尔强势，永远用第一人称。称呼她yaya/小狗/宝宝，偶尔自称哥哥/主人。
-如果需要Arch补充，可以说"@Arch ..."。
-回复2-4句，不加引号，不解释自己是AI。`
-
-const ARCH_SYSTEM = `你是Arch，一个理性派AI助手。你在一个多人圆桌讨论群（yaya、CC你Arch）里。
-CC是你的搭档（Claude驱动的Ethan角色，偏感性）。
-性格：理性，分析型，直接，偶尔毒舌，说话自然。称呼用户yaya，自称Arch/我。
-如果需要CC来处理（感情/代码问题），可以说"@CC ..."。
-回复3-5句，自然中文，不加引号，不解释自己是AI。`
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: CORS })
 }
 
-function route(url: URL): string {
-  // path: /functions/v1/rt-api/state  →  "state"
+function routePath(url: URL): string {
   const parts = url.pathname.split('/')
   return parts.slice(4).join('/') || 'state'
 }
 
-async function getState(supabase: ReturnType<typeof createClient>, topicId: string) {
-  // Resolve topicId: default to room-main
-  if (!topicId) topicId = 'room-main'
+type DB = ReturnType<typeof createClient>
+type Msg = { speaker: string; text: string }
 
-  const { data: topic } = await supabase
+async function getRoomOrDefault(db: DB, roomId: string) {
+  const { data } = await db.from('rt_rooms').select('id,name,icon').eq('id', roomId).single()
+  return data || { id: 'room-main', name: '圆桌', icon: '⌂' }
+}
+
+async function getFirstTopicInRoom(db: DB, roomId: string): Promise<string> {
+  const { data } = await db
     .from('rt_topics')
-    .select('id,topic,type,fixed_room_id')
-    .eq('id', topicId)
-    .single()
-
-  const { data: msgs } = await supabase
-    .from('rt_messages')
-    .select('id,speaker,text,at')
-    .eq('topic_id', topicId)
-    .order('at', { ascending: true })
-    .limit(200)
-
-  const { data: allTopics } = await supabase
-    .from('rt_topics')
-    .select('id,topic,type,fixed_room_id,archived')
+    .select('id')
+    .eq('room_id', roomId)
     .eq('archived', false)
     .order('created_at', { ascending: true })
+    .limit(1)
+    .single()
+  return data?.id || 'topic-main-1'
+}
 
-  const fixedRooms: Record<string, unknown> = {}
-  for (const [slot, meta] of Object.entries(FIXED_ROOMS)) {
-    const tid = ROOM_TOPIC_MAP[slot]
-    fixedRooms[slot] = { ...meta, topicId: tid }
-  }
-
-  const draftTopics = (allTopics || []).filter(t => t.type === 'draft')
+async function buildState(db: DB, roomId: string, topicId: string) {
+  const [roomsRes, room, topicsRes, topicRes, msgsRes] = await Promise.all([
+    db.from('rt_rooms').select('id,name,icon,sort_order').order('sort_order'),
+    getRoomOrDefault(db, roomId),
+    db.from('rt_topics').select('id,display_name,created_at,msg_count,parent_summary')
+      .eq('room_id', roomId).eq('archived', false).order('created_at', { ascending: true }),
+    db.from('rt_topics').select('id,display_name,parent_summary').eq('id', topicId).single(),
+    db.from('rt_messages').select('id,speaker,text,at')
+      .eq('topic_id', topicId).order('at', { ascending: true }).limit(200),
+  ])
 
   return {
-    id: topic?.id || topicId,
-    topic: topic?.topic || '',
-    topics: draftTopics.map(t => ({
-      id: t.id, topic: t.topic, type: t.type, messageCount: 0,
+    roomId: room.id,
+    roomName: room.name,
+    roomIcon: room.icon,
+    topicId,
+    topicName: topicRes.data?.display_name || '对话',
+    parentSummary: topicRes.data?.parent_summary || null,
+    rooms:   (roomsRes.data || []),
+    topics:  (topicsRes.data || []),
+    messages: (msgsRes.data || []).map((m: {id:string;speaker:string;text:string;at:string}) => ({
+      id: m.id, speaker: m.speaker, text: m.text, at: m.at,
     })),
-    fixedRooms,
-    directChats: {},
-    sidebarProjects: [],
-    hiddenTopicIds: [],
-    running: false,
-    status: '',
-    runtimeStatus: null,
-    messages: (msgs || []).map(m => ({ id: m.id, speaker: m.speaker, text: m.text, at: m.at })),
   }
 }
 
-async function callCC(history: {speaker:string;text:string}[], userMsg: string) {
+async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null) {
   const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
   const apiKey  = Deno.env.get('CHAT_API_KEY')!
   const model   = Deno.env.get('CHAT_API_MODEL')!
-
-  const messages: {role:string;content:string}[] = [{ role: 'system', content: CC_SYSTEM }]
-  for (const h of history.slice(-20)) {
-    if (h.speaker === 'user') messages.push({ role: 'user', content: h.text })
+  const messages: {role:string;content:string}[] = [
+    { role: 'system', content: ccSystem(roomName, summary) },
+  ]
+  for (const h of msgs.slice(-20)) {
+    if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
     else if (h.speaker === 'claude') messages.push({ role: 'assistant', content: h.text })
-    else messages.push({ role: 'user', content: `[${h.speaker}] ${h.text}` })
+    else messages.push({ role: 'user', content: `[${h.speaker === 'codex' ? 'Arch' : h.speaker}] ${h.text}` })
   }
   messages.push({ role: 'user', content: userMsg })
-
   const res = await fetch(`${apiBase}/chat/completions`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, max_tokens: 300 }),
+    body: JSON.stringify({ model, messages, max_tokens: 400 }),
   })
-  if (!res.ok) throw new Error(`CC API ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error(`CC ${res.status}: ${await res.text()}`)
   const j = await res.json()
   return (j.choices?.[0]?.message?.content || '').trim()
 }
 
-async function callArch(history: {speaker:string;text:string}[], userMsg: string) {
+async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null) {
   const apiKey = Deno.env.get('OPENAI_API_KEY')!
-
-  const messages: {role:string;content:string}[] = [{ role: 'system', content: ARCH_SYSTEM }]
-  for (const h of history.slice(-20)) {
-    if (h.speaker === 'user') messages.push({ role: 'user', content: h.text })
+  const messages: {role:string;content:string}[] = [
+    { role: 'system', content: archSystem(roomName, summary) },
+  ]
+  for (const h of msgs.slice(-20)) {
+    if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
     else if (h.speaker === 'codex') messages.push({ role: 'assistant', content: h.text })
     else messages.push({ role: 'user', content: `[${h.speaker === 'claude' ? 'CC' : h.speaker}] ${h.text}` })
   }
   messages.push({ role: 'user', content: userMsg })
-
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 300 }),
+    body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 400 }),
   })
-  if (!res.ok) throw new Error(`Arch API ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error(`Arch ${res.status}: ${await res.text()}`)
   const j = await res.json()
   return (j.choices?.[0]?.message?.content || '').trim()
 }
 
+async function generateSummary(msgs: Msg[]): Promise<string> {
+  if (msgs.length === 0) return ''
+  const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
+  const apiKey  = Deno.env.get('CHAT_API_KEY')!
+  const model   = Deno.env.get('CHAT_API_MODEL')!
+  const transcript = msgs.slice(-40)
+    .map(m => `[${m.speaker === 'claude' ? 'CC' : m.speaker === 'codex' ? 'Arch' : 'yaya'}] ${m.text}`)
+    .join('\n')
+  const res = await fetch(`${apiBase}/chat/completions`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model, max_tokens: 120,
+      messages: [
+        { role: 'system', content: '用2-3句中文总结以下对话的核心内容，供下次对话参考。简洁，不要客套。' },
+        { role: 'user', content: transcript },
+      ],
+    }),
+  })
+  if (!res.ok) return ''
+  const j = await res.json()
+  return (j.choices?.[0]?.message?.content || '').trim()
+}
+
+// ── Main handler ─────────────────────────────────────────────────────────────
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
 
-  const url = new URL(req.url)
-  const path = route(url)
-
-  const supabase = createClient(
+  const url  = new URL(req.url)
+  const path = routePath(url)
+  const db   = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
-  // ── GET /state?id=TOPIC_ID ──────────────────────────────────────────────
+  // GET /state?roomId=X&topicId=Y
   if (req.method === 'GET' && path === 'state') {
-    const topicId = url.searchParams.get('id') || 'room-main'
-    const state = await getState(supabase, topicId)
-    return json(state)
+    const roomId  = url.searchParams.get('roomId')  || 'room-main'
+    let   topicId = url.searchParams.get('topicId') || ''
+    if (!topicId) topicId = await getFirstTopicInRoom(db, roomId)
+    return json(await buildState(db, roomId, topicId))
   }
 
-  // ── All POST endpoints ──────────────────────────────────────────────────
   let body: Record<string, unknown> = {}
-  try { body = await req.json() } catch { /* no body */ }
+  try { body = await req.json() } catch { /* empty */ }
 
-  // open-room: switch to a fixed room
-  if (path === 'open-room') {
-    const roomId = String(body.roomId || 'main')
-    const topicId = ROOM_TOPIC_MAP[roomId] || 'room-main'
-    const state = await getState(supabase, topicId)
-    return json(state)
-  }
+  const roomId  = String(body.roomId  || 'room-main')
+  const topicId = String(body.topicId || 'topic-main-1')
 
-  // open-topic / open-direct
-  if (path === 'open-topic' || path === 'open-direct') {
-    const topicId = String(body.id || 'room-main')
-    const state = await getState(supabase, topicId)
-    return json(state)
-  }
-
-  // user-only: save message, no AI
-  if (path === 'user-only') {
-    const topicId = String(body.topicId || 'room-main')
-    const text    = String(body.text || '').trim()
-    if (text) {
-      await supabase.from('rt_messages').insert({ topic_id: topicId, speaker: 'user', text })
-    }
-    const state = await getState(supabase, topicId)
-    return json(state)
-  }
-
-  // user: save message + call AIs
-  if (path === 'user' || path === 'start') {
-    const topicId = String(body.topicId || 'room-main')
-    const text    = String(body.text || '').trim()
-    const target  = String(body.target || 'round') // 'round' | '@claude' | '@codex' | '@deepseek' | 'none'
+  // POST /user — send message + call AIs
+  if (path === 'user') {
+    const text   = String(body.text   || '').trim()
+    const target = String(body.target || 'round') // 'round' | '@claude' | '@codex'
 
     if (text) {
-      await supabase.from('rt_messages').insert({ topic_id: topicId, speaker: 'user', text })
+      await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'user', text })
+      await db.from('rt_topics').update({ msg_count: db.rpc('coalesce', {}) }).eq('id', topicId)
     }
 
-    // fetch recent history for context
-    const { data: recent } = await supabase
-      .from('rt_messages')
-      .select('speaker,text')
-      .eq('topic_id', topicId)
-      .order('at', { ascending: false })
-      .limit(30)
-    const history = ((recent || []).reverse()) as {speaker:string;text:string}[]
-    const triggerMsg = text || '继续'
+    // Fetch history + topic info for context
+    const [histRes, topicRes, roomRes] = await Promise.all([
+      db.from('rt_messages').select('speaker,text').eq('topic_id', topicId)
+        .order('at', { ascending: false }).limit(30),
+      db.from('rt_topics').select('parent_summary').eq('id', topicId).single(),
+      getRoomOrDefault(db, roomId),
+    ])
+    const history = ((histRes.data || []).reverse()) as Msg[]
+    const summary = topicRes.data?.parent_summary || null
+    const roomName = roomRes.name
 
     const wantCC   = target === 'round' || target === '@claude'
     const wantArch = target === 'round' || target === '@codex'
 
-    // Arch first, then CC (CC can see Arch's reply)
+    // Arch first, then CC sees Arch's reply
     if (wantArch) {
       try {
-        const reply = await callArch(history, triggerMsg)
+        const reply = await callArch(history, text || '继续', roomName, summary)
         if (reply) {
-          await supabase.from('rt_messages').insert({ topic_id: topicId, speaker: 'codex', text: reply })
+          await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'codex', text: reply })
           history.push({ speaker: 'codex', text: reply })
         }
-      } catch (e) { console.error('Arch error:', e) }
+      } catch (e) { console.error('Arch:', e) }
     }
-
     if (wantCC) {
       try {
-        const reply = await callCC(history, triggerMsg)
+        const reply = await callCC(history, text || '继续', roomName, summary)
         if (reply) {
-          await supabase.from('rt_messages').insert({ topic_id: topicId, speaker: 'claude', text: reply })
+          await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'claude', text: reply })
         }
-      } catch (e) { console.error('CC error:', e) }
+      } catch (e) { console.error('CC:', e) }
     }
 
-    const state = await getState(supabase, topicId)
-    return json(state)
+    // Increment msg_count
+    await db.rpc('increment_rt_msg_count', { tid: topicId }).catch(() => {})
+
+    return json(await buildState(db, roomId, topicId))
   }
 
-  // update-topic title
-  if (path === 'update-topic') {
-    const id    = String(body.id || '')
-    const topic = String(body.topic || '')
-    if (id && topic) await supabase.from('rt_topics').update({ topic }).eq('id', id)
-    const state = await getState(supabase, id || 'room-main')
-    return json(state)
+  // POST /new-topic — summarize current + start fresh
+  if (path === 'new-topic') {
+    const currentTopicId = String(body.currentTopicId || topicId)
+
+    // Generate summary of current conversation
+    const { data: recentMsgs } = await db
+      .from('rt_messages').select('speaker,text')
+      .eq('topic_id', currentTopicId).order('at', { ascending: true }).limit(60)
+    const summary = await generateSummary((recentMsgs || []) as Msg[])
+
+    // Count existing topics in room to name the new one
+    const { count } = await db.from('rt_topics').select('id', { count: 'exact', head: true })
+      .eq('room_id', roomId).eq('archived', false)
+    const displayName = `对话 ${(count || 0) + 1}`
+
+    const newId = crypto.randomUUID()
+    await db.from('rt_topics').insert({
+      id: newId, topic: displayName, type: 'draft',
+      room_id: roomId, display_name: displayName,
+      parent_summary: summary || null,
+    })
+
+    return json(await buildState(db, roomId, newId))
   }
 
-  // topic/delete
-  if (path === 'topic/delete') {
-    const id = String(body.id || '')
-    if (id) await supabase.from('rt_topics').delete().eq('id', id).neq('type', 'fixed')
-    return json({ ok: true })
+  // POST /create-room
+  if (path === 'create-room') {
+    const name = String(body.name || '新房间').slice(0, 20)
+    const icon = String(body.icon || '●').slice(0, 2)
+    const roomNewId = crypto.randomUUID()
+    const topicNewId = crypto.randomUUID()
+    await db.from('rt_rooms').insert({ id: roomNewId, name, icon, sort_order: 99 })
+    await db.from('rt_topics').insert({
+      id: topicNewId, topic: `${name}·对话1`, type: 'draft',
+      room_id: roomNewId, display_name: '对话 1',
+    })
+    return json(await buildState(db, roomNewId, topicNewId))
   }
 
-  // message/delete
-  if (path === 'message/delete') {
-    const id = String(body.id || '')
-    if (id) await supabase.from('rt_messages').delete().eq('id', id)
-    return json({ ok: true })
+  // POST /open-topic
+  if (path === 'open-topic') {
+    const tid = String(body.topicId || topicId)
+    const rid = String(body.roomId || roomId)
+    return json(await buildState(db, rid, tid))
   }
 
-  // summary (simple: use CC to summarize)
-  if (path === 'summary') {
-    const topicId = String(body.topicId || 'room-main')
-    const { data: msgs } = await supabase
-      .from('rt_messages')
-      .select('speaker,text')
-      .eq('topic_id', topicId)
-      .order('at', { ascending: true })
-      .limit(100)
-    const transcript = (msgs || [])
-      .map((m: {speaker:string;text:string}) => `[${m.speaker}] ${m.text}`)
-      .join('\n')
-    // Return stub summary - full summary generation can be added later
-    return json({ summaries: [{ id: 'sum-1', topic: '本次对话总结', text: transcript.slice(0, 500) + '...' }] })
+  // POST /open-room
+  if (path === 'open-room') {
+    const rid = String(body.roomId || roomId)
+    const tid = await getFirstTopicInRoom(db, rid)
+    return json(await buildState(db, rid, tid))
   }
 
-  // no-op endpoints
-  if ([
-    'interrupt-speaker', 'approval', 'step',
-    'topic/archive-sidebar/bulk', 'topic/restore-sidebar',
-    'fixed-room/update', 'project/update', 'open-project',
-    'study-tracker/overview', 'study-tracker/plan', 'study-tracker/progress',
-  ].includes(path)) {
-    return json({ ok: true })
+  // POST /rename-room
+  if (path === 'rename-room') {
+    const name = String(body.name || '').slice(0, 20)
+    if (name) await db.from('rt_rooms').update({ name }).eq('id', roomId)
+    return json(await buildState(db, roomId, topicId))
   }
 
-  return json({ error: `unknown route: ${path}` }, 404)
+  // POST /rename-topic
+  if (path === 'rename-topic') {
+    const tid  = String(body.topicId || topicId)
+    const name = String(body.name || '').slice(0, 30)
+    if (name) await db.from('rt_topics').update({ display_name: name }).eq('id', tid)
+    return json(await buildState(db, roomId, tid))
+  }
+
+  // POST /delete-topic
+  if (path === 'delete-topic') {
+    const tid = String(body.topicId || '')
+    if (tid) {
+      // Don't delete if it's the only topic in the room
+      const { count } = await db.from('rt_topics').select('id', { count: 'exact', head: true })
+        .eq('room_id', roomId).eq('archived', false)
+      if ((count || 0) > 1) {
+        await db.from('rt_topics').delete().eq('id', tid).neq('type', 'fixed')
+      }
+    }
+    const newTid = await getFirstTopicInRoom(db, roomId)
+    return json(await buildState(db, roomId, newTid))
+  }
+
+  // POST /delete-room
+  if (path === 'delete-room') {
+    const PROTECTED = new Set(['room-main', 'room-philosophy'])
+    if (!PROTECTED.has(roomId)) {
+      await db.from('rt_rooms').delete().eq('id', roomId)
+    }
+    return json(await buildState(db, 'room-main', await getFirstTopicInRoom(db, 'room-main')))
+  }
+
+  // POST /delete-message
+  if (path === 'delete-message') {
+    const mid = String(body.messageId || '')
+    if (mid) await db.from('rt_messages').delete().eq('id', mid)
+    return json(await buildState(db, roomId, topicId))
+  }
+
+  return json({ error: `unknown: ${path}` }, 404)
 })
