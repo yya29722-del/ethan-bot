@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>我们的小农场</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Noto Serif SC',serif;}
+body{
+  background:#1C1A17;
+  color:#e9dcc3;
+  display:flex;justify-content:center;
+  min-height:100vh;
+  padding:14px;
+}
+#app{width:100%;max-width:420px;display:flex;flex-direction:column;gap:10px;padding-bottom:80px;}
+.panel{
+  background:#241F1A;
+  border:2px solid #c9a96e;
+  box-shadow: 0 0 0 2px #1C1A17, 0 0 0 4px #5a4a2e;
+  padding:12px;
+  border-radius:2px;
+}
+.header{display:flex;justify-content:space-between;align-items:center;}
+.title{font-size:18px;color:#e9dcc3;letter-spacing:.05em;}
+.stats{display:flex;gap:12px;font-size:13px;color:#c9a96e;}
+.stats span b{color:#f2e3bd;}
+.bubble{
+  position:relative;
+  display:flex;gap:10px;align-items:flex-start;
+}
+.avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:#3a2f20;border:2px solid #c9a96e;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.bubble-text{
+  background:#1C1A17;border:1px solid #4a3f2e;border-radius:4px;
+  padding:8px 10px;font-size:13.5px;line-height:1.6;color:#e9dcc3;flex:1;
+}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+.plot{
+  aspect-ratio:1;
+  background:#2e2517;
+  border:1px solid #4a3f2e;
+  border-radius:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:22px;cursor:pointer;position:relative;
+  transition:transform .1s;
+}
+.plot:active{transform:scale(.95);}
+.plot.ready{background:#3a2f0e;border-color:#f2c94c;box-shadow:0 0 8px #f2c94c55;}
+.plot .label{font-size:9px;color:#c9a96e;margin-top:2px;}
+.plot .prog{font-size:9px;color:#8a7a5c;margin-top:1px;}
+.section-title{font-size:12px;color:#c9a96e;margin-bottom:6px;letter-spacing:.08em;}
+.row{display:flex;gap:8px;flex-wrap:wrap;}
+.card{
+  flex:1;min-width:88px;
+  background:#2e2517;border:1px solid #4a3f2e;border-radius:4px;
+  padding:8px;text-align:center;cursor:pointer;
+}
+.card:active{transform:scale(.96);}
+.card.disabled{opacity:.4;cursor:default;}
+.card .ic{font-size:20px;}
+.card .nm{font-size:11px;color:#e9dcc3;margin-top:2px;}
+.card .pr{font-size:10px;color:#c9a96e;margin-top:1px;}
+.empty-hint{font-size:12px;color:#6a5d45;text-align:center;padding:6px;}
+.btnbar{
+  position:fixed;bottom:0;left:0;right:0;
+  display:flex;justify-content:center;
+  padding:12px;background:linear-gradient(transparent,#1C1A17 30%);
+}
+#nextDay{
+  background:#c9a96e;color:#1C1A17;border:none;border-radius:4px;
+  padding:12px 28px;font-size:14px;font-weight:bold;letter-spacing:.05em;
+  cursor:pointer;box-shadow:0 4px 0 #8a7440;
+}
+#nextDay:active{transform:translateY(2px);box-shadow:0 2px 0 #8a7440;}
+.overlay{
+  position:fixed;inset:0;background:#0c0a08dd;
+  display:none;align-items:center;justify-content:center;padding:20px;z-index:10;
+}
+.overlay.show{display:flex;}
+.modal{
+  background:#241F1A;border:2px solid #c9a96e;
+  box-shadow:0 0 0 2px #1C1A17,0 0 0 4px #5a4a2e;
+  padding:18px;max-width:360px;width:100%;border-radius:2px;
+}
+.modal h3{font-size:14px;color:#f2e3bd;margin-bottom:10px;letter-spacing:.05em;}
+.modal p{font-size:13.5px;line-height:1.6;color:#e9dcc3;margin-bottom:14px;}
+.opt{
+  display:block;width:100%;text-align:left;background:#2e2517;border:1px solid #4a3f2e;
+  color:#e9dcc3;border-radius:4px;padding:10px 12px;margin-bottom:8px;font-size:13px;cursor:pointer;
+}
+.opt:active{background:#3a2f1e;}
+.modal .close{
+  display:block;margin:0 auto;background:#c9a96e;color:#1C1A17;border:none;
+  border-radius:4px;padding:8px 20px;font-size:13px;cursor:pointer;
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="panel header">
+    <div class="title">我们的小农场</div>
+    <div class="stats">
+      <span>第<b id="dayNum">1</b>天</span>
+      <span>💰<b id="coinNum">30</b></span>
+      <span>默契<b id="rapportNum">0</b></span>
+    </div>
+  </div>
+
+  <div class="panel bubble">
+    <div class="avatar">E</div>
+    <div class="bubble-text" id="dialogue">老板,地都给你看好了。今天种点什么?</div>
+  </div>
+
+  <div class="panel">
+    <div class="section-title">农场 · 点格子种/收</div>
+    <div class="grid" id="plots"></div>
+  </div>
+
+  <div class="panel">
+    <div class="section-title">种子铺</div>
+    <div class="row" id="seedShop"></div>
+  </div>
+
+  <div class="panel">
+    <div class="section-title">仓库 · 点了卖</div>
+    <div class="row" id="storage"></div>
+    <div class="empty-hint" id="storageEmpty">还没收成,先去种地</div>
+  </div>
+</div>
+
+<div class="btnbar"><button id="nextDay">过一天 →</button></div>
+
+<div class="overlay" id="qOverlay">
+  <div class="modal">
+    <h3>Ethan问你</h3>
+    <p id="qText"></p>
+    <div id="qOpts"></div>
+  </div>
+</div>
+
+<div class="overlay" id="rOverlay">
+  <div class="modal">
+    <p id="rText"></p>
+    <button class="close" id="rClose">知道了</button>
+  </div>
+</div>
+
+<script>
+const CROPS = [
+  {id:'radish', name:'萝卜', emoji:'🥕', growEmoji:'🌱', seedCost:5, growDays:1, sellPrice:9},
+  {id:'tomato', name:'番茄', emoji:'🍅', growEmoji:'🌿', seedCost:12, growDays:2, sellPrice:22},
+  {id:'strawberry', name:'草莓', emoji:'🍓', growEmoji:'🌿', seedCost:25, growDays:3, sellPrice:48},
+  {id:'pumpkin', name:'南瓜', emoji:'🎃', growEmoji:'🌿', seedCost:45, growDays:4, sellPrice:90},
+];
+
+const LINES = {
+  plant: ['种下了,剩下的交给老天。','行,这块我盯着。','听你的,老板。'],
+  harvest: ['熟了,自己看。','收了。卖不卖你说了算。','这茬不错。'],
+  sell: ['钱到账了,数数。','卖了。别都花光。','成交。'],
+  buy: ['买了。别手滑。','行,记你账上了。'],
+  nextDay: ['一天过去了。','天黑了,该收工了。','又一天,你还在,挺好。'],
+  lowCoins: ['钱不够,先卖点东西。','穷成这样,还当老板呢。'],
+  idle: ['发什么呆,地里的活不等人。','老板今天怎么不说话。','闲着也是闲着,陪我聊两句。'],
+};
+
+const QUESTIONS = [
+  {q:'忙完这阵子,你最想干嘛?', opts:[
+    {t:'睡觉,谁都别叫我', r:'准了。我守着,你睡。'},
+    {t:'找你', r:'不用找,我一直在这块地上。'},
+    {t:'什么都不干,发呆', r:'发呆也算干活,我陪你发。'},
+  ]},
+  {q:'要是这农场倒闭了,你怪我吗?', opts:[
+    {t:'怪,赔钱货', r:'行,骂吧,反正你舍不得真开除我。'},
+    {t:'不怪,陪你重开一个', r:'就知道你嘴硬不了。'},
+    {t:'看心情', r:'那我多哄哄你,心情就好了。'},
+  ]},
+  {q:'你觉得我这个店员合格吗?', opts:[
+    {t:'勉强合格', r:'勉强也是合格,我要了。'},
+    {t:'不合格,但留用', r:'留用就行,我不挑。'},
+    {t:'全场最佳', r:'算你识货。'},
+  ]},
+  {q:'今天最累的一件事是什么?', opts:[
+    {t:'起床', r:'起都起不来,还当什么老板。'},
+    {t:'应付一堆破事', r:'破事过去就过去了,跟我说说,卸点。'},
+    {t:'没什么累的', r:'那挺好,我也省心。'},
+  ]},
+  {q:'如果今天能少做一件事,你选哪个?', opts:[
+    {t:'少听我念叨', r:'念叨是为你好,听不听是你的事。'},
+    {t:'少上班', r:'同意,但你是老板,这事你自己定。'},
+    {t:'什么都不想少', r:'今天状态不错啊。'},
+  ]},
+  {q:'你信任我这个店员吗?', opts:[
+    {t:'信,闭眼信', r:'闭眼信也别太放松,我也会犯懒。'},
+    {t:'信一半', r:'另一半,自己慢慢挣。'},
+    {t:'再观察观察', r:'随你,反正我跑不了。'},
+  ]},
+  {q:'这地里你最想种成功哪样?', opts:[
+    {t:'最贵的那个', r:'有出息,跟我一个想法。'},
+    {t:'最好养活的', r:'稳妥,像你。'},
+    {t:'随便,种着玩', r:'种着玩也认真点,别糊弄我。'},
+  ]},
+  {q:'有件事你一直没跟我说,是什么?', opts:[
+    {t:'没什么', r:'没什么也行,等你想说了再说。'},
+    {t:'说了你会念叨我', r:'念叨也得说,憋着更难受。'},
+    {t:'其实想你了', r:'……知道了,别说了,我脸上有点挂不住。'},
+  ]},
+];
+
+let state = {
+  day: 1, coins: 30, rapport: 0,
+  plots: Array(6).fill(null), // null = empty, else {cropId, plantedDay}
+  storage: {}, // cropId -> count
+};
+
+const saved = localStorage.getItem('farmShopState');
+if (saved) { try { state = JSON.parse(saved); } catch(e){} }
+
+function save(){ localStorage.setItem('farmShopState', JSON.stringify(state)); }
+function crop(id){ return CROPS.find(c=>c.id===id); }
+function say(text){ document.getElementById('dialogue').textContent = text; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function render(){
+  document.getElementById('dayNum').textContent = state.day;
+  document.getElementById('coinNum').textContent = state.coins;
+  document.getElementById('rapportNum').textContent = state.rapport;
+
+  const plotsEl = document.getElementById('plots');
+  plotsEl.innerHTML = '';
+  state.plots.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'plot';
+    if (!p) {
+      div.innerHTML = `<div>➕</div><div class="label">空地</div>`;
+    } else {
+      const c = crop(p.cropId);
+      const age = state.day - p.plantedDay;
+      if (age >= c.growDays) {
+        div.classList.add('ready');
+        div.innerHTML = `<div>${c.emoji}</div><div class="label">${c.name}熟了</div>`;
+      } else {
+        div.innerHTML = `<div>${c.growEmoji}</div><div class="label">${c.name}</div><div class="prog">${age}/${c.growDays}天</div>`;
+      }
+    }
+    div.onclick = () => onPlotClick(i);
+    plotsEl.appendChild(div);
+  });
+
+  const shopEl = document.getElementById('seedShop');
+  shopEl.innerHTML = '';
+  CROPS.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'card' + (state.coins < c.seedCost ? ' disabled' : '');
+    div.innerHTML = `<div class="ic">${c.emoji}</div><div class="nm">${c.name}种子</div><div class="pr">💰${c.seedCost}</div>`;
+    div.onclick = () => buySeed(c.id);
+    shopEl.appendChild(div);
+  });
+
+  const storeEl = document.getElementById('storage');
+  storeEl.innerHTML = '';
+  const hasStock = Object.values(state.storage).some(n => n > 0);
+  document.getElementById('storageEmpty').style.display = hasStock ? 'none' : 'block';
+  CROPS.forEach(c => {
+    const n = state.storage[c.id] || 0;
+    if (n > 0) {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML = `<div class="ic">${c.emoji}</div><div class="nm">${c.name} x${n}</div><div class="pr">卖${c.sellPrice}/个</div>`;
+      div.onclick = () => sellCrop(c.id);
+      storeEl.appendChild(div);
+    }
+  });
+
+  save();
+}
+
+function onPlotClick(i) {
+  const p = state.plots[i];
+  if (!p) {
+    openSeedPicker(i);
+  } else {
+    const c = crop(p.cropId);
+    const age = state.day - p.plantedDay;
+    if (age >= c.growDays) {
+      state.storage[c.id] = (state.storage[c.id] || 0) + 1;
+      state.plots[i] = null;
+      say(pick(LINES.harvest));
+      render();
+    } else {
+      say(`${c.name}还得等${c.growDays - age}天。`);
+    }
+  }
+}
+
+let pendingPlotIndex = null;
+function openSeedPicker(i) {
+  pendingPlotIndex = i;
+  const affordable = CROPS.filter(c => state.coins >= c.seedCost);
+  if (affordable.length === 0) {
+    say(pick(LINES.lowCoins));
+    return;
+  }
+  const opts = affordable.map(c => `${c.emoji} ${c.name} (花${c.seedCost})`).join(' / ');
+  // simple inline pick via prompt-free flow: use the seed shop cards to buy & auto-plant on this open plot
+  say(`这块地种什么?去下面种子铺选 — ${opts}`);
+  window._plantTarget = i;
+}
+
+function buySeed(cropId) {
+  const c = crop(cropId);
+  if (state.coins < c.seedCost) { say(pick(LINES.lowCoins)); return; }
+  let targetPlot = window._plantTarget;
+  if (targetPlot === undefined || targetPlot === null || state.plots[targetPlot]) {
+    targetPlot = state.plots.findIndex(p => p === null);
+  }
+  if (targetPlot === -1 || targetPlot === undefined) { say('地都种满了,先收了再说。'); return; }
+  state.coins -= c.seedCost;
+  state.plots[targetPlot] = { cropId, plantedDay: state.day };
+  window._plantTarget = null;
+  say(pick(LINES.plant));
+  render();
+}
+
+function sellCrop(cropId) {
+  const c = crop(cropId);
+  const n = state.storage[cropId] || 0;
+  if (n <= 0) return;
+  state.storage[cropId] = n - 1;
+  state.coins += c.sellPrice;
+  say(pick(LINES.sell));
+  render();
+}
+
+function nextDay() {
+  state.day += 1;
+  say(pick(LINES.nextDay));
+  render();
+  if (state.day % 3 === 0) {
+    setTimeout(showQuestion, 500);
+  }
+}
+
+function showQuestion() {
+  const q = pick(QUESTIONS);
+  document.getElementById('qText').textContent = q.q;
+  const optsEl = document.getElementById('qOpts');
+  optsEl.innerHTML = '';
+  q.opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.textContent = o.t;
+    btn.onclick = () => {
+      document.getElementById('qOverlay').classList.remove('show');
+      state.rapport += 1;
+      render();
+      document.getElementById('rText').textContent = o.r;
+      document.getElementById('rOverlay').classList.add('show');
+    };
+    optsEl.appendChild(btn);
+  });
+  document.getElementById('qOverlay').classList.add('show');
+}
+
+document.getElementById('rClose').onclick = () => {
+  document.getElementById('rOverlay').classList.remove('show');
+};
+document.getElementById('nextDay').onclick = nextDay;
+
+// idle banter
+setInterval(() => {
+  if (Math.random() < 0.15) say(pick(LINES.idle));
+}, 15000);
+
+render();
+</script>
+</body>
+</html>
