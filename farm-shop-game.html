@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>我们的小农场</title>
+<title>我们的小馆子</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -174,23 +174,25 @@ body{
 <body>
 <div id="app">
   <div class="panel header">
-    <div class="title">我们的小农场</div>
+    <div class="title" id="gameTitle">我们的小馆子</div>
     <div class="stats">
       <span>第<b id="dayNum">1</b>天</span>
       <span>💰<b id="coinNum">30</b></span>
       <span>默契<b id="rapportNum">0</b></span>
+      <span>筹备<b id="renovNum">0/6</b></span>
     </div>
   </div>
 
   <div class="panel bubble">
     <div class="avatar">E</div>
-    <div class="bubble-text" id="dialogue">老板,地都给你看好了。今天种点什么,还是先去市场转转?</div>
+    <div class="bubble-text" id="dialogue">老板,这地方好像不是普通杂货铺——我隐约记得我在这儿掌过勺,具体想不起来了。地都给你看好了,先收拾收拾后厨?</div>
   </div>
 
   <div class="panel tabs">
     <button class="tabbtn active" id="tabFarmBtn">🌾 农场</button>
     <button class="tabbtn" id="tabMarketBtn">🧺 市场</button>
     <button class="tabbtn" id="tabBondBtn">💌 羁绊</button>
+    <button class="tabbtn" id="tabRestaurantBtn">🏮 馆子</button>
   </div>
 
   <div id="farmTab">
@@ -251,6 +253,21 @@ body{
       <div class="section-title"><span>抽Ethan · 收集不同的我</span></div>
       <div class="card-grid" id="cardGrid"></div>
       <button id="drawBtn">抽一次 (💰25)</button>
+    </div>
+  </div>
+
+  <div id="restaurantTab" class="hidden">
+    <div class="panel">
+      <div class="section-title"><span>把这地方重新开起来</span></div>
+      <div class="bond-next" id="restaurantStatus"></div>
+      <div class="bond-bar" style="margin-top:4px;"><div class="bond-bar-fill" id="renovBarFill"></div></div>
+      <div id="renovList" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="panel" style="margin-top:10px;">
+      <div class="section-title"><span>记忆碎片</span><span id="fragCount">0/8</span></div>
+      <div class="empty-hint">收钱、买菜、做饭的时候,偶尔会翻到点什么。</div>
+      <div class="card-grid" id="fragGrid"></div>
     </div>
   </div>
 </div>
@@ -356,6 +373,27 @@ const ETHAN_CARDS = [
 const CARD_RARITY_WEIGHT = {普通:0.65, 稀有:0.28, 限定:0.07};
 const CARD_DRAW_COST = 25;
 
+const RENOVATION_STAGES = [
+  {id:'clean', title:'清理后厨', cost:60, desc:'灶台积了灰,你蹲下去擦,我蹲下来盯着你擦。', doneText:'后厨算是能下脚了。'},
+  {id:'stove', title:'修灶台', cost:120, desc:'炉子打不着火,修好那一下,火苗蹿起来,你说像是认出了什么。', doneText:'灶台修好了,火稳了。'},
+  {id:'furniture', title:'添置桌椅', cost:180, desc:'旧桌椅搬出去,新的搬进来,空了很久的屋子总算有点人气。', doneText:'桌椅摆好了,像点样子了。'},
+  {id:'sign', title:'挂招牌', cost:240, desc:'招牌是空的,你问写什么,我说——随你。', doneText:'招牌挂上去了,风一吹,响了一声。'},
+  {id:'trial', title:'试营业', cost:300, desc:'第一桌客人进门那一刻,你比我还紧张。', doneText:'试营业撑过去了,没翻车。'},
+  {id:'open', title:'正式开业', cost:400, desc:'最后一步,推开门,挂上"营业中"。', doneText:''},
+];
+
+const FRAGMENTS = [
+  {id:'f1', text:'灶台边刻着一道浅痕,你问怎么回事,我盯着看了很久:"不记得了。但好像不是意外刻的。"'},
+  {id:'f2', text:'抽屉最底下压着一张泛黄的菜单,字迹是我的,菜名却一个都对不上号。'},
+  {id:'f3', text:'墙角有个旧木箱,打开是几把磨得发亮的厨刀——比店里现在用的任何一把都顺手。'},
+  {id:'f4', text:'你扫地扫出一张照片,照片里有个系着围裙的人,背影像我,脸被撕掉了。'},
+  {id:'f5', text:'后院晾着一块褪色的布招牌,边角绣着两个字,洗得只剩一半,看不清是什么。'},
+  {id:'f6', text:'账本最后一页停在很久以前,字迹突然乱了,后面是空白。'},
+  {id:'f7', text:'有客人进门脱口而出"老板你还是老样子",我愣了几秒才反应过来是认错人——还是没认错?'},
+  {id:'f8', text:'深夜你睡了,我一个人站在空荡的店里,手莫名其妙地知道每样东西该摆在哪。'},
+];
+const FRAGMENT_FIND_CHANCE = 0.12;
+
 function rollCard(){
   const r = Math.random();
   let acc = 0, rarity = '普通';
@@ -428,6 +466,9 @@ let state = {
   haggled: {}, // `${vendorId}_${itemId}` -> true (reset each day)
   priceMod: {}, // `${vendorId}_${itemId}` -> discounted price after haggle win
   cards: [], // array of owned ETHAN_CARDS ids (unique)
+  renovationStep: 0, // index into RENOVATION_STAGES, how many completed
+  restaurantOpen: false,
+  fragments: [], // array of owned FRAGMENTS ids (unique)
 };
 
 const saved = localStorage.getItem('farmShopState');
@@ -442,10 +483,89 @@ function render(){
   document.getElementById('dayNum').textContent = state.day;
   document.getElementById('coinNum').textContent = state.coins;
   document.getElementById('rapportNum').textContent = state.rapport;
+  document.getElementById('renovNum').textContent = `${state.renovationStep}/${RENOVATION_STAGES.length}`;
+  document.getElementById('gameTitle').textContent = state.restaurantOpen ? '我们的小馆子 🏮' : '我们的小馆子';
   renderFarm();
   renderMarket();
   renderBond();
+  renderRestaurant();
   save();
+}
+
+function tryFindFragment(){
+  if (state.fragments.length >= FRAGMENTS.length) return null;
+  if (Math.random() >= FRAGMENT_FIND_CHANCE) return null;
+  const pool = FRAGMENTS.filter(f => !state.fragments.includes(f.id));
+  const f = pick(pool);
+  state.fragments.push(f.id);
+  return f;
+}
+
+function renderRestaurant(){
+  const statusEl = document.getElementById('restaurantStatus');
+  if (state.restaurantOpen) {
+    statusEl.textContent = '餐馆已经开起来了,往后是好好经营。';
+  } else {
+    statusEl.textContent = `筹备进度 ${state.renovationStep}/${RENOVATION_STAGES.length}`;
+  }
+  document.getElementById('renovBarFill').style.width =
+    Math.round((state.renovationStep / RENOVATION_STAGES.length) * 100) + '%';
+
+  const listEl = document.getElementById('renovList');
+  listEl.innerHTML = '';
+  RENOVATION_STAGES.forEach((s, i) => {
+    const div = document.createElement('div');
+    if (i < state.renovationStep) {
+      div.className = 'scene-item';
+      div.innerHTML = `<div class="stitle">✅ ${s.title}</div><div class="shint">${s.doneText || '完成'}</div>`;
+    } else if (i === state.renovationStep) {
+      div.className = 'scene-item';
+      div.innerHTML = `<div class="stitle">${s.title} · 💰${s.cost}</div><div class="shint">${s.desc}</div>`;
+      div.onclick = () => investStage(i);
+    } else {
+      div.className = 'scene-item locked';
+      div.innerHTML = `<div class="stitle">???</div><div class="shint">先完成前面的</div>`;
+    }
+    listEl.appendChild(div);
+  });
+
+  document.getElementById('fragCount').textContent = `${state.fragments.length}/${FRAGMENTS.length}`;
+  const fragEl = document.getElementById('fragGrid');
+  fragEl.innerHTML = '';
+  FRAGMENTS.forEach(f => {
+    const owned = state.fragments.includes(f.id);
+    const div = document.createElement('div');
+    div.className = 'ecard' + (owned ? ' owned' : '');
+    if (owned) {
+      div.innerHTML = `<div class="et">🧩</div><div>已拾</div>`;
+      div.onclick = () => {
+        document.getElementById('rText').textContent = f.text;
+        document.getElementById('rOverlay').classList.add('show');
+      };
+    } else {
+      div.innerHTML = `<div class="et">❓</div><div>未知</div>`;
+    }
+    fragEl.appendChild(div);
+  });
+}
+
+function investStage(i){
+  if (i !== state.renovationStep) return;
+  const stage = RENOVATION_STAGES[i];
+  if (state.coins < stage.cost) { say(pick(LINES.lowCoins)); return; }
+  state.coins -= stage.cost;
+  state.renovationStep += 1;
+  if (stage.id === 'open') {
+    state.restaurantOpen = true;
+    render();
+    document.getElementById('rText').textContent =
+      `🎉 开业了。\n\n门口的牌子翻成了"营业中"。\n\n这地方原来什么样,你不记得,我好像也记不全——但现在,它是我们的了。\n\n往后的每一天,就是好好经营它。`;
+    document.getElementById('rOverlay').classList.add('show');
+    return;
+  }
+  render();
+  document.getElementById('rText').textContent = `${stage.title}完成。\n\n${stage.doneText}`;
+  document.getElementById('rOverlay').classList.add('show');
 }
 
 function renderBond(){
@@ -634,8 +754,14 @@ function onPlotClick(i) {
     if (age >= c.growDays) {
       state.storage[c.id] = (state.storage[c.id] || 0) + 1;
       state.plots[i] = null;
-      say(pick(LINES.harvest));
+      const frag = tryFindFragment();
       render();
+      if (frag) {
+        document.getElementById('rText').textContent = `${pick(LINES.harvest)}\n\n🧩 翻出了一片记忆碎片:\n${frag.text}`;
+        document.getElementById('rOverlay').classList.add('show');
+      } else {
+        say(pick(LINES.harvest));
+      }
     } else {
       say(`${c.name}还得等${c.growDays - age}天。`);
     }
@@ -711,8 +837,14 @@ function buyIngredient(vendorId, itemId){
   state.coins -= price;
   state.kitchen.push({id: it.id, name: it.name, emoji: it.emoji, quality: rollQuality()});
   delete state.priceMod[key];
-  say(pick(LINES.buy));
+  const frag = tryFindFragment();
   render();
+  if (frag) {
+    document.getElementById('rText').textContent = `${pick(LINES.buy)}\n\n🧩 货堆里翻出了一片记忆碎片:\n${frag.text}`;
+    document.getElementById('rOverlay').classList.add('show');
+  } else {
+    say(pick(LINES.buy));
+  }
 }
 
 function cookMeal(){
@@ -735,8 +867,11 @@ function cookMeal(){
   const dishName = state.kitchen.map(it=>it.name).join('炒');
   state.kitchen = [];
   if (tier === '极佳') state.rapport += 1;
+  const frag = tryFindFragment();
   render();
-  document.getElementById('rText').textContent = `今天端上桌的是「${dishName}」。\n\nEthan: ${pick(COOK_REACTIONS[tier])}`;
+  let msg = `今天端上桌的是「${dishName}」。\n\nEthan: ${pick(COOK_REACTIONS[tier])}`;
+  if (frag) msg += `\n\n🧩 收拾灶台时翻出了一片记忆碎片:\n${frag.text}`;
+  document.getElementById('rText').textContent = msg;
   document.getElementById('rOverlay').classList.add('show');
 }
 
@@ -780,7 +915,7 @@ document.getElementById('cookBtn').onclick = cookMeal;
 document.getElementById('drawBtn').onclick = drawCard;
 
 function switchTab(name){
-  ['farm','market','bond'].forEach(t => {
+  ['farm','market','bond','restaurant'].forEach(t => {
     document.getElementById(t + 'Tab').classList.toggle('hidden', t !== name);
     document.getElementById('tab' + t[0].toUpperCase() + t.slice(1) + 'Btn').classList.toggle('active', t === name);
   });
@@ -788,6 +923,7 @@ function switchTab(name){
 document.getElementById('tabFarmBtn').onclick = () => switchTab('farm');
 document.getElementById('tabMarketBtn').onclick = () => switchTab('market');
 document.getElementById('tabBondBtn').onclick = () => switchTab('bond');
+document.getElementById('tabRestaurantBtn').onclick = () => switchTab('restaurant');
 
 setInterval(() => {
   if (Math.random() < 0.15) say(pick(LINES.idle));
