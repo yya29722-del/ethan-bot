@@ -474,28 +474,50 @@ async function sendMsg() {
   el.appendChild(mkBubble({id:'tmp'+Date.now(), speaker:'user', text, at:new Date().toISOString()}));
   el.scrollTop = el.scrollHeight;
 
-  const wCC   = target==='round'||target==='@claude';
-  const wArch = target==='round'||target==='@codex';
-  if (wArch) { setDot('codex','thinking'); addTyping('codex'); }
-  if (wCC)   { setDot('claude','thinking'); if(!wArch) addTyping('claude'); }
-  startLivePoll(S.roomId, S.topicId);
-
   try {
     const data = await api('user', {text, topicId:S.topicId, roomId:S.roomId, target});
-    removeTyping('codex'); removeTyping('claude');
-    setDot('codex',''); setDot('claude','');
     lastSig = '';
     apply(data);
+    await runTurnPlan(data.turnPlan || [], text, data.roomId, data.topicId);
   } catch(e) {
     removeTyping('codex'); removeTyping('claude');
     setDot('codex',''); setDot('claude','');
     alert('发送失败：'+e.message);
   } finally {
-    stopLivePoll();
     S.busy = false;
     document.getElementById('send-btn').disabled = false;
     document.getElementById('attach-btn').disabled = false;
     document.getElementById('msg-input').focus();
+  }
+}
+
+async function runTurnPlan(plan, userText, roomId, topicId) {
+  for (const turn of plan) {
+    if (S.roomId !== roomId || S.topicId !== topicId) break;
+    const sp = turn.agent;
+    setDot(sp, 'thinking');
+    addTyping(sp);
+    try {
+      const data = await api('agent-turn', {
+        agent: sp,
+        instruction: turn.instruction || '',
+        userText,
+        topicId,
+        roomId,
+      });
+      removeTyping(sp);
+      setDot(sp, '');
+      lastSig = '';
+      apply(data);
+      if (data.lastError) {
+        alert('发送失败：' + data.lastError);
+        break;
+      }
+    } catch (e) {
+      removeTyping(sp);
+      setDot(sp, '');
+      throw e;
+    }
   }
 }
 

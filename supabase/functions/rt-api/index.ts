@@ -127,6 +127,7 @@ function routePath(url: URL): string {
 type DB = ReturnType<typeof createClient>
 type Msg = { speaker: string; text: string }
 type Agent = 'codex' | 'claude'
+type Turn = { agent: Agent; instruction: string }
 
 function chatCompletionsUrl(apiBase: string) {
   const base = apiBase.replace(/\/+$/, '')
@@ -206,7 +207,7 @@ function otherAgent(agent: Agent): Agent {
   return agent === 'codex' ? 'claude' : 'codex'
 }
 
-function buildTurnPlan(text: string, target: string) {
+function buildTurnPlan(text: string, target: string): Turn[] {
   const council = wantsCouncil(text)
   const first = firstAgentFor(text, target)
   const second = otherAgent(first)
@@ -274,6 +275,41 @@ async function buildState(db: DB, roomId: string, topicId: string) {
       id: m.id, speaker: m.speaker, text: m.text, at: m.at,
     })),
   }
+}
+
+async function getTurnContext(db: DB, roomId: string, topicId: string) {
+  const [histRes, topicRes, room] = await Promise.all([
+    db.from('rt_messages').select('speaker,text').eq('topic_id', topicId)
+      .order('at', { ascending: false }).limit(60),
+    db.from('rt_topics').select('parent_summary,display_name').eq('id', topicId).single(),
+    getRoomOrDefault(db, roomId),
+  ])
+  const roomName = room.name
+  const isStudyContext = /考研|study|学业/i.test(`${roomName} ${topicRes.data?.display_name || ''}`)
+  return {
+    history: ((histRes.data || []).reverse()) as Msg[],
+    summary: topicRes.data?.parent_summary || null,
+    roomName,
+    isStudyContext,
+    studyMemory: isStudyContext ? await getRecentStudyNotes(db) : '',
+    mistakeStats: isStudyContext ? await getMistakeStats(db) : '',
+  }
+}
+
+async function runAgentTurn(db: DB, roomId: string, topicId: string, turn: Turn, userText: string) {
+  const { history, summary, roomName, studyMemory, isStudyContext, mistakeStats } = await getTurnContext(db, roomId, topicId)
+  const agent = turn.agent
+  const alreadyLastSpeaker = history[history.length - 1]?.speaker === agent
+  if (alreadyLastSpeaker) return ''
+
+  const label = agent === 'codex' ? 'Arch' : 'yaya二号机'
+  const reply = agent === 'codex'
+    ? await withTimeout(callArch(history, userText || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction), 55000, label)
+    : await withTimeout(callCC(history, userText || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction), 55000, label)
+  if (reply) {
+    await db.from('rt_messages').insert({ topic_id: topicId, speaker: agent, text: reply })
+  }
+  return reply
 }
 
 async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
@@ -388,7 +424,7 @@ Deno.serve(async (req) => {
   const roomId  = String(body.roomId  || 'room-main')
   const topicId = String(body.topicId || 'topic-main-1')
 
-  // POST /user — send message + call AIs
+  // POST /user — save the user's message quickly, then return a client-run turn plan.
   if (path === 'user') {
     const text   = String(body.text   || '').trim()
     const postedTarget = String(body.target || '')
@@ -401,43 +437,13 @@ Deno.serve(async (req) => {
       await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'user', text })
     }
 
-    // Fetch history + topic info for context
-    const [histRes, topicRes, roomRes] = await Promise.all([
-      db.from('rt_messages').select('speaker,text').eq('topic_id', topicId)
-        .order('at', { ascending: false }).limit(60),
-      db.from('rt_topics').select('parent_summary,display_name').eq('id', topicId).single(),
+    const [topicRes, roomRes] = await Promise.all([
+      db.from('rt_topics').select('display_name').eq('id', topicId).single(),
       getRoomOrDefault(db, roomId),
     ])
-    const history = ((histRes.data || []).reverse()) as Msg[]
-    const summary = topicRes.data?.parent_summary || null
     const roomName = roomRes.name
     const isStudyContext = /考研|study|学业/i.test(`${roomName} ${topicRes.data?.display_name || ''}`)
-    const studyMemory = isStudyContext ? await getRecentStudyNotes(db) : ''
-    const mistakeStats = isStudyContext ? await getMistakeStats(db) : ''
-
     const plan = buildTurnPlan(text, target)
-    const agentErrors: string[] = []
-
-    for (const turn of plan) {
-      const agent = turn.agent
-      const alreadyLastSpeaker = history[history.length - 1]?.speaker === agent
-      if (alreadyLastSpeaker) continue
-
-      try {
-        const label = agent === 'codex' ? 'Arch' : 'yaya二号机'
-        const reply = agent === 'codex'
-          ? await withTimeout(callArch(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction), 55000, label)
-          : await withTimeout(callCC(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction), 55000, label)
-        if (reply) {
-          await db.from('rt_messages').insert({ topic_id: topicId, speaker: agent, text: reply })
-          history.push({ speaker: agent, text: reply })
-        }
-      } catch (e) {
-        const msg = `${agent === 'codex' ? 'Arch' : 'yaya二号机'}: ${errorMessage(e)}`
-        console.error(msg)
-        agentErrors.push(msg)
-      }
-    }
 
     // Study rooms: "错题：..." gets tagged and logged for pattern tracking,
     // independent of whatever CC/Arch said about it above.
@@ -460,7 +466,28 @@ Deno.serve(async (req) => {
     }
 
     const state = await buildState(db, roomId, topicId)
-    return json({ ...state, lastError: agentErrors.join('\n') })
+    return json({ ...state, turnPlan: plan })
+  }
+
+  // POST /agent-turn — run exactly one AI message so the UI can show a real handoff.
+  if (path === 'agent-turn') {
+    const agent = String(body.agent || '') as Agent
+    const instruction = String(body.instruction || '')
+    const userText = String(body.userText || '').trim()
+    if (agent !== 'codex' && agent !== 'claude') {
+      return json({ error: 'bad agent' }, 400)
+    }
+
+    try {
+      await runAgentTurn(db, roomId, topicId, { agent, instruction }, userText)
+      return json(await buildState(db, roomId, topicId))
+    } catch (e) {
+      const label = agent === 'codex' ? 'Arch' : 'yaya二号机'
+      const msg = `${label}: ${errorMessage(e)}`
+      console.error(msg)
+      const state = await buildState(db, roomId, topicId)
+      return json({ ...state, lastError: msg })
+    }
   }
 
   // POST /new-topic — summarize current + start fresh
