@@ -1,0 +1,31 @@
+name: Round Table Admin Call
+
+on:
+  workflow_dispatch:
+    inputs:
+      path:
+        description: 'rt-api路径，如 rename-topic 或 state?roomId=room-main'
+        required: true
+      body:
+        description: 'POST body JSON（GET留空）'
+        required: false
+        default: ''
+
+jobs:
+  call:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call rt-api
+        env:
+          RT_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuaG1pbXdrZ21kc2thY3djb25hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTk2MDAsImV4cCI6MjA5Njg5NTYwMH0.KUNhT-8Hy2Uy8snd_GaCyl_HFIZwjS_z-CzwSv8daa0
+          RT_PATH: ${{ github.event.inputs.path }}
+          RT_BODY: ${{ github.event.inputs.body }}
+        run: |
+          URL="https://tnhmimwkgmdskacwcona.supabase.co/functions/v1/rt-api/${RT_PATH}"
+          if [ -n "$RT_BODY" ]; then
+            curl -sS -X POST "$URL" \
+              -H "Authorization: Bearer $RT_ANON_KEY" -H "Content-Type: application/json" \
+              --data "$RT_BODY"
+          else
+            curl -sS "$URL" -H "Authorization: Bearer $RT_ANON_KEY"
+          fi

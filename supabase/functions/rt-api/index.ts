@@ -284,13 +284,14 @@ Deno.serve(async (req) => {
     const [histRes, topicRes, roomRes] = await Promise.all([
       db.from('rt_messages').select('speaker,text').eq('topic_id', topicId)
         .order('at', { ascending: false }).limit(30),
-      db.from('rt_topics').select('parent_summary').eq('id', topicId).single(),
+      db.from('rt_topics').select('parent_summary,display_name').eq('id', topicId).single(),
       getRoomOrDefault(db, roomId),
     ])
     const history = ((histRes.data || []).reverse()) as Msg[]
     const summary = topicRes.data?.parent_summary || null
     const roomName = roomRes.name
-    const studyMemory = /考研|study|学业/i.test(roomName) ? await getRecentStudyNotes(db) : ''
+    const isStudyContext = /考研|study|学业/i.test(`${roomName} ${topicRes.data?.display_name || ''}`)
+    const studyMemory = isStudyContext ? await getRecentStudyNotes(db) : ''
 
     const wantCC   = target === 'round' || target === '@claude'
     const wantArch = target === 'round' || target === '@codex'
@@ -339,10 +340,20 @@ Deno.serve(async (req) => {
     const currentTopicId = String(body.currentTopicId || topicId)
 
     // Generate summary of current conversation
-    const { data: recentMsgs } = await db
-      .from('rt_messages').select('speaker,text')
-      .eq('topic_id', currentTopicId).order('at', { ascending: true }).limit(60)
+    const [{ data: recentMsgs }, { data: currentTopic }, room] = await Promise.all([
+      db.from('rt_messages').select('speaker,text')
+        .eq('topic_id', currentTopicId).order('at', { ascending: true }).limit(60),
+      db.from('rt_topics').select('display_name').eq('id', currentTopicId).single(),
+      getRoomOrDefault(db, roomId),
+    ])
     const summary = await generateSummary((recentMsgs || []) as Msg[])
+
+    // Study rooms/topics: also persist the summary permanently so it survives
+    // beyond the single-hop parent_summary chain (see getRecentStudyNotes).
+    const isStudyContext = /考研|study|学业/i.test(`${room.name} ${currentTopic?.display_name || ''}`)
+    if (summary && isStudyContext) {
+      await db.from('yaya_notes').insert({ content: summary, category: '学业' })
+    }
 
     // Count existing topics in room to name the new one
     const { count } = await db.from('rt_topics').select('id', { count: 'exact', head: true })
