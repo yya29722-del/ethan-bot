@@ -468,10 +468,10 @@ type StudyIntent = 'intel' | 'arch' | 'handoff'
 
 function studyIntentFor(text: string): StudyIntent {
   const clean = textForAI(text)
-  if (/(周复盘|月复盘|完整复盘|调整计划|重新规划|制定计划|明天怎么安排|接下来怎么学|二号机.*Arch|Arch.*二号机|你们俩|一起看)/i.test(clean)) {
+  if (/(周复盘|月复盘|完整复盘|调整计划|重新规划|制定计划|明天怎么安排|接下来怎么学|二号机.*Arch|Arch.*二号机|你们俩|一起看|有点多|太多|太少|减量|加量|放到\d+[-—~到]\d+月|作文.*(?:放到|推迟|提前)|(?:题目|真题|练习题|题).*(?:发我|给我|链接|在哪)|(?:可以|能不能|可不可以|是不是).*(?:放到|调整|推迟|提前|减少|增加))/i.test(clean)) {
     return 'handoff'
   }
-  if (/(出题|讲题|解析|为什么错|怎么做|布置|安排|计划|任务|训练计划|阶段目标|难度调整|判题|批改)/i.test(clean)) {
+  if (/(出题|讲题|解析|为什么错|怎么做|布置|安排|计划|任务|训练计划|阶段目标|难度调整|判题|批改|具体题|题单|材料|资料)/i.test(clean)) {
     return 'arch'
   }
   if (/^(A|B|C|D|选[A-D]|我选[A-D]|答案是[A-D])$/i.test(clean.trim())) {
