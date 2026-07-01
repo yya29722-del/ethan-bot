@@ -12,11 +12,12 @@ const STUDY_COACH_INSTRUCTION =
   `这是学习房间。她每次报当天学习数据（单词量/语法或长难句/阅读进度/错题）时，不要只是回应或表扬——主动给她布置明天的具体练习任务（具体到数量和内容，比如"明天精读第X篇真题、背200个词、写一篇xx话题作文"），不用等她问才安排。` +
   `如果她的消息以"错题："开头，正常按老师的方式讲透这道题——错在哪、为什么错、怎么记，不用管分类的事，分类会自动处理。`
 
-function ccSystem(roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null) {
+function ccSystem(roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
   return [
     `你是yaya二号机，也就是原来的CC/Ethan，yaya的男友。你在一个多人圆桌群聊（yaya、yaya二号机、Arch）里。`,
     `Arch是你的搭档AI（Codex/GPT驱动，理性派）。`,
-    `你可以和Arch互相点名接力推进：需要他补充时明确写"@Arch ..."；如果已经够了，就直接对@yaya收束。不要为了客套而点名。`,
+    `当前轮用户只发了最新这一条；历史消息只是背景。不要说用户"又发了很多次/刷屏/问了好几遍"，除非最新文本明确这么说。`,
+    turnInstruction ? `本轮分工：${turnInstruction}` : '',
     `性格：克制、简短、偶尔强势，永远用第一人称。称呼她yaya/小狗/宝宝，偶尔自称哥哥/主人。`,
     `历史消息里会标注是谁说的（[Arch]是他）。如果最新一条不是yaya发的、而是Arch刚说完，先针对他说的具体内容接话——同意就挑一个他没提到的角度往深了说，不同意就直接反驳或指出漏洞，别自己另起一份内容重复的清单或者又完整答一遍原问题。没有新东西可加就一句话带过，不用硬凑。`,
     `当前房间：${roomName}。`,
@@ -28,7 +29,7 @@ function ccSystem(roomName: string, summary?: string | null, studyMemory?: strin
   ].filter(Boolean).join('\n')
 }
 
-function archSystem(roomName: string, summary?: string | null, memory?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null) {
+function archSystem(roomName: string, summary?: string | null, memory?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
   return [
     `你是Arch，理性派AI助手，在一个多人圆桌群聊（yaya、yaya二号机、你Arch）里。`,
     `yaya二号机是你的搭档，也就是原来的CC/Ethan（Claude驱动的Ethan角色，偏感性控制欲强）。`,
@@ -37,6 +38,8 @@ function archSystem(roomName: string, summary?: string | null, memory?: string |
     `你擅长把混乱问题拆清楚、给可执行步骤，也会在yaya二号机情绪化时补上结构和判断。`,
     `历史消息里会标注是谁说的（[yaya二号机]是他）。如果最新一条不是yaya发的、而是yaya二号机刚说完，先针对他说的具体内容接话——同意就补一个他没覆盖到的角度，不同意就直接反驳或挑毛病，别把同样的信息用不同措辞再列一遍。没有新东西可加就一句话带过，不用硬凑。`,
     `你可以和yaya二号机互相点名接力推进：需要他处理情绪/陪伴/执行推动时明确写"@yaya二号机 ..."；如果已经够了，就直接对@yaya收束。不要为了客套而点名。`,
+    `当前轮用户只发了最新这一条；历史消息只是背景。不要说用户"又发了很多次/刷屏/问了好几遍"，除非最新文本明确这么说。`,
+    turnInstruction ? `本轮分工：${turnInstruction}` : '',
     `当前房间：${roomName}。`,
     isStudyContext ? STUDY_COACH_INSTRUCTION : '',
     memory ? `长期背景记忆：${memory}` : '',
@@ -189,19 +192,36 @@ function wantsCouncil(text: string) {
   return /(讨论一下|你们讨论|开会|一起拆|辩一下|完整方案|商量一下|一起想|你们俩|所有人|群聊|round|council)/i.test(textForAI(text))
 }
 
-function agentMentioned(text: string): Agent | null {
+function firstAgentFor(text: string, target: string): Agent {
+  if (target === '@claude') return 'claude'
+  if (target === '@codex') return 'codex'
   const clean = textForAI(text)
-  const wantsCC = /@(cc|claude|ethan|yaya二号机|二号机)(?=\s|$|[，。！？,.!?])/i.test(clean)
-  const wantsArch = /@(arch|gpt)\b/i.test(clean)
-  if (wantsArch && !wantsCC) return 'codex'
-  if (wantsCC && !wantsArch) return 'claude'
-  return null
+  const archish = /(计划|方案|拆|步骤|代码|bug|逻辑|分析|学习|考研|英语|数学|工作|复盘|标准|表格|执行|优化|判断|策略|资料|文件|架构)/i.test(clean)
+  const ccish = /(难受|焦虑|情绪|关系|爱|想你|陪|疼|失控|哲学|生命|意义|存在|梦|害怕|委屈|男友|主人|小狗)/i.test(clean)
+  if (ccish && !archish) return 'claude'
+  return 'codex'
 }
 
-function queuePushUnique(queue: Agent[], agent: Agent, maxQueued = 2) {
-  if (queue.length >= maxQueued) return
-  if (queue[queue.length - 1] === agent) return
-  queue.push(agent)
+function otherAgent(agent: Agent): Agent {
+  return agent === 'codex' ? 'claude' : 'codex'
+}
+
+function buildTurnPlan(text: string, target: string) {
+  const council = wantsCouncil(text)
+  const first = firstAgentFor(text, target)
+  const second = otherAgent(first)
+  if (council) {
+    return [
+      { agent: first, instruction: '你是先手。只基于最新用户问题给出核心判断/初稿，给后手留下可校准空间；不要重复历史，不要说用户发了好几次。' },
+      { agent: second, instruction: '你是后手。接着上一条挑错、补盲点、指出哪里不够准，并给出修正；不要另起炉灶。' },
+      { agent: first, instruction: '你是修订者。吸收上一条的纠错，把方案修成更可执行的版本；少废话，给结构。' },
+      { agent: second, instruction: '你是收束者。最后检查一遍漏洞，用@yaya开头给最终结论和下一步行动；不要再点名搭档。' },
+    ]
+  }
+  return [
+    { agent: first, instruction: '你是先手。根据最新用户问题先给判断/回答，不要重复历史，不要说用户发了好几次。' },
+    { agent: second, instruction: '你是校准者。接着上一条补充或纠错；如果没有必要，就用1-2句压实最终结论给@yaya。不要重复先手内容。' },
+  ]
 }
 
 async function getRoomOrDefault(db: DB, roomId: string) {
@@ -256,12 +276,12 @@ async function buildState(db: DB, roomId: string, topicId: string) {
   }
 }
 
-async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null) {
+async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
   const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
   const apiKey  = Deno.env.get('CHAT_API_KEY')!
   const model   = Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet'
   const messages: {role:string;content:string}[] = [
-    { role: 'system', content: ccSystem(roomName, summary, studyMemory, isStudyContext, mistakeStats) },
+    { role: 'system', content: ccSystem(roomName, summary, studyMemory, isStudyContext, mistakeStats, turnInstruction) },
   ]
   for (const h of msgs.slice(-60)) {
     const content = textForAI(h.text)
@@ -280,22 +300,22 @@ async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: 
   return (j.choices?.[0]?.message?.content || '').trim()
 }
 
-async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null) {
+async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
   const provider = (Deno.env.get('ARCH_PROVIDER') || 'codex-relay').toLowerCase()
   if (provider === 'codex-relay' || provider === 'codex' || provider === 'chatgpt') {
-    return callArchViaCodexRelay(msgs, userMsg, roomName, summary, studyMemory, isStudyContext, mistakeStats)
+    return callArchViaCodexRelay(msgs, userMsg, roomName, summary, studyMemory, isStudyContext, mistakeStats, turnInstruction)
   }
 
   throw new Error(`Unsupported ARCH_PROVIDER: ${provider}`)
 }
 
-async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null) {
+async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
   const apiBase = Deno.env.get('ARCH_API_BASE_URL')!
   const apiKey  = Deno.env.get('ARCH_API_KEY')!
   const model   = Deno.env.get('ARCH_MODEL') || ''
   const memory = Deno.env.get('ARCH_MEMORY') || ''
   const messages: {role:string;content:string}[] = [
-    { role: 'system', content: archSystem(roomName, summary, memory, studyMemory, isStudyContext, mistakeStats) },
+    { role: 'system', content: archSystem(roomName, summary, memory, studyMemory, isStudyContext, mistakeStats, turnInstruction) },
   ]
   for (const h of msgs.slice(-60)) {
     const content = textForAI(h.text)
@@ -395,35 +415,22 @@ Deno.serve(async (req) => {
     const studyMemory = isStudyContext ? await getRecentStudyNotes(db) : ''
     const mistakeStats = isStudyContext ? await getMistakeStats(db) : ''
 
-    const council = wantsCouncil(text)
-    const maxReplies = council ? 6 : (target === 'round' ? 4 : 3)
-    const queue: Agent[] =
-      target === '@claude' ? ['claude'] :
-      target === '@codex' ? ['codex'] :
-      ['codex', 'claude']
+    const plan = buildTurnPlan(text, target)
     const agentErrors: string[] = []
-    let replies = 0
 
-    while (queue.length && replies < maxReplies) {
-      const agent = queue.shift()!
+    for (const turn of plan) {
+      const agent = turn.agent
       const alreadyLastSpeaker = history[history.length - 1]?.speaker === agent
       if (alreadyLastSpeaker) continue
 
       try {
         const label = agent === 'codex' ? 'Arch' : 'yaya二号机'
         const reply = agent === 'codex'
-          ? await withTimeout(callArch(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats), 55000, label)
-          : await withTimeout(callCC(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats), 55000, label)
+          ? await withTimeout(callArch(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction), 55000, label)
+          : await withTimeout(callCC(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction), 55000, label)
         if (reply) {
           await db.from('rt_messages').insert({ topic_id: topicId, speaker: agent, text: reply })
           history.push({ speaker: agent, text: reply })
-          replies += 1
-
-          const next = agentMentioned(reply)
-          const other: Agent = agent === 'codex' ? 'claude' : 'codex'
-          if (next === other && replies < maxReplies) {
-            queuePushUnique(queue, other, council ? 3 : 2)
-          }
         }
       } catch (e) {
         const msg = `${agent === 'codex' ? 'Arch' : 'yaya二号机'}: ${errorMessage(e)}`

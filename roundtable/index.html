@@ -223,6 +223,7 @@ let lastSig = '';
 let lastMessages = [];
 let selIcon = ICONS[0];
 let pendingFiles = [];
+let livePoll = 0;
 const ATT_MARK = '[[RT_ATTACHMENT:';
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_FILES = 4;
@@ -467,6 +468,7 @@ async function sendMsg() {
   const wArch = target==='round'||target==='@codex';
   if (wArch) { setDot('codex','thinking'); addTyping('codex'); }
   if (wCC)   { setDot('claude','thinking'); if(!wArch) addTyping('claude'); }
+  startLivePoll(S.roomId, S.topicId);
 
   try {
     const data = await api('user', {text, topicId:S.topicId, roomId:S.roomId, target});
@@ -479,11 +481,31 @@ async function sendMsg() {
     setDot('codex',''); setDot('claude','');
     alert('发送失败：'+e.message);
   } finally {
+    stopLivePoll();
     S.busy = false;
     document.getElementById('send-btn').disabled = false;
     document.getElementById('attach-btn').disabled = false;
     document.getElementById('msg-input').focus();
   }
+}
+
+function startLivePoll(roomId, topicId) {
+  stopLivePoll();
+  livePoll = setInterval(async () => {
+    try {
+      if (S.roomId !== roomId || S.topicId !== topicId) return;
+      const q = new URLSearchParams({ roomId, topicId });
+      const data = await api('state?' + q);
+      if (S.roomId === roomId && S.topicId === topicId) apply(data);
+    } catch (e) {
+      console.warn('live poll failed', e);
+    }
+  }, 1800);
+}
+
+function stopLivePoll() {
+  if (livePoll) clearInterval(livePoll);
+  livePoll = 0;
 }
 
 function pickFiles() {
