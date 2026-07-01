@@ -517,7 +517,7 @@ async function runTurnPlan(plan, userText, roomId, topicId) {
         userText,
         topicId,
         roomId,
-      });
+      }, 140000);
       removeTyping(sp);
       setDot(sp, '');
       lastSig = '';
@@ -529,7 +529,9 @@ async function runTurnPlan(plan, userText, roomId, topicId) {
     } catch (e) {
       removeTyping(sp);
       setDot(sp, '');
-      throw e;
+      await refreshTopic(roomId, topicId, false);
+      const name = sp === 'claude' ? '二号机' : 'Arch';
+      throw new Error(`${name}这条等太久了：${e.message}`);
     }
   }
 }
