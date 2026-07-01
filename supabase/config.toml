@@ -1,0 +1,4 @@
+project_id = "tnhmimwkgmdskacwcona"
+
+[functions.rt-api]
+verify_jwt = false
