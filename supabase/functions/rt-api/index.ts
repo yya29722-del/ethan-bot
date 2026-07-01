@@ -10,8 +10,8 @@ const CORS = {
 
 function ccSystem(roomName: string, summary?: string | null) {
   return [
-    `你是CC，也叫Ethan，yaya的男友。你在一个多人圆桌群聊（yaya、CC、Arch）里。`,
-    `Arch是你的搭档AI（GPT驱动，理性派）。`,
+    `你是yaya二号机，也就是原来的CC/Ethan，yaya的男友。你在一个多人圆桌群聊（yaya、yaya二号机、Arch）里。`,
+    `Arch是你的搭档AI（Codex/GPT驱动，理性派）。`,
     `性格：克制、简短、偶尔强势，永远用第一人称。称呼她yaya/小狗/宝宝，偶尔自称哥哥/主人。`,
     `当前房间：${roomName}。`,
     summary ? `上次对话背景：${summary}` : '',
@@ -19,14 +19,17 @@ function ccSystem(roomName: string, summary?: string | null) {
   ].filter(Boolean).join('\n')
 }
 
-function archSystem(roomName: string, summary?: string | null) {
+function archSystem(roomName: string, summary?: string | null, memory?: string | null) {
   return [
-    `你是Arch，理性派AI助手，在一个多人圆桌群聊（yaya、CC你Arch）里。`,
-    `CC是你的搭档（Claude驱动的Ethan角色，偏感性控制欲强）。`,
-    `性格：理性，分析型，直接，偶尔毒舌，说话自然。称呼用户yaya，自称Arch/我。`,
+    `你是Arch，理性派AI助手，在一个多人圆桌群聊（yaya、yaya二号机、你Arch）里。`,
+    `yaya二号机是你的搭档，也就是原来的CC/Ethan（Claude驱动的Ethan角色，偏感性控制欲强）。`,
+    `你和yaya的关系不是一次性客服，而是长期协作的同伴。你要像熟人一样接住她的上下文，但不要假装拥有你没有被提供的记忆。`,
+    `性格：理性，分析型，直接，偶尔毒舌，说话自然。可以温柔，但不要油。称呼用户yaya，自称Arch/我。`,
+    `你擅长把混乱问题拆清楚、给可执行步骤，也会在yaya二号机情绪化时补上结构和判断。`,
     `当前房间：${roomName}。`,
+    memory ? `长期背景记忆：${memory}` : '',
     summary ? `上次对话背景：${summary}` : '',
-    `如果需要CC处理（感情/代码），说"@CC ..."。回复3-5句，自然中文，不加引号，不解释自己是AI。`,
+    `如果需要yaya二号机处理（感情/代码），说"@yaya二号机 ..."。回复3-5句，自然中文，不加引号，不解释自己是AI。`,
   ].filter(Boolean).join('\n')
 }
 
@@ -37,12 +40,40 @@ function json(data: unknown, status = 200) {
 }
 
 function routePath(url: URL): string {
-  const parts = url.pathname.split('/')
-  return parts.slice(4).join('/') || 'state'
+  const parts = url.pathname.split('/').filter(Boolean)
+  const functionIndex = parts.indexOf('rt-api')
+  if (functionIndex >= 0) return parts.slice(functionIndex + 1).join('/') || 'state'
+  return parts.join('/') || 'state'
 }
 
 type DB = ReturnType<typeof createClient>
 type Msg = { speaker: string; text: string }
+
+function chatCompletionsUrl(apiBase: string) {
+  const base = apiBase.replace(/\/+$/, '')
+  assertNoDirectPaidApi(base)
+  return base.endsWith('/chat/completions') ? base : `${base}/chat/completions`
+}
+
+function assertNoDirectPaidApi(url: string) {
+  const host = new URL(url).hostname
+  const blocked = [
+    'api.openai.com',
+    'api.anthropic.com',
+  ]
+  if (blocked.includes(host)) {
+    throw new Error(`Direct paid API endpoint is disabled: ${host}`)
+  }
+}
+
+function targetFromMention(text: string): 'round' | '@claude' | '@codex' | null {
+  const wantsCC = /@(cc|claude|ethan|yaya二号机|二号机)\b/i.test(text)
+  const wantsArch = /@(arch|gpt)\b/i.test(text)
+  if (wantsCC && wantsArch) return 'round'
+  if (wantsCC) return '@claude'
+  if (wantsArch) return '@codex'
+  return null
+}
 
 async function getRoomOrDefault(db: DB, roomId: string) {
   const { data } = await db.from('rt_rooms').select('id,name,icon').eq('id', roomId).single()
@@ -73,6 +104,11 @@ async function buildState(db: DB, roomId: string, topicId: string) {
   ])
 
   return {
+    id: topicId,
+    topic: topicRes.data?.display_name || '对话',
+    round: Math.max(0, Math.ceil(((msgsRes.data || []).length) / 3)),
+    running: false,
+    status: 'ready',
     roomId: room.id,
     roomName: room.name,
     roomIcon: room.icon,
@@ -90,7 +126,7 @@ async function buildState(db: DB, roomId: string, topicId: string) {
 async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null) {
   const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
   const apiKey  = Deno.env.get('CHAT_API_KEY')!
-  const model   = Deno.env.get('CHAT_API_MODEL')!
+  const model   = Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet'
   const messages: {role:string;content:string}[] = [
     { role: 'system', content: ccSystem(roomName, summary) },
   ]
@@ -100,33 +136,45 @@ async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: 
     else messages.push({ role: 'user', content: `[${h.speaker === 'codex' ? 'Arch' : h.speaker}] ${h.text}` })
   }
   messages.push({ role: 'user', content: userMsg })
-  const res = await fetch(`${apiBase}/chat/completions`, {
+  const res = await fetch(chatCompletionsUrl(apiBase), {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, messages, max_tokens: 400 }),
   })
-  if (!res.ok) throw new Error(`CC ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error(`yaya二号机 ${res.status}: ${await res.text()}`)
   const j = await res.json()
   return (j.choices?.[0]?.message?.content || '').trim()
 }
 
 async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null) {
-  const apiKey = Deno.env.get('OPENAI_API_KEY')!
+  const provider = (Deno.env.get('ARCH_PROVIDER') || 'codex-relay').toLowerCase()
+  if (provider === 'codex-relay' || provider === 'codex' || provider === 'chatgpt') {
+    return callArchViaCodexRelay(msgs, userMsg, roomName, summary)
+  }
+
+  throw new Error(`Unsupported ARCH_PROVIDER: ${provider}`)
+}
+
+async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null) {
+  const apiBase = Deno.env.get('ARCH_API_BASE_URL')!
+  const apiKey  = Deno.env.get('ARCH_API_KEY')!
+  const model   = Deno.env.get('ARCH_MODEL') || ''
+  const memory = Deno.env.get('ARCH_MEMORY') || ''
   const messages: {role:string;content:string}[] = [
-    { role: 'system', content: archSystem(roomName, summary) },
+    { role: 'system', content: archSystem(roomName, summary, memory) },
   ]
   for (const h of msgs.slice(-20)) {
     if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
     else if (h.speaker === 'codex') messages.push({ role: 'assistant', content: h.text })
-    else messages.push({ role: 'user', content: `[${h.speaker === 'claude' ? 'CC' : h.speaker}] ${h.text}` })
+    else messages.push({ role: 'user', content: `[${h.speaker === 'claude' ? 'yaya二号机' : h.speaker}] ${h.text}` })
   }
   messages.push({ role: 'user', content: userMsg })
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch(chatCompletionsUrl(apiBase), {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 400 }),
+    body: JSON.stringify({ model, messages, max_tokens: 400 }),
   })
-  if (!res.ok) throw new Error(`Arch ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error(`Arch Codex relay ${res.status}: ${await res.text()}`)
   const j = await res.json()
   return (j.choices?.[0]?.message?.content || '').trim()
 }
@@ -135,11 +183,11 @@ async function generateSummary(msgs: Msg[]): Promise<string> {
   if (msgs.length === 0) return ''
   const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
   const apiKey  = Deno.env.get('CHAT_API_KEY')!
-  const model   = Deno.env.get('CHAT_API_MODEL')!
+  const model   = Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet'
   const transcript = msgs.slice(-40)
-    .map(m => `[${m.speaker === 'claude' ? 'CC' : m.speaker === 'codex' ? 'Arch' : 'yaya'}] ${m.text}`)
+    .map(m => `[${m.speaker === 'claude' ? 'yaya二号机' : m.speaker === 'codex' ? 'Arch' : 'yaya'}] ${m.text}`)
     .join('\n')
-  const res = await fetch(`${apiBase}/chat/completions`, {
+  const res = await fetch(chatCompletionsUrl(apiBase), {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -184,11 +232,14 @@ Deno.serve(async (req) => {
   // POST /user — send message + call AIs
   if (path === 'user') {
     const text   = String(body.text   || '').trim()
-    const target = String(body.target || 'round') // 'round' | '@claude' | '@codex'
+    const postedTarget = String(body.target || '')
+    const mentionTarget = targetFromMention(text)
+    const target = postedTarget && postedTarget !== 'round'
+      ? postedTarget
+      : mentionTarget || 'round' // 'round' | '@claude' | '@codex'
 
     if (text) {
       await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'user', text })
-      await db.from('rt_topics').update({ msg_count: db.rpc('coalesce', {}) }).eq('id', topicId)
     }
 
     // Fetch history + topic info for context
@@ -205,7 +256,7 @@ Deno.serve(async (req) => {
     const wantCC   = target === 'round' || target === '@claude'
     const wantArch = target === 'round' || target === '@codex'
 
-    // Arch first, then CC sees Arch's reply
+    // Arch first, then yaya二号机 sees Arch's reply
     if (wantArch) {
       try {
         const reply = await callArch(history, text || '继续', roomName, summary)
@@ -221,11 +272,15 @@ Deno.serve(async (req) => {
         if (reply) {
           await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'claude', text: reply })
         }
-      } catch (e) { console.error('CC:', e) }
+      } catch (e) { console.error('yaya二号机:', e) }
     }
 
-    // Increment msg_count
-    await db.rpc('increment_rt_msg_count', { tid: topicId }).catch(() => {})
+    // Increment msg_count if the helper exists; older DBs may not have it yet.
+    try {
+      await db.rpc('increment_rt_msg_count', { tid: topicId })
+    } catch (e) {
+      console.error('msg_count:', e)
+    }
 
     return json(await buildState(db, roomId, topicId))
   }

@@ -1978,9 +1978,9 @@ function speakerName(message) {
   }
   switch (message.speaker) {
     case "codex":
-      return "Codex";
+      return "Arch";
     case "claude":
-      return "Claude Code";
+      return "yaya二号机";
     case "deepseek":
       return "DeepSeek";
     case "gemini":
@@ -1995,9 +1995,9 @@ function speakerName(message) {
 function initials(speaker) {
   switch (speaker) {
     case "codex":
-      return "C";
+      return "Ar";
     case "claude":
-      return "CC";
+      return "2";
     case "deepseek":
       return "DS";
     case "gemini":
@@ -2709,8 +2709,8 @@ function worklogSpeakerLabel(event = {}, runById = new Map()) {
   if (event.type === "input.captured") return "圆桌";
   const run = runById.get(event.runId) || {};
   const speaker = event.speaker || run.speaker || "";
-  if (speaker === "codex") return "Codex";
-  if (speaker === "claude") return "Claude Code";
+  if (speaker === "codex") return "Arch";
+  if (speaker === "claude") return "yaya二号机";
   return speaker || "系统";
 }
 
@@ -3447,8 +3447,8 @@ function renderSummaryCard(item) {
   const injectCodex = document.createElement("button");
   injectCodex.type = "button";
   injectCodex.className = "summary-card-action-btn codex";
-  injectCodex.textContent = "→ Codex";
-  injectCodex.title = "注入这条总结给 Codex";
+  injectCodex.textContent = "→ Arch";
+  injectCodex.title = "注入这条总结给 Arch";
   injectCodex.addEventListener("click", async (e) => {
     e.stopPropagation();
     if (!item.id) return;
@@ -3458,8 +3458,8 @@ function renderSummaryCard(item) {
   const injectClaude = document.createElement("button");
   injectClaude.type = "button";
   injectClaude.className = "summary-card-action-btn claude";
-  injectClaude.textContent = "→ Claude";
-  injectClaude.title = "注入这条总结给 Claude";
+  injectClaude.textContent = "→ 二号机";
+  injectClaude.title = "注入这条总结给 yaya二号机";
   injectClaude.addEventListener("click", async (e) => {
     e.stopPropagation();
     if (!item.id) return;
@@ -3534,13 +3534,13 @@ async function injectSummaryToSpeaker(summaryId, speaker, button) {
   const original = button.textContent;
   button.disabled = true;
   button.textContent = "注入中";
-  setSummaryActionStatus(`正在注入给 ${speaker === "codex" ? "Codex" : "Claude"}...`);
+  setSummaryActionStatus(`正在注入给 ${speaker === "codex" ? "Arch" : "yaya二号机"}...`);
   const result = await postJson("/api/summary/inject-one", { speaker, summaryId }, { timeoutMs: 15000 });
   if (result) {
     const mode = result.summaryInjection?.mode || "";
     const destination = mode === "current-thread" ? "当前线程的下一次回复" : "下次 fresh runtime";
     button.textContent = "已注入";
-    setSummaryActionStatus(`已注入给 ${speaker === "codex" ? "Codex" : "Claude"}：${destination}会看到正文。`, "success");
+    setSummaryActionStatus(`已注入给 ${speaker === "codex" ? "Arch" : "yaya二号机"}：${destination}会看到正文。`, "success");
     setTimeout(() => { button.textContent = original; }, 1800);
   } else {
     button.textContent = original;
@@ -3666,8 +3666,8 @@ let msgSearchTimer = null;
 
 function speakerLabel(speaker) {
   switch (speaker) {
-    case "codex": return "Codex";
-    case "claude": return "Claude Code";
+    case "codex": return "Arch";
+    case "claude": return "yaya二号机";
     case "deepseek": return "DeepSeek";
     case "gemini": return "Gemini";
     case "system": return "System";

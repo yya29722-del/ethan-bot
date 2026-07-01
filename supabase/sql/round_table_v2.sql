@@ -14,6 +14,15 @@ ALTER TABLE rt_topics ADD COLUMN IF NOT EXISTS display_name  TEXT;
 ALTER TABLE rt_topics ADD COLUMN IF NOT EXISTS parent_summary TEXT;
 ALTER TABLE rt_topics ADD COLUMN IF NOT EXISTS msg_count     INT DEFAULT 0;
 
+CREATE OR REPLACE FUNCTION increment_rt_msg_count(tid TEXT)
+RETURNS VOID
+LANGUAGE SQL
+AS $$
+  UPDATE rt_topics
+  SET msg_count = COALESCE(msg_count, 0) + 1
+  WHERE id = tid;
+$$;
+
 -- Seed rooms
 INSERT INTO rt_rooms (id, name, icon, sort_order) VALUES
   ('room-main',       '圆桌',  '⌂', 0),

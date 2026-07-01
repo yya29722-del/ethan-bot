@@ -146,14 +146,14 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
     <span id="h-topic">对话 1</span>
     <div class="sdots">
       <div class="schip"><div class="sdot" id="dot-arch"></div>Arch</div>
-      <div class="schip"><div class="sdot" id="dot-cc"></div>CC</div>
+      <div class="schip"><div class="sdot" id="dot-cc"></div>二号机</div>
     </div>
   </div>
   <div id="messages"></div>
   <div id="input-bar">
     <div class="tbar">
       <button class="tbtn active" data-t="round"   onclick="setTarget(this)">Round</button>
-      <button class="tbtn"        data-t="@claude"  onclick="setTarget(this)">@CC</button>
+      <button class="tbtn"        data-t="@claude"  onclick="setTarget(this)">@二号机</button>
       <button class="tbtn"        data-t="@codex"   onclick="setTarget(this)">@Arch</button>
     </div>
     <div class="irow">
@@ -254,7 +254,7 @@ function renderMsgs(msgs, summary) {
     el.appendChild(b);
   }
   if (!msgs.length && !summary) {
-    el.innerHTML = '<div class="empty-hint">Round Table<br><span style="font-size:11px;opacity:.6">Round · @CC · @Arch</span><br><span style="font-size:10px;opacity:.4;letter-spacing:.05em">说点什么开始吧</span></div>';
+    el.innerHTML = '<div class="empty-hint">Round Table<br><span style="font-size:11px;opacity:.6">Round · @二号机 · @Arch</span><br><span style="font-size:10px;opacity:.4;letter-spacing:.05em">说点什么开始吧</span></div>';
     return;
   }
   let prevDay = '';
@@ -273,8 +273,8 @@ function renderMsgs(msgs, summary) {
 }
 
 function mkBubble(m) {
-  const names    = {user:'yaya', claude:'CC', codex:'Arch'};
-  const initials = {user:'y',    claude:'CC', codex:'Ar'};
+  const names    = {user:'yaya', claude:'yaya二号机', codex:'Arch'};
+  const initials = {user:'y',    claude:'2', codex:'Ar'};
   const row = document.createElement('div');
   row.className = 'msg-row ' + m.speaker;
   row.dataset.id = m.id;
@@ -299,12 +299,12 @@ function addTyping(sp) {
   row.id = 'typ-' + sp;
   const av = document.createElement('div');
   av.className = 'av';
-  av.textContent = sp === 'claude' ? 'CC' : 'Ar';
+  av.textContent = sp === 'claude' ? '2' : 'Ar';
   const body = document.createElement('div');
   body.className = 'mbody';
   const nm = document.createElement('div');
   nm.className = 'mname';
-  nm.textContent = sp === 'claude' ? 'CC' : 'Arch';
+  nm.textContent = sp === 'claude' ? 'yaya二号机' : 'Arch';
   const bub = document.createElement('div');
   bub.className = 'bubble';
   bub.style.color = sp === 'claude' ? 'var(--cc-dot)' : 'var(--arch-dot)';
@@ -326,11 +326,21 @@ function setTarget(btn) {
   S.target = btn.dataset.t;
 }
 
+function targetFromMention(text) {
+  const wantsCC = /@(cc|claude|ethan|yaya二号机|二号机)\b/i.test(text);
+  const wantsArch = /@(arch|gpt)\b/i.test(text);
+  if (wantsCC && wantsArch) return 'round';
+  if (wantsCC) return '@claude';
+  if (wantsArch) return '@codex';
+  return null;
+}
+
 async function sendMsg() {
   if (S.busy) return;
   const inp  = document.getElementById('msg-input');
   const text = (inp.value||'').trim();
   if (!text) return;
+  const target = targetFromMention(text) || S.target;
   inp.value = '';
   inp.style.height = 'auto';
   document.getElementById('send-btn').disabled = true;
@@ -342,13 +352,13 @@ async function sendMsg() {
   el.appendChild(mkBubble({id:'tmp'+Date.now(), speaker:'user', text, at:new Date().toISOString()}));
   el.scrollTop = el.scrollHeight;
 
-  const wCC   = S.target==='round'||S.target==='@claude';
-  const wArch = S.target==='round'||S.target==='@codex';
+  const wCC   = target==='round'||target==='@claude';
+  const wArch = target==='round'||target==='@codex';
   if (wArch) { setDot('codex','thinking'); addTyping('codex'); }
   if (wCC)   { setDot('claude','thinking'); if(!wArch) addTyping('claude'); }
 
   try {
-    const data = await api('user', {text, topicId:S.topicId, roomId:S.roomId, target:S.target});
+    const data = await api('user', {text, topicId:S.topicId, roomId:S.roomId, target});
     removeTyping('codex'); removeTyping('claude');
     setDot('codex',''); setDot('claude','');
     lastSig = '';
