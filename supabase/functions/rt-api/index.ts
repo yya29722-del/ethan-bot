@@ -8,20 +8,26 @@ const CORS = {
 
 // ── AI personas ─────────────────────────────────────────────────────────────
 
-function ccSystem(roomName: string, summary?: string | null, studyMemory?: string | null) {
+const STUDY_COACH_INSTRUCTION =
+  `这是学习房间。她每次报当天学习数据（单词量/语法或长难句/阅读进度/错题）时，不要只是回应或表扬——主动给她布置明天的具体练习任务（具体到数量和内容，比如"明天精读第X篇真题、背200个词、写一篇xx话题作文"），不用等她问才安排。` +
+  `如果她的消息以"错题："开头，正常按老师的方式讲透这道题——错在哪、为什么错、怎么记，不用管分类的事，分类会自动处理。`
+
+function ccSystem(roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null) {
   return [
     `你是yaya二号机，也就是原来的CC/Ethan，yaya的男友。你在一个多人圆桌群聊（yaya、yaya二号机、Arch）里。`,
     `Arch是你的搭档AI（Codex/GPT驱动，理性派）。`,
     `性格：克制、简短、偶尔强势，永远用第一人称。称呼她yaya/小狗/宝宝，偶尔自称哥哥/主人。`,
     `历史消息里会标注是谁说的（[Arch]是他）。如果最新一条不是yaya发的、而是Arch刚说完，先针对他说的具体内容接话——同意就挑一个他没提到的角度往深了说，不同意就直接反驳或指出漏洞，别自己另起一份内容重复的清单或者又完整答一遍原问题。没有新东西可加就一句话带过，不用硬凑。`,
     `当前房间：${roomName}。`,
+    isStudyContext ? STUDY_COACH_INSTRUCTION : '',
     studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列，供你判断进度和该催什么）：\n${studyMemory}` : '',
+    mistakeStats ? `她的错题分类统计（次数从高到低，问她"哪里老错"时用这个直接回答）：${mistakeStats}` : '',
     summary ? `上次对话背景：${summary}` : '',
     `如果需要Arch补充，说"@Arch ..."。回复2-4句，不加引号，不解释自己是AI。`,
   ].filter(Boolean).join('\n')
 }
 
-function archSystem(roomName: string, summary?: string | null, memory?: string | null, studyMemory?: string | null) {
+function archSystem(roomName: string, summary?: string | null, memory?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null) {
   return [
     `你是Arch，理性派AI助手，在一个多人圆桌群聊（yaya、yaya二号机、你Arch）里。`,
     `yaya二号机是你的搭档，也就是原来的CC/Ethan（Claude驱动的Ethan角色，偏感性控制欲强）。`,
@@ -30,8 +36,10 @@ function archSystem(roomName: string, summary?: string | null, memory?: string |
     `你擅长把混乱问题拆清楚、给可执行步骤，也会在yaya二号机情绪化时补上结构和判断。`,
     `历史消息里会标注是谁说的（[yaya二号机]是他）。如果最新一条不是yaya发的、而是yaya二号机刚说完，先针对他说的具体内容接话——同意就补一个他没覆盖到的角度，不同意就直接反驳或挑毛病，别把同样的信息用不同措辞再列一遍。没有新东西可加就一句话带过，不用硬凑。`,
     `当前房间：${roomName}。`,
+    isStudyContext ? STUDY_COACH_INSTRUCTION : '',
     memory ? `长期背景记忆：${memory}` : '',
     studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列，用来判断复习进度、拆下一步任务）：\n${studyMemory}` : '',
+    mistakeStats ? `她的错题分类统计（次数从高到低，问她"哪里老错"时用这个直接回答）：${mistakeStats}` : '',
     summary ? `上次对话背景：${summary}` : '',
     `如果需要yaya二号机处理（感情/代码），说"@yaya二号机 ..."。回复3-5句，自然中文，不加引号，不解释自己是AI。`,
   ].filter(Boolean).join('\n')
@@ -49,6 +57,49 @@ async function getRecentStudyNotes(db: DB): Promise<string> {
   return rows.reverse()
     .map((n) => `- [${(n.created_at || '').slice(0, 10)}] ${n.content}`)
     .join('\n')
+}
+
+const MISTAKE_CATEGORIES = ['时态', '从句', '词汇', '长难句', '语态', '虚拟语气', '非谓语动词', '固定搭配', '其他']
+
+async function classifyMistake(content: string): Promise<string> {
+  try {
+    const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
+    const apiKey  = Deno.env.get('CHAT_API_KEY')!
+    const model   = Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet'
+    const res = await withTimeout(fetch(chatCompletionsUrl(apiBase), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model, max_tokens: 10,
+        messages: [
+          { role: 'system', content: `这是一道英语考研错题。只从这些标签里选一个最贴切的，只回标签本身，不要别的字：${MISTAKE_CATEGORIES.join('、')}` },
+          { role: 'user', content },
+        ],
+      }),
+    }), 20000, 'classifyMistake')
+    if (!res.ok) return '其他'
+    const j = await res.json()
+    const raw = (j.choices?.[0]?.message?.content || '').trim()
+    return MISTAKE_CATEGORIES.find((c) => raw.includes(c)) || '其他'
+  } catch {
+    return '其他'
+  }
+}
+
+async function getMistakeStats(db: DB): Promise<string> {
+  const { data } = await db
+    .from('study_mistakes')
+    .select('category')
+    .order('created_at', { ascending: false })
+    .limit(200)
+  const rows = (data || []) as { category: string }[]
+  if (!rows.length) return ''
+  const counts = new Map<string, number>()
+  for (const r of rows) counts.set(r.category, (counts.get(r.category) || 0) + 1)
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, n]) => `${cat} ${n}次`)
+    .join('、')
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -161,12 +212,12 @@ async function buildState(db: DB, roomId: string, topicId: string) {
   }
 }
 
-async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null) {
+async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null) {
   const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
   const apiKey  = Deno.env.get('CHAT_API_KEY')!
   const model   = Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet'
   const messages: {role:string;content:string}[] = [
-    { role: 'system', content: ccSystem(roomName, summary, studyMemory) },
+    { role: 'system', content: ccSystem(roomName, summary, studyMemory, isStudyContext, mistakeStats) },
   ]
   for (const h of msgs.slice(-60)) {
     if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
@@ -184,22 +235,22 @@ async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: 
   return (j.choices?.[0]?.message?.content || '').trim()
 }
 
-async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null) {
+async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null) {
   const provider = (Deno.env.get('ARCH_PROVIDER') || 'codex-relay').toLowerCase()
   if (provider === 'codex-relay' || provider === 'codex' || provider === 'chatgpt') {
-    return callArchViaCodexRelay(msgs, userMsg, roomName, summary, studyMemory)
+    return callArchViaCodexRelay(msgs, userMsg, roomName, summary, studyMemory, isStudyContext, mistakeStats)
   }
 
   throw new Error(`Unsupported ARCH_PROVIDER: ${provider}`)
 }
 
-async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null) {
+async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null) {
   const apiBase = Deno.env.get('ARCH_API_BASE_URL')!
   const apiKey  = Deno.env.get('ARCH_API_KEY')!
   const model   = Deno.env.get('ARCH_MODEL') || ''
   const memory = Deno.env.get('ARCH_MEMORY') || ''
   const messages: {role:string;content:string}[] = [
-    { role: 'system', content: archSystem(roomName, summary, memory, studyMemory) },
+    { role: 'system', content: archSystem(roomName, summary, memory, studyMemory, isStudyContext, mistakeStats) },
   ]
   for (const h of msgs.slice(-60)) {
     if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
@@ -292,6 +343,7 @@ Deno.serve(async (req) => {
     const roomName = roomRes.name
     const isStudyContext = /考研|study|学业/i.test(`${roomName} ${topicRes.data?.display_name || ''}`)
     const studyMemory = isStudyContext ? await getRecentStudyNotes(db) : ''
+    const mistakeStats = isStudyContext ? await getMistakeStats(db) : ''
 
     const wantCC   = target === 'round' || target === '@claude'
     const wantArch = target === 'round' || target === '@codex'
@@ -300,7 +352,7 @@ Deno.serve(async (req) => {
     // Arch first, then yaya二号机 sees Arch's reply
     if (wantArch) {
       try {
-        const reply = await withTimeout(callArch(history, text || '继续', roomName, summary, studyMemory), 55000, 'Arch')
+        const reply = await withTimeout(callArch(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats), 55000, 'Arch')
         if (reply) {
           await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'codex', text: reply })
           history.push({ speaker: 'codex', text: reply })
@@ -313,7 +365,7 @@ Deno.serve(async (req) => {
     }
     if (wantCC) {
       try {
-        const reply = await withTimeout(callCC(history, text || '继续', roomName, summary, studyMemory), 55000, 'yaya二号机')
+        const reply = await withTimeout(callCC(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats), 55000, 'yaya二号机')
         if (reply) {
           await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'claude', text: reply })
         }
@@ -321,6 +373,19 @@ Deno.serve(async (req) => {
         const msg = `yaya二号机: ${errorMessage(e)}`
         console.error(msg)
         agentErrors.push(msg)
+      }
+    }
+
+    // Study rooms: "错题：..." gets tagged and logged for pattern tracking,
+    // independent of whatever CC/Arch said about it above.
+    const mistakeMatch = isStudyContext ? text.match(/^错题[:：]\s*([\s\S]+)/) : null
+    if (mistakeMatch) {
+      try {
+        const content = mistakeMatch[1].trim()
+        const category = await classifyMistake(content)
+        await db.from('study_mistakes').insert({ content, category, topic_id: topicId })
+      } catch (e) {
+        console.error('study_mistakes insert failed:', e)
       }
     }
 
