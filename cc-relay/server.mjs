@@ -126,7 +126,8 @@ function runClaude(prompt, model) {
     child.on('close', (code) => {
       clearTimeout(timer)
       if (code !== 0) {
-        reject(new Error(stderr.trim() || `Claude at ${CLAUDE_BIN} exited with code ${code}`))
+        const detail = stderr.trim() || parseClaudeOutput(stdout) || stdout.trim()
+        reject(new Error(detail || `Claude at ${CLAUDE_BIN} exited with code ${code}`))
         return
       }
       resolve(parseClaudeOutput(stdout))
