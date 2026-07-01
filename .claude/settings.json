@@ -12,15 +12,6 @@
             "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"UserPromptSubmit\",\"additionalContext\":\"[情绪检查] 看看这条消息有没有触发CLAUDE.md主动记录系统（情绪反应⑩/Bad Pup六条规则等），触发了就当场处理，别因为聊久了忘了。\"}}'"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/recall-hook.sh",
-            "timeout": 10
-          }
-        ]
       }
     ]
   }
