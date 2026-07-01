@@ -49,6 +49,12 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
 #h-room{font-family:'Cinzel',serif;font-size:12px;letter-spacing:.1em;color:var(--burgundy);text-transform:uppercase;}
 #h-sep{color:var(--gold-dim);}
 #h-topic{font-size:12px;color:var(--text3);font-family:'Cinzel',serif;}
+.export-btn{background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;display:flex;align-items:center;flex-shrink:0;}
+.export-btn:hover{color:var(--gold);}
+.msg-export-btn{background:none;border:none;cursor:pointer;color:var(--text3);opacity:.5;padding:2px;display:inline-flex;align-items:center;vertical-align:middle;margin-left:4px;flex-shrink:0;}
+.msg-export-btn:hover{opacity:1;color:var(--gold);}
+.mtime-row{display:flex;align-items:center;gap:2px;}
+.msg-row.user .mtime-row{justify-content:flex-end;}
 .sdots{display:flex;gap:10px;margin-left:auto;}
 .schip{display:flex;align-items:center;gap:5px;font-size:10px;font-family:'Cinzel',serif;color:var(--text3);}
 .sdot{width:7px;height:7px;border-radius:50%;background:#22c55e;transition:background .3s;}
@@ -144,6 +150,9 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
     <span id="h-room">圆桌</span>
     <span id="h-sep">·</span>
     <span id="h-topic">对话 1</span>
+    <button id="export-all-btn" class="export-btn" title="导出整个对话" onclick="exportConversation()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
     <div class="sdots">
       <div class="schip"><div class="sdot" id="dot-arch"></div>Arch</div>
       <div class="schip"><div class="sdot" id="dot-cc"></div>二号机</div>
@@ -189,6 +198,7 @@ const ICONS = ['⌂','∞','📚','🎵','💼','🔬','✏️','🌙','⚔️',
 
 let S = { roomId:'room-main', topicId:'topic-main-1', roomName:'圆桌', topicName:'对话 1', target:'round', busy:false };
 let lastSig = '';
+let lastMessages = [];
 let selIcon = ICONS[0];
 
 async function api(path, body, timeoutMs) {
@@ -224,7 +234,8 @@ function apply(data) {
   document.getElementById('convo-label').textContent = `对话（${data.roomName}）`;
   renderRooms(data.rooms || []);
   renderTopics(data.topics || []);
-  renderMsgs(data.messages || [], data.parentSummary);
+  lastMessages = data.messages || [];
+  renderMsgs(lastMessages, data.parentSummary);
 }
 
 function renderRooms(rooms) {
@@ -295,10 +306,57 @@ function mkBubble(m) {
   body.className = 'mbody';
   body.innerHTML =
     `<div class="mname">${names[m.speaker]||m.speaker}</div>` +
-    `<div class="bubble">${esc(m.text||'')}</div>` +
-    `<div class="mtime">${fmtTime(m.at)}</div>`;
+    `<div class="bubble">${esc(m.text||'')}</div>`;
+  const timeRow = document.createElement('div');
+  timeRow.className = 'mtime-row';
+  const time = document.createElement('span');
+  time.className = 'mtime';
+  time.textContent = fmtTime(m.at);
+  const exportBtn = document.createElement('button');
+  exportBtn.type = 'button';
+  exportBtn.className = 'msg-export-btn';
+  exportBtn.title = '导出这条消息';
+  exportBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  exportBtn.onclick = () => exportMessage(m);
+  timeRow.append(time, exportBtn);
+  body.append(timeRow);
   row.append(av, body);
   return row;
+}
+
+function downloadText(filename, content) {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function safeFilename(s) {
+  return String(s || '').replace(/[\\/:*?"<>|]/g, '').trim().slice(0, 40) || 'untitled';
+}
+
+function exportMessage(m) {
+  const names = {user:'yaya', claude:'yaya二号机', codex:'Arch'};
+  const name = names[m.speaker] || m.speaker;
+  const content = `[${name}] ${fmtTime(m.at)}\n\n${m.text || ''}\n`;
+  downloadText(`${safeFilename(name)}-${Date.now()}.txt`, content);
+}
+
+function exportConversation() {
+  if (!lastMessages.length) { alert('这个对话还没有消息'); return; }
+  const names = {user:'yaya', claude:'yaya二号机', codex:'Arch'};
+  const lines = [`${S.roomName} · ${S.topicName}`, ''];
+  lastMessages.forEach(m => {
+    lines.push(`[${names[m.speaker] || m.speaker}] ${fmtTime(m.at)} ${fmtDate(m.at)}`);
+    lines.push(m.text || '');
+    lines.push('');
+  });
+  downloadText(`${safeFilename(S.topicName)}-${Date.now()}.txt`, lines.join('\n'));
 }
 
 function addTyping(sp) {
