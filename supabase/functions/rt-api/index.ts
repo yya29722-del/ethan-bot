@@ -43,7 +43,7 @@ async function getRecentStudyNotes(db: DB): Promise<string> {
     .select('content, created_at')
     .eq('category', '学业')
     .order('created_at', { ascending: false })
-    .limit(6)
+    .limit(20)
   const rows = (data || []) as { content: string; created_at: string }[]
   if (!rows.length) return ''
   return rows.reverse()
@@ -168,7 +168,7 @@ async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: 
   const messages: {role:string;content:string}[] = [
     { role: 'system', content: ccSystem(roomName, summary, studyMemory) },
   ]
-  for (const h of msgs.slice(-20)) {
+  for (const h of msgs.slice(-60)) {
     if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
     else if (h.speaker === 'claude') messages.push({ role: 'assistant', content: h.text })
     else messages.push({ role: 'user', content: `[${h.speaker === 'codex' ? 'Arch' : h.speaker}] ${h.text}` })
@@ -201,7 +201,7 @@ async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: str
   const messages: {role:string;content:string}[] = [
     { role: 'system', content: archSystem(roomName, summary, memory, studyMemory) },
   ]
-  for (const h of msgs.slice(-20)) {
+  for (const h of msgs.slice(-60)) {
     if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
     else if (h.speaker === 'codex') messages.push({ role: 'assistant', content: h.text })
     else messages.push({ role: 'user', content: `[${h.speaker === 'claude' ? 'yaya二号机' : h.speaker}] ${h.text}` })
@@ -283,7 +283,7 @@ Deno.serve(async (req) => {
     // Fetch history + topic info for context
     const [histRes, topicRes, roomRes] = await Promise.all([
       db.from('rt_messages').select('speaker,text').eq('topic_id', topicId)
-        .order('at', { ascending: false }).limit(30),
+        .order('at', { ascending: false }).limit(60),
       db.from('rt_topics').select('parent_summary,display_name').eq('id', topicId).single(),
       getRoomOrDefault(db, roomId),
     ])
