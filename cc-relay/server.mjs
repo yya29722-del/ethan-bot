@@ -1,9 +1,14 @@
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
+import { existsSync } from 'node:fs'
 
 const PORT = Number(process.env.PORT || 8787)
 const RELAY_KEY = process.env.CC_RELAY_KEY || ''
-const CLAUDE_BIN = process.env.CLAUDE_BIN || 'claude'
+const CLAUDE_BIN = process.env.CLAUDE_BIN || (
+  existsSync('/usr/local/bin/claude') ? '/usr/local/bin/claude' :
+  existsSync('/opt/homebrew/bin/claude') ? '/opt/homebrew/bin/claude' :
+  'claude'
+)
 const DEFAULT_MODEL = process.env.CLAUDE_CODE_MODEL || ''
 const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 120000)
 const MAX_PROMPT_CHARS = Number(process.env.MAX_PROMPT_CHARS || 60000)
@@ -116,12 +121,12 @@ function runClaude(prompt, model) {
     child.stderr.on('data', (chunk) => { stderr += chunk })
     child.on('error', (err) => {
       clearTimeout(timer)
-      reject(err)
+      reject(new Error(`Failed to start Claude at ${CLAUDE_BIN}: ${err.message}`))
     })
     child.on('close', (code) => {
       clearTimeout(timer)
       if (code !== 0) {
-        reject(new Error(stderr.trim() || `Claude exited with code ${code}`))
+        reject(new Error(stderr.trim() || `Claude at ${CLAUDE_BIN} exited with code ${code}`))
         return
       }
       resolve(parseClaudeOutput(stdout))
