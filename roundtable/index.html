@@ -191,12 +191,22 @@ let S = { roomId:'room-main', topicId:'topic-main-1', roomName:'圆桌', topicNa
 let lastSig = '';
 let selIcon = ICONS[0];
 
-async function api(path, body) {
-  const r = await fetch(`${API}/${path}`, body
-    ? { method:'POST', headers:H, body:JSON.stringify(body) }
-    : { headers:H });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
+async function api(path, body, timeoutMs) {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), timeoutMs || (body && body.text !== undefined ? 60000 : 30000));
+  try {
+    const r = await fetch(`${API}/${path}`, {
+      ...(body ? { method:'POST', headers:H, body:JSON.stringify(body) } : { headers:H }),
+      signal: ac.signal,
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json();
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('请求超时，再试一次');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function loadState(roomId, topicId) {
