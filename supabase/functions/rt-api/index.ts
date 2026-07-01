@@ -188,8 +188,12 @@ async function buildState(db: DB, roomId: string, topicId: string) {
     db.from('rt_topics').select('id,display_name,created_at,msg_count,parent_summary')
       .eq('room_id', roomId).eq('archived', false).order('created_at', { ascending: true }),
     db.from('rt_topics').select('id,display_name,parent_summary').eq('id', topicId).single(),
+    // Fetch the most recent 80 (descending) rather than the oldest 200 — this
+    // is refetched on every navigation, so trimming payload size matters for
+    // perceived speed. Re-reverse to chronological order for rendering.
     db.from('rt_messages').select('id,speaker,text,at')
-      .eq('topic_id', topicId).order('at', { ascending: true }).limit(200),
+      .eq('topic_id', topicId).order('at', { ascending: false }).limit(80)
+      .then((res) => ({ ...res, data: (res.data || []).slice().reverse() })),
   ])
 
   return {
@@ -294,15 +298,19 @@ async function generateSummary(msgs: Msg[]): Promise<string> {
 
 // ── Main handler ─────────────────────────────────────────────────────────────
 
+// Created once per warm isolate instead of per-request — supabase-js sets up
+// no network connection at construction time, but re-parsing env vars and
+// rebuilding the client object on every single call is pointless overhead.
+const db = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+)
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS })
 
   const url  = new URL(req.url)
   const path = routePath(url)
-  const db   = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  )
 
   // GET /state?roomId=X&topicId=Y
   if (req.method === 'GET' && path === 'state') {
