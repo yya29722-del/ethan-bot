@@ -1,0 +1,33 @@
+name: Deploy Supabase Edge Functions
+
+on:
+  workflow_dispatch:
+    inputs:
+      function:
+        description: '要部署的函数名（留空=部署全部）'
+        required: false
+        default: ''
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Deploy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: tnhmimwkgmdskacwcona
+        run: |
+          if [ -n "${{ github.event.inputs.function }}" ]; then
+            supabase functions deploy "${{ github.event.inputs.function }}" --project-ref "$SUPABASE_PROJECT_REF"
+          else
+            for fn in supabase/functions/*/; do
+              name=$(basename "$fn")
+              [ "$name" = "_shared" ] && continue
+              echo "Deploying $name..."
+              supabase functions deploy "$name" --project-ref "$SUPABASE_PROJECT_REF"
+            done
+          fi
