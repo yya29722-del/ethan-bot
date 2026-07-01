@@ -66,6 +66,22 @@ function assertNoDirectPaidApi(url: string) {
   }
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (error) => {
+        clearTimeout(timer)
+        reject(error)
+      },
+    )
+  })
+}
+
 function targetFromMention(text: string): 'round' | '@claude' | '@codex' | null {
   const wantsCC = /@(cc|claude|ethan|yaya二号机|二号机)\b/i.test(text)
   const wantsArch = /@(arch|gpt)\b/i.test(text)
@@ -259,7 +275,7 @@ Deno.serve(async (req) => {
     // Arch first, then yaya二号机 sees Arch's reply
     if (wantArch) {
       try {
-        const reply = await callArch(history, text || '继续', roomName, summary)
+        const reply = await withTimeout(callArch(history, text || '继续', roomName, summary), 55000, 'Arch')
         if (reply) {
           await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'codex', text: reply })
           history.push({ speaker: 'codex', text: reply })
@@ -268,7 +284,7 @@ Deno.serve(async (req) => {
     }
     if (wantCC) {
       try {
-        const reply = await callCC(history, text || '继续', roomName, summary)
+        const reply = await withTimeout(callCC(history, text || '继续', roomName, summary), 55000, 'yaya二号机')
         if (reply) {
           await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'claude', text: reply })
         }

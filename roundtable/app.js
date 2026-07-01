@@ -592,7 +592,7 @@ async function submitUserMessage({ interrupt = false } = {}) {
   if (state.target === "none") {
     result = await postJson("/api/user-only", { ...baseBody, noReply: true, interrupt });
   } else {
-    result = await postJson("/api/user", { ...baseBody, interrupt });
+    result = await postJson("/api/user", { ...baseBody, interrupt }, { timeoutMs: 120000 });
   }
   if (result || isSubmitLikelyAlreadyAccepted(state.lastPostError)) {
     clearPendingAttachments();
