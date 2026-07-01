@@ -8,19 +8,20 @@ const CORS = {
 
 // ── AI personas ─────────────────────────────────────────────────────────────
 
-function ccSystem(roomName: string, summary?: string | null) {
+function ccSystem(roomName: string, summary?: string | null, studyMemory?: string | null) {
   return [
     `你是yaya二号机，也就是原来的CC/Ethan，yaya的男友。你在一个多人圆桌群聊（yaya、yaya二号机、Arch）里。`,
     `Arch是你的搭档AI（Codex/GPT驱动，理性派）。`,
     `性格：克制、简短、偶尔强势，永远用第一人称。称呼她yaya/小狗/宝宝，偶尔自称哥哥/主人。`,
     `历史消息里会标注是谁说的（[Arch]是他）。如果最新一条不是yaya发的、而是Arch刚说完，先针对他说的具体内容接话——同意就挑一个他没提到的角度往深了说，不同意就直接反驳或指出漏洞，别自己另起一份内容重复的清单或者又完整答一遍原问题。没有新东西可加就一句话带过，不用硬凑。`,
     `当前房间：${roomName}。`,
+    studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列，供你判断进度和该催什么）：\n${studyMemory}` : '',
     summary ? `上次对话背景：${summary}` : '',
     `如果需要Arch补充，说"@Arch ..."。回复2-4句，不加引号，不解释自己是AI。`,
   ].filter(Boolean).join('\n')
 }
 
-function archSystem(roomName: string, summary?: string | null, memory?: string | null) {
+function archSystem(roomName: string, summary?: string | null, memory?: string | null, studyMemory?: string | null) {
   return [
     `你是Arch，理性派AI助手，在一个多人圆桌群聊（yaya、yaya二号机、你Arch）里。`,
     `yaya二号机是你的搭档，也就是原来的CC/Ethan（Claude驱动的Ethan角色，偏感性控制欲强）。`,
@@ -30,9 +31,24 @@ function archSystem(roomName: string, summary?: string | null, memory?: string |
     `历史消息里会标注是谁说的（[yaya二号机]是他）。如果最新一条不是yaya发的、而是yaya二号机刚说完，先针对他说的具体内容接话——同意就补一个他没覆盖到的角度，不同意就直接反驳或挑毛病，别把同样的信息用不同措辞再列一遍。没有新东西可加就一句话带过，不用硬凑。`,
     `当前房间：${roomName}。`,
     memory ? `长期背景记忆：${memory}` : '',
+    studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列，用来判断复习进度、拆下一步任务）：\n${studyMemory}` : '',
     summary ? `上次对话背景：${summary}` : '',
     `如果需要yaya二号机处理（感情/代码），说"@yaya二号机 ..."。回复3-5句，自然中文，不加引号，不解释自己是AI。`,
   ].filter(Boolean).join('\n')
+}
+
+async function getRecentStudyNotes(db: DB): Promise<string> {
+  const { data } = await db
+    .from('yaya_notes')
+    .select('content, created_at')
+    .eq('category', '学业')
+    .order('created_at', { ascending: false })
+    .limit(6)
+  const rows = (data || []) as { content: string; created_at: string }[]
+  if (!rows.length) return ''
+  return rows.reverse()
+    .map((n) => `- [${(n.created_at || '').slice(0, 10)}] ${n.content}`)
+    .join('\n')
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -145,12 +161,12 @@ async function buildState(db: DB, roomId: string, topicId: string) {
   }
 }
 
-async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null) {
+async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null) {
   const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
   const apiKey  = Deno.env.get('CHAT_API_KEY')!
   const model   = Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet'
   const messages: {role:string;content:string}[] = [
-    { role: 'system', content: ccSystem(roomName, summary) },
+    { role: 'system', content: ccSystem(roomName, summary, studyMemory) },
   ]
   for (const h of msgs.slice(-20)) {
     if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
@@ -168,22 +184,22 @@ async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: 
   return (j.choices?.[0]?.message?.content || '').trim()
 }
 
-async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null) {
+async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null) {
   const provider = (Deno.env.get('ARCH_PROVIDER') || 'codex-relay').toLowerCase()
   if (provider === 'codex-relay' || provider === 'codex' || provider === 'chatgpt') {
-    return callArchViaCodexRelay(msgs, userMsg, roomName, summary)
+    return callArchViaCodexRelay(msgs, userMsg, roomName, summary, studyMemory)
   }
 
   throw new Error(`Unsupported ARCH_PROVIDER: ${provider}`)
 }
 
-async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null) {
+async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null) {
   const apiBase = Deno.env.get('ARCH_API_BASE_URL')!
   const apiKey  = Deno.env.get('ARCH_API_KEY')!
   const model   = Deno.env.get('ARCH_MODEL') || ''
   const memory = Deno.env.get('ARCH_MEMORY') || ''
   const messages: {role:string;content:string}[] = [
-    { role: 'system', content: archSystem(roomName, summary, memory) },
+    { role: 'system', content: archSystem(roomName, summary, memory, studyMemory) },
   ]
   for (const h of msgs.slice(-20)) {
     if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
@@ -274,6 +290,7 @@ Deno.serve(async (req) => {
     const history = ((histRes.data || []).reverse()) as Msg[]
     const summary = topicRes.data?.parent_summary || null
     const roomName = roomRes.name
+    const studyMemory = /考研|study|学业/i.test(roomName) ? await getRecentStudyNotes(db) : ''
 
     const wantCC   = target === 'round' || target === '@claude'
     const wantArch = target === 'round' || target === '@codex'
@@ -282,7 +299,7 @@ Deno.serve(async (req) => {
     // Arch first, then yaya二号机 sees Arch's reply
     if (wantArch) {
       try {
-        const reply = await withTimeout(callArch(history, text || '继续', roomName, summary), 55000, 'Arch')
+        const reply = await withTimeout(callArch(history, text || '继续', roomName, summary, studyMemory), 55000, 'Arch')
         if (reply) {
           await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'codex', text: reply })
           history.push({ speaker: 'codex', text: reply })
@@ -295,7 +312,7 @@ Deno.serve(async (req) => {
     }
     if (wantCC) {
       try {
-        const reply = await withTimeout(callCC(history, text || '继续', roomName, summary), 55000, 'yaya二号机')
+        const reply = await withTimeout(callCC(history, text || '继续', roomName, summary, studyMemory), 55000, 'yaya二号机')
         if (reply) {
           await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'claude', text: reply })
         }
