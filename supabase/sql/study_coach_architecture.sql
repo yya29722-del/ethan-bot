@@ -98,6 +98,61 @@ create table if not exists study_memory (
 
 create index if not exists study_memory_active_idx on study_memory (active, memory_type, updated_at desc);
 
+-- exam bank / 真题库
+create table if not exists study_exam_sources (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  title text not null,
+  exam_year integer,
+  subject text,
+  section text,
+  raw_text text not null,
+  status text not null default 'uploaded',
+  metadata jsonb not null default '{}'::jsonb
+);
+
+create index if not exists study_exam_sources_created_at_idx on study_exam_sources (created_at desc);
+
+create table if not exists study_exam_blueprints (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  source_id uuid references study_exam_sources(id) on delete cascade,
+  title text not null,
+  summary text,
+  tags text[] not null default array[]::text[],
+  blueprint jsonb not null default '{}'::jsonb
+);
+
+create index if not exists study_exam_blueprints_created_at_idx on study_exam_blueprints (created_at desc);
+create index if not exists study_exam_blueprints_source_id_idx on study_exam_blueprints (source_id);
+
+-- daily generated Word-compatible training packs / 每日训练包
+create table if not exists study_training_packs (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  pack_date date not null default current_date,
+  title text not null,
+  focus text,
+  tasks text[] not null default array[]::text[],
+  source_blueprint_ids uuid[] not null default array[]::uuid[],
+  doc_html text not null,
+  plain_text text,
+  metadata jsonb not null default '{}'::jsonb
+);
+
+create index if not exists study_training_packs_pack_date_idx on study_training_packs (pack_date desc);
+
+create table if not exists study_submissions (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  pack_id uuid references study_training_packs(id) on delete set null,
+  raw_answer text not null,
+  feedback text,
+  metadata jsonb not null default '{}'::jsonb
+);
+
+create index if not exists study_submissions_created_at_idx on study_submissions (created_at desc);
+
 -- Seed the study room for Round Table.
 insert into rt_rooms (id, name, icon, sort_order) values
   ('room-study', '考研房', '📚', 2)

@@ -118,6 +118,13 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
 .dash-mini-chart div{flex:1;min-width:8px;background:rgba(74,122,155,.38);border-radius:3px 3px 0 0;position:relative;}
 .dash-mini-chart div.current{background:rgba(139,30,47,.65);}
 .dash-empty{font-size:12px;color:var(--text3);line-height:1.6;padding:6px 0;}
+.dash-field{width:100%;border:1px solid var(--gold-dim);border-radius:8px;background:rgba(255,253,249,.92);color:var(--text);font:inherit;font-size:12px;padding:8px;margin-bottom:7px;outline:none;}
+.dash-text{min-height:92px;resize:vertical;line-height:1.45;}
+.dash-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+.dash-action{border:1px solid var(--gold-dim);background:rgba(255,253,249,.9);color:var(--burgundy);border-radius:999px;padding:7px 11px;font-size:12px;cursor:pointer;}
+.dash-action.primary{background:var(--burgundy);border-color:var(--burgundy);color:#fff;}
+.dash-action:disabled{opacity:.5;cursor:wait;}
+.dash-status{font-size:12px;color:var(--text3);line-height:1.5;margin-top:7px;white-space:pre-wrap;}
 
 /* INPUT */
 #input-bar{flex-shrink:0;border-top:1px solid var(--gold-dim);background:rgba(255,253,249,.98);padding:10px 16px max(14px,env(safe-area-inset-bottom));}
@@ -407,6 +414,14 @@ function renderStudyDash(data) {
         <h3>Medical Record</h3>
         ${renderRecentLogs(recent.logs || [])}
       </div>
+      <div class="dash-card">
+        <h3>Exam Bank</h3>
+        ${renderExamBank(data.exam || {})}
+      </div>
+      <div class="dash-card">
+        <h3>Daily Pack</h3>
+        ${renderPackTools(data.exam || {})}
+      </div>
     </div>
   `;
 }
@@ -451,6 +466,104 @@ function renderRecentLogs(items) {
 
 function memLabel(type) {
   return ({goal:'目标',weakness:'弱点',habit:'习惯',rule:'规则',report:'诊断',general:'记忆'}[type] || type || '记忆');
+}
+
+function renderExamBank(exam) {
+  const blueprints = exam.blueprints || [];
+  return `
+    <input id="exam-title" class="dash-field" placeholder="标题：如 2010 英一 Text 1">
+    <textarea id="exam-raw" class="dash-field dash-text" placeholder="把真题原文、题目、选项、答案/解析粘贴在这里。你不用标考点，AI会拆。"></textarea>
+    <div class="dash-actions">
+      <button class="dash-action primary" onclick="ingestExam()">AI拆真题</button>
+    </div>
+    <div id="exam-status" class="dash-status">${blueprints.length ? `已拆 ${blueprints.length} 份蓝图` : '还没有真题蓝图。'}</div>
+    ${blueprints.length ? `<div class="dash-list" style="margin-top:8px">${blueprints.slice(0,3).map(bp => `<div class="dash-item"><strong>${esc(bp.title)}</strong><br>${esc(bp.summary || (bp.tags || []).join(' / ') || '已入库')}</div>`).join('')}</div>` : ''}
+  `;
+}
+
+function renderPackTools(exam) {
+  const packs = exam.packs || [];
+  return `
+    <div class="dash-empty">基于真题蓝图、近期错因和长线计划生成可直接写的 Word 训练包。</div>
+    <div class="dash-actions">
+      <button class="dash-action primary" onclick="generateTrainingPack()">生成今日Word</button>
+      ${packs[0] ? `<button class="dash-action" onclick="downloadPack('${escAttr(packs[0].id)}')">下载最近训练包</button>` : ''}
+    </div>
+    <div id="pack-status" class="dash-status">${packs[0] ? `最近：${esc(packs[0].title)}` : '还没有训练包。'}</div>
+    ${packs.length ? `<div class="dash-list" style="margin-top:8px">${packs.slice(0,3).map(pack => `<div class="dash-item"><strong>${esc(pack.pack_date || '')}</strong> ${esc(pack.title)}<br>${esc(pack.focus || '')}</div>`).join('')}</div>` : ''}
+  `;
+}
+
+function escAttr(value) {
+  return String(value || '').replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;');
+}
+
+async function ingestExam() {
+  const titleEl = document.getElementById('exam-title');
+  const rawEl = document.getElementById('exam-raw');
+  const status = document.getElementById('exam-status');
+  const title = (titleEl?.value || '').trim() || '未命名真题';
+  const rawText = (rawEl?.value || '').trim();
+  if (rawText.length < 80) {
+    status.textContent = '内容太短，至少贴一段原文和题目。';
+    return;
+  }
+  status.textContent = 'AI正在拆真题：题型、考点、干扰项、难度…';
+  try {
+    await api('exam-ingest', { title, rawText }, 90000);
+    status.textContent = '已入库。以后生成训练包会参考这份蓝图。';
+    rawEl.value = '';
+    await loadStudyDash();
+  } catch (e) {
+    status.textContent = '拆真题失败：' + e.message;
+  }
+}
+
+async function generateTrainingPack() {
+  const status = document.getElementById('pack-status');
+  status.textContent = 'Arch正在生成今日Word训练包…';
+  try {
+    const data = await api('generate-training-pack', { date: todayLocalText() }, 120000);
+    const pack = data.pack;
+    status.textContent = '已生成，正在下载。';
+    downloadTrainingDoc(pack);
+    await loadStudyDash();
+  } catch (e) {
+    status.textContent = '生成失败：' + e.message;
+  }
+}
+
+async function downloadPack(id) {
+  const status = document.getElementById('pack-status');
+  status.textContent = '正在读取训练包…';
+  try {
+    const data = await api('training-pack', { id }, 30000);
+    downloadTrainingDoc(data.pack);
+    status.textContent = '已下载。';
+  } catch (e) {
+    status.textContent = '下载失败：' + e.message;
+  }
+}
+
+function downloadTrainingDoc(pack) {
+  const html = pack.doc_html || `<html><body><pre>${esc(pack.plain_text || '')}</pre></body></html>`;
+  const blob = new Blob(['﻿', html], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${safeFilename(pack.title || '考研训练包')}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function todayLocalText() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function renderMsgs(msgs, summary) {

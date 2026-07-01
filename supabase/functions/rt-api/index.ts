@@ -700,6 +700,284 @@ async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: str
   return (j.choices?.[0]?.message?.content || '').trim()
 }
 
+async function callStudyJson(system: string, user: string, maxTokens = 1200, useArch = false) {
+  const apiBase = useArch ? Deno.env.get('ARCH_API_BASE_URL')! : Deno.env.get('CHAT_API_BASE_URL')!
+  const apiKey  = useArch ? Deno.env.get('ARCH_API_KEY')! : Deno.env.get('CHAT_API_KEY')!
+  const model   = useArch ? (Deno.env.get('ARCH_MODEL') || '') : (Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet')
+  const res = await fetch(chatCompletionsUrl(apiBase), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      messages: [
+        { role: 'system', content: `${system}\n只输出JSON，不要markdown代码块，不要解释。` },
+        { role: 'user', content: user },
+      ],
+    }),
+  })
+  if (!res.ok) throw new Error(`study json ${res.status}: ${await res.text()}`)
+  const j = await res.json()
+  return parseJsonObject(j.choices?.[0]?.message?.content || '')
+}
+
+function parseJsonObject(raw: string) {
+  const text = String(raw || '').trim()
+    .replace(/^```(?:json)?/i, '')
+    .replace(/```$/i, '')
+    .trim()
+  try {
+    return JSON.parse(text)
+  } catch {
+    const start = text.indexOf('{')
+    const end = text.lastIndexOf('}')
+    if (start >= 0 && end > start) {
+      return JSON.parse(text.slice(start, end + 1))
+    }
+    return {
+      summary: text.slice(0, 800),
+      tags: [],
+      blueprint: { raw_analysis: text },
+      title: 'AI输出',
+      focus: 'AI输出未结构化',
+      tasks: [],
+      doc_html: normalizeDocHtml(text || 'AI没有返回内容', 'AI输出'),
+      plain_text: text,
+    }
+  }
+}
+
+async function analyzeExamSource(title: string, rawText: string) {
+  const clipped = rawText.slice(0, 14000)
+  try {
+    return await withTimeout(callStudyJson(
+      [
+        '你是考研英语真题分析器。',
+        '用户会给你一段真题原文/题目/答案/解析，可能格式混乱。',
+        '你的任务是自动提取考试蓝图，不要求用户懂考点。',
+        '字段必须包含：summary,tags,article,questions,blueprint,coverage。',
+        'questions每项包含：number,type,testing_point,distractor_pattern,difficulty,evidence_hint。',
+        'blueprint包含：article_structure,question_type_ratio,distractor_patterns,skills,estimated_difficulty。',
+        'coverage包含：reading, vocabulary, long_sentences, translation, writing 的相关性说明。',
+      ].join('\n'),
+      `标题：${title}\n\n真题内容：\n${clipped}`,
+      1000,
+      false,
+    ), 35000, 'exam analysis ai')
+  } catch (e) {
+    return fallbackExamAnalysis(title, rawText, errorMessage(e))
+  }
+}
+
+function fallbackExamAnalysis(title: string, rawText: string, reason: string) {
+  const questionCount = (rawText.match(/\b(?:Question|Q)?\s*\d+[.)、]/gi) || rawText.match(/[1-5][.)、]/g) || []).length
+  const hasOptions = /A[.)、]|B[.)、]|C[.)、]|D[.)、]/.test(rawText)
+  const tags = [
+    hasOptions ? '选择题' : '文本材料',
+    questionCount >= 4 ? '阅读理解' : '待细分',
+    /infer|imply|推断|推理/i.test(rawText) ? '推理' : '',
+    /main idea|主旨|title/i.test(rawText) ? '主旨' : '',
+    /word|phrase|means|词/i.test(rawText) ? '词义' : '',
+  ].filter(Boolean)
+  return {
+    summary: `已入库：${title}。AI深度拆解超时，先生成保底蓝图；后续训练包会按阅读真题结构参考，之后可重新粘贴更完整解析提升精度。`,
+    tags,
+    article: {
+      estimated_length: rawText.length,
+      structure: '待AI精拆；默认按考研阅读：提出问题/展开论证/作者态度或结论。',
+    },
+    questions: Array.from({ length: Math.max(1, Math.min(5, questionCount || 2)) }, (_, i) => ({
+      number: i + 1,
+      type: i === 0 ? '主旨/细节' : '细节/推理',
+      testing_point: '定位、同义替换、选项辨析',
+      distractor_pattern: '偷换范围、无中生有、过度推断',
+      difficulty: '中',
+      evidence_hint: '根据原文定位句判断',
+    })),
+    blueprint: {
+      article_structure: '考研阅读常规结构',
+      question_type_ratio: { detail: 0.4, inference: 0.3, main_idea: 0.2, vocabulary: 0.1 },
+      distractor_patterns: ['偷换范围', '无中生有', '过度推断', '因果倒置'],
+      skills: ['定位', '同义替换', '长难句拆解', '选项排除'],
+      estimated_difficulty: '中',
+      fallback_reason: reason,
+    },
+    coverage: {
+      reading: '可用于阅读仿真题蓝图',
+      vocabulary: '可抽取生词与熟词僻义',
+      long_sentences: '可抽取长难句训练',
+      translation: '可转化为段落翻译',
+      writing: '可提取主题素材',
+    },
+  }
+}
+
+async function buildTrainingPack(db: DB, requestedDate?: string) {
+  const packDate = requestedDate || dateTextInShanghai()
+  const [dashboard, blueprintsRes] = await Promise.all([
+    buildStudyDashboard(db),
+    db.from('study_exam_blueprints')
+      .select('id,title,summary,tags,blueprint,created_at')
+      .order('created_at', { ascending: false })
+      .limit(5),
+  ])
+  const blueprints = (blueprintsRes.data || []) as ExamBlueprintRow[]
+  const compactBlueprints = blueprints.map((bp) => ({
+    id: bp.id,
+    title: bp.title,
+    summary: bp.summary,
+    tags: bp.tags,
+    blueprint: bp.blueprint,
+  }))
+  const prompt = {
+    date: packDate,
+    rule: '生成一份可直接开始写的考研英语每日训练包。必须具体给题目内容，不要只给任务说明。',
+    student: {
+      dashboard: {
+        today: dashboard.today,
+        errors: dashboard.errors,
+        recent: dashboard.recent,
+        memory: (dashboard.memory || []).slice(0, 6),
+        goal: dashboard.goal,
+      },
+    },
+    exam_blueprints: compactBlueprints,
+    output_contract: {
+      title: '训练包标题',
+      focus: '今日重点',
+      tasks: ['任务1', '任务2'],
+      doc_html: 'Word可打开的完整HTML正文，含标题、答题区、阅读/长难句/词汇/翻译等模块',
+      plain_text: '纯文本摘要',
+    },
+  }
+  let result: Record<string, unknown>
+  try {
+    result = await withTimeout(callStudyJson(
+      [
+        '你是Arch，考研英语主教练。',
+        '基于真题蓝图和二号机病历生成每日训练包。',
+        '必须省token：只使用给你的蓝图摘要，不要求读取完整真题。',
+        '训练包必须具体可写：阅读材料/题目/选项/长难句/词汇/翻译句都要给出来。',
+        '题目应为原创仿真题，不抄原真题原文；但结构、考点、干扰项模式要参考蓝图。',
+        '作文若当前策略暂缓，可只保留低阻力句型/素材，不强制整篇。',
+        'doc_html必须是完整HTML片段，可以被保存为.doc用Word打开。',
+      ].join('\n'),
+      JSON.stringify(prompt),
+      2200,
+      true,
+    ), 55000, 'training pack ai')
+  } catch (e) {
+    result = fallbackTrainingPack(packDate, compactBlueprints, dashboard, errorMessage(e))
+  }
+  const title = String(result.title || `${packDate} 考研英语训练包`)
+  const tasks = Array.isArray(result.tasks) ? result.tasks.map(String) : []
+  const focus = String(result.focus || tasks[0] || '真题蓝图定制训练')
+  const docHtml = normalizeDocHtml(String(result.doc_html || result.plain_text || title), title)
+  const plainText = String(result.plain_text || tasks.join('\n'))
+  const sourceIds = blueprints.map((bp) => bp.id)
+  const { data, error } = await db.from('study_training_packs').insert({
+    pack_date: packDate,
+    title,
+    focus,
+    tasks,
+    source_blueprint_ids: sourceIds,
+    doc_html: docHtml,
+    plain_text: plainText,
+    metadata: { generatedBy: 'arch', blueprintCount: blueprints.length },
+  }).select('id,pack_date,title,focus,tasks,doc_html,plain_text,created_at').single()
+  if (error) throw new Error(error.message)
+  await db.from('study_daily_tasks').insert({
+    task_date: packDate,
+    tasks,
+    focus,
+    source_report_id: `pack-${data.id}`,
+    metadata: { trainingPackId: data.id, sourceBlueprintIds: sourceIds },
+  })
+  await db.from('study_decision_logs').insert({
+    changed: tasks,
+    reason: [
+      `生成每日Word训练包：${title}`,
+      blueprints.length ? `参考${blueprints.length}份真题蓝图` : '暂无真题蓝图，使用基础考研英语结构',
+      dashboard.errors?.ranking?.[0] ? `结合高频错因：${dashboard.errors.ranking[0].category}` : '错因样本不足',
+    ],
+    source_report_id: `pack-${data.id}`,
+  })
+  return data
+}
+
+function fallbackTrainingPack(packDate: string, blueprints: Array<Record<string, unknown>>, dashboard: Record<string, unknown>, reason: string) {
+  const topError = (((dashboard.errors as Record<string, unknown> | undefined)?.ranking as Array<Record<string, unknown>> | undefined)?.[0]?.category as string | undefined) || '选项辨析'
+  const refTitle = String(blueprints[0]?.title || '真题蓝图')
+  const title = `${packDate} 考研英语保底训练包`
+  const tasks = [
+    '阅读仿真短文1篇，完成5题并写出每题定位句',
+    `专项：${topError}错因复盘5题`,
+    '长难句拆解5句，标出主干和修饰',
+    '段落翻译1段，先直译再重组中文',
+  ]
+  const doc_html = normalizeDocHtml(`
+    <h1>${escapeDocHtml(title)}</h1>
+    <p><b>生成说明：</b>AI训练包生成超时，已使用本地保底模板。原因：${escapeDocHtml(reason)}</p>
+    <p><b>参考蓝图：</b>${escapeDocHtml(refTitle)}</p>
+    <h2>Part A 阅读仿真</h2>
+    <p>In recent years, students have increasingly relied on digital tools to manage academic work. Some educators worry that convenience weakens patience, while others argue that disciplined routines matter more than the medium itself. The debate suggests a broader point: learning outcomes are shaped not only by resources, but by how consistently students use them.</p>
+    <ol>
+      <li>What is the main idea of the passage?<br>A. Digital tools always damage learning. B. Learning depends partly on disciplined use of resources. C. Educators no longer care about reading. D. Convenience guarantees success.</li>
+      <li>The author mentions educators mainly to show that:<br>A. there is debate about digital learning. B. teachers reject all technology. C. students should avoid tools. D. academic work is unnecessary.</li>
+      <li>Which choice is closest to "medium"?<br>A. method or form. B. average level. C. public news. D. middle position.</li>
+      <li>According to the passage, what shapes learning outcomes?<br>A. resources alone. B. consistency and use of resources. C. exams only. D. convenience alone.</li>
+      <li>Which option is a likely distractor pattern?<br>A. absolute wording. B. direct evidence. C. same-sentence paraphrase. D. neutral restatement.</li>
+    </ol>
+    <h2>答题区</h2>
+    <p>1.___ 定位句：__________ 错因：__________</p>
+    <p>2.___ 定位句：__________ 错因：__________</p>
+    <p>3.___ 定位句：__________ 错因：__________</p>
+    <p>4.___ 定位句：__________ 错因：__________</p>
+    <p>5.___ 定位句：__________ 错因：__________</p>
+    <h2>Part B 长难句</h2>
+    <p>Some educators worry that convenience weakens patience, while others argue that disciplined routines matter more than the medium itself.</p>
+    <p>主干：__________ 修饰：__________ 翻译：__________</p>
+    <h2>Part C 翻译</h2>
+    <p>The debate suggests a broader point: learning outcomes are shaped not only by resources, but by how consistently students use them.</p>
+    <p>译文：__________</p>
+  `, title)
+  return {
+    title,
+    focus: `保底训练：${topError}`,
+    tasks,
+    doc_html,
+    plain_text: tasks.join('\n'),
+  }
+}
+
+type ExamBlueprintRow = {
+  id: string
+  title: string
+  summary: string | null
+  tags: string[] | null
+  blueprint: Record<string, unknown>
+  created_at: string
+}
+
+function normalizeDocHtml(value: string, title: string) {
+  if (/<html[\s>]/i.test(value)) return value
+  if (/<(h1|h2|p|table|ol|ul|section|div)[\s>]/i.test(value)) {
+    return `<html><head><meta charset="utf-8"><title>${escapeDocHtml(title)}</title></head><body>${value}</body></html>`
+  }
+  return `<html><head><meta charset="utf-8"><title>${escapeDocHtml(title)}</title></head><body>${value
+    .split(/\n{2,}/)
+    .map((block) => `<p>${escapeDocHtml(block).replace(/\n/g, '<br>')}</p>`)
+    .join('\n')}</body></html>`
+}
+
+function escapeDocHtml(value: string) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+}
+
 async function generateSummary(msgs: Msg[]): Promise<string> {
   if (msgs.length === 0) return ''
   const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
@@ -734,6 +1012,8 @@ async function buildStudyDashboard(db: DB) {
     decisionsRes,
     memoryRes,
     goalsRes,
+    blueprintsRes,
+    packsRes,
   ] = await Promise.all([
     db.from('study_daily_logs')
       .select('raw_text, completed, missed, reading_accuracy, minutes, metadata, created_at')
@@ -764,6 +1044,14 @@ async function buildStudyDashboard(db: DB) {
       .select('target, current_level, days_left, phase, created_at')
       .order('created_at', { ascending: false })
       .limit(1),
+    db.from('study_exam_blueprints')
+      .select('id,title,summary,tags,created_at')
+      .order('created_at', { ascending: false })
+      .limit(8),
+    db.from('study_training_packs')
+      .select('id,pack_date,title,focus,tasks,created_at')
+      .order('created_at', { ascending: false })
+      .limit(5),
   ])
 
   const dailyLogs = (dailyRes.data || []) as StudyDailyRow[]
@@ -803,6 +1091,10 @@ async function buildStudyDashboard(db: DB) {
     tasks,
     decisions,
     memory: memoryRes.data || [],
+    exam: {
+      blueprints: blueprintsRes.data || [],
+      packs: packsRes.data || [],
+    },
   }
 }
 
@@ -906,11 +1198,79 @@ Deno.serve(async (req) => {
     return json(await buildStudyDashboard(db))
   }
 
+  // GET /exam-bank — compact list of uploaded exam blueprints.
+  if (req.method === 'GET' && path === 'exam-bank') {
+    const { data } = await db.from('study_exam_blueprints')
+      .select('id,source_id,title,summary,tags,blueprint,created_at')
+      .order('created_at', { ascending: false })
+      .limit(50)
+    return json({ blueprints: data || [] })
+  }
+
   let body: Record<string, unknown> = {}
   try { body = await req.json() } catch { /* empty */ }
 
   const roomId  = String(body.roomId  || 'room-main')
   const topicId = String(body.topicId || 'topic-main-1')
+
+  // POST /exam-ingest — upload raw exam text and let AI extract blueprint once.
+  if (path === 'exam-ingest') {
+    const title = String(body.title || '未命名真题').slice(0, 120)
+    const rawText = String(body.rawText || body.raw_text || '').trim()
+    if (rawText.length < 80) return json({ error: '真题内容太短，至少贴一段原文/题目。' }, 400)
+    const examYear = body.examYear ? Number(body.examYear) : null
+    const subject = String(body.subject || '考研英语').slice(0, 40)
+    const section = String(body.section || '阅读').slice(0, 40)
+    const { data: source, error: sourceError } = await db.from('study_exam_sources').insert({
+      title,
+      exam_year: examYear,
+      subject,
+      section,
+      raw_text: rawText,
+      status: 'analyzing',
+    }).select('id,title').single()
+    if (sourceError) return json({ error: sourceError.message }, 500)
+    try {
+      const analysis = await withTimeout(analyzeExamSource(title, rawText), 70000, 'exam analysis')
+      const tags = Array.isArray(analysis.tags) ? analysis.tags.map(String).slice(0, 12) : []
+      const summary = String(analysis.summary || '')
+      const { data: blueprint, error: bpError } = await db.from('study_exam_blueprints').insert({
+        source_id: source.id,
+        title,
+        summary,
+        tags,
+        blueprint: analysis,
+      }).select('id,title,summary,tags,blueprint,created_at').single()
+      if (bpError) throw new Error(bpError.message)
+      await db.from('study_exam_sources').update({ status: 'analyzed', metadata: { blueprintId: blueprint.id } }).eq('id', source.id)
+      return json({ source, blueprint })
+    } catch (e) {
+      await db.from('study_exam_sources').update({ status: 'failed', metadata: { error: errorMessage(e) } }).eq('id', source.id)
+      return json({ error: errorMessage(e) }, 500)
+    }
+  }
+
+  // POST /generate-training-pack — create a Word-compatible daily pack.
+  if (path === 'generate-training-pack') {
+    try {
+      const pack = await withTimeout(buildTrainingPack(db, String(body.date || '') || undefined), 90000, 'training pack')
+      return json({ pack })
+    } catch (e) {
+      return json({ error: errorMessage(e) }, 500)
+    }
+  }
+
+  // POST /training-pack — fetch a generated pack by id.
+  if (path === 'training-pack') {
+    const id = String(body.id || '')
+    if (!id) return json({ error: 'missing id' }, 400)
+    const { data, error } = await db.from('study_training_packs')
+      .select('id,pack_date,title,focus,tasks,doc_html,plain_text,created_at')
+      .eq('id', id)
+      .single()
+    if (error) return json({ error: error.message }, 404)
+    return json({ pack: data })
+  }
 
   // POST /user — save the user's message quickly, then return a client-run turn plan.
   if (path === 'user') {
