@@ -26,13 +26,15 @@ $$;
 -- Seed rooms
 INSERT INTO rt_rooms (id, name, icon, sort_order) VALUES
   ('room-main',       '圆桌',  '⌂', 0),
-  ('room-philosophy', '哲学场', '∞', 1)
+  ('room-philosophy', '哲学场', '∞', 1),
+  ('room-study',      '考研房', '📚', 2)
 ON CONFLICT DO NOTHING;
 
 -- Seed first topic per room
 INSERT INTO rt_topics (id, topic, type, room_id, display_name) VALUES
   ('topic-main-1', '圆桌·对话1',  'fixed', 'room-main',       '对话 1'),
-  ('topic-phil-1', '哲学场·对话1', 'fixed', 'room-philosophy', '对话 1')
+  ('topic-phil-1', '哲学场·对话1', 'fixed', 'room-philosophy', '对话 1'),
+  ('topic-study-1', '考研房·对话1', 'fixed', 'room-study',      '对话 1')
 ON CONFLICT DO NOTHING;
 
 -- Update old fixed topics to have room_id if migrating

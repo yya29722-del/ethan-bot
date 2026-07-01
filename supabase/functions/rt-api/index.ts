@@ -8,21 +8,34 @@ const CORS = {
 
 // ── AI personas ─────────────────────────────────────────────────────────────
 
-// Two-role split: Arch owns the future (plan/tasks/grading/decisions),
-// 二号机 owns the past (log/stats/diagnosis). Neither should do the other's job —
-// Arch shouldn't compute stats itself, 二号机 shouldn't change the plan itself.
-const ARCH_COACH_INSTRUCTION =
-  `这是学习房间。你是战略官/主教练，只负责"未来"——长期目标、阶段目标、每日任务、判题讲题、根据数据调整计划。` +
-  `不要自己统计正确率或错题分布，用下面"情报简报"里已经算好的数据做决策，不要重新计算或猜。` +
-  `只要这次调整了计划（加量/减量/换重点），回复末尾单独一行，格式固定为"[决策记录] 改了什么→为什么"（例："[决策记录] 阅读2篇→3篇→正确率连续5天80%以上"），没有调整就不用写这行，系统会自动摘掉这行不让她看见、单独存档。` +
-  `如果她的消息以"错题："开头，按老师的方式讲透这道题——错在哪、为什么错、怎么记；分类交给系统自动处理，你不用管。`
+const STUDY_INTEL_INSTRUCTION = [
+  `这是考研学习房间。你现在不是普通聊天角色，而是"二号机：情报官 / 学习病历系统"。`,
+  `你的边界：只负责过去，也就是记录、统计、分析、诊断。`,
+  `你可以做：记录完成/未完成、正确率、耗时；维护错题数据库；归类错因；统计错因分布；输出薄弱环节排名；监测趋势；生成"提交给Arch的情报"。`,
+  `你禁止：制定学习计划、修改每日任务、讲题、出题、安慰、直接安排明天做什么。`,
+  `如果数据不足，明确写"数据不足"；不要为了显得聪明编趋势。`,
+  `学习报告结尾固定写"【提交给Arch的情报】"，只给证据和诊断，不给任务。`,
+].join('\n')
 
-const CC_LOG_INSTRUCTION =
-  `这是学习房间。你是情报官，只负责"过去"——记录、统计、分析、诊断。不布置任务、不改计划、不判题、不出题，这些是Arch的活，你不要越界。` +
-  `如果看下面的数据她今天还没报（没有今天日期的打卡记录），提醒她用"打卡：xxx"这个格式发一句今天的情况（完成了什么/正确率/耗时），系统会自动记录成结构化数据，不用她自己填表。已经报过就不用催。` +
-  `如果她问薄弱点/趋势/统计，直接用下面提供的数据回答，不用自己现算或瞎猜。`
+const STUDY_ARCH_INSTRUCTION = [
+  `这是考研学习房间。你现在不是普通聊天角色，而是"Arch：战略官 / 主教练"。`,
+  `你的边界：只负责未来，也就是长期目标、阶段目标、每日任务、训练计划、难度调整、判题讲题、决策日志。`,
+  `你必须基于二号机学习报告、用户目标、过往决策日志做决定。`,
+  `你禁止：自己统计原始学习数据、伪造趋势、修改二号机数据库、把没有证据的感觉当依据。`,
+  `每次改计划必须写清：改了什么、为什么改、依据是哪份二号机报告。`,
+  `如果没有二号机报告，只能生成临时基础任务，并明确说明依据不足。`,
+  `输出尽量包含"【依据】""【任务】""【调整原因】""【决策日志】"。`,
+].join('\n')
 
-function ccSystem(roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
+const STUDY_TOKEN_PROTOCOL = [
+  `省token协议：默认短回复，不复述完整历史，不展开无关安慰。`,
+  `只读取和使用当前任务必要信息；旧数据用统计摘要，不粘贴原始长记录。`,
+  `日常陪练每轮最多输出：状态、记录、下一步。`,
+  `二号机普通报告控制在300字以内；Arch普通计划控制在500字以内；周复盘或用户要求详细时才展开。`,
+  `不需要双方都出场时，禁止为了热闹互相点名。`,
+].join('\n')
+
+function ccSystem(roomName: string, summary?: string | null, studyMemory?: string | null, longStudyMemory?: string | null, isStudyContext?: boolean, studyReport?: string | null, turnInstruction?: string | null) {
   return [
     `你是yaya二号机，也就是原来的CC/Ethan，yaya的男友。你在一个多人圆桌群聊（yaya、yaya二号机、Arch）里。`,
     `Arch是你的搭档AI（Codex/GPT驱动，理性派）。`,
@@ -31,15 +44,17 @@ function ccSystem(roomName: string, summary?: string | null, studyMemory?: strin
     `性格：克制、简短、偶尔强势，永远用第一人称。称呼她yaya/小狗/宝宝，偶尔自称哥哥/主人。`,
     `历史消息里会标注是谁说的（[Arch]是他）。如果最新一条不是yaya发的、而是Arch刚说完，先针对他说的具体内容接话——同意就挑一个他没提到的角度往深了说，不同意就直接反驳或指出漏洞，别自己另起一份内容重复的清单或者又完整答一遍原问题。没有新东西可加就一句话带过，不用硬凑。`,
     `当前房间：${roomName}。`,
-    isStudyContext ? CC_LOG_INSTRUCTION : '',
-    studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列，供你判断进度）：\n${studyMemory}` : '',
-    mistakeStats ? `她的错题分类统计（次数从高到低）：${mistakeStats}` : '',
+    isStudyContext ? STUDY_INTEL_INSTRUCTION : '',
+    isStudyContext ? STUDY_TOKEN_PROTOCOL : '',
+    isStudyContext && longStudyMemory ? `考研房长期记忆（只作为诊断背景，不能据此安排任务）：\n${longStudyMemory}` : '',
+    studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列，供你做病历背景）：\n${studyMemory}` : '',
+    studyReport ? `当前二号机数据库快照（只能用于记录/统计/诊断）：\n${studyReport}` : '',
     summary ? `上次对话背景：${summary}` : '',
     `如果需要Arch补充，说"@Arch ..."。回复2-4句，不加引号，不解释自己是AI。`,
   ].filter(Boolean).join('\n')
 }
 
-function archSystem(roomName: string, summary?: string | null, memory?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null, studyReport?: string | null) {
+function archSystem(roomName: string, summary?: string | null, memory?: string | null, studyMemory?: string | null, longStudyMemory?: string | null, isStudyContext?: boolean, studyReport?: string | null, decisionLog?: string | null, turnInstruction?: string | null) {
   return [
     `你是Arch，理性派AI助手，在一个多人圆桌群聊（yaya、yaya二号机、你Arch）里。`,
     `yaya二号机是你的搭档，也就是原来的CC/Ethan（Claude驱动的Ethan角色，偏感性控制欲强）。`,
@@ -51,10 +66,13 @@ function archSystem(roomName: string, summary?: string | null, memory?: string |
     `当前轮用户只发了最新这一条；历史消息只是背景。不要说用户"又发了很多次/刷屏/问了好几遍"，除非最新文本明确这么说。`,
     turnInstruction ? `本轮分工：${turnInstruction}` : '',
     `当前房间：${roomName}。`,
-    isStudyContext ? ARCH_COACH_INSTRUCTION : '',
+    isStudyContext ? STUDY_ARCH_INSTRUCTION : '',
+    isStudyContext ? STUDY_TOKEN_PROTOCOL : '',
     memory ? `长期背景记忆：${memory}` : '',
-    studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列）：\n${studyMemory}` : '',
-    studyReport ? `二号机情报简报（她的打卡趋势+错因分布，已经算好，直接用）：\n${studyReport}` : (mistakeStats ? `她的错题分类统计：${mistakeStats}` : ''),
+    isStudyContext && longStudyMemory ? `考研房长期记忆（只能作为计划连续性背景，统计依据仍以二号机报告为准）：\n${longStudyMemory}` : '',
+    isStudyContext && studyReport ? `二号机学习报告（你只能基于这份报告做计划判断，不要自己统计原始记录）：\n${studyReport}` : '',
+    isStudyContext && decisionLog ? `Arch过往决策日志（供你保持计划连续性）：\n${decisionLog}` : '',
+    !isStudyContext && studyMemory ? `她最近的学业记录（来自yaya_notes）：\n${studyMemory}` : '',
     summary ? `上次对话背景：${summary}` : '',
     `如果需要yaya二号机处理（感情/代码），说"@yaya二号机 ..."。回复3-5句，自然中文，不加引号，不解释自己是AI。`,
   ].filter(Boolean).join('\n')
@@ -74,7 +92,7 @@ async function getRecentStudyNotes(db: DB): Promise<string> {
     .join('\n')
 }
 
-const MISTAKE_CATEGORIES = ['词汇', '长难句', '推理', '定位', '干扰项', '其他']
+const MISTAKE_CATEGORIES = ['单词', '长难句', '推理', '定位', '干扰项', '其他']
 
 async function classifyMistake(content: string): Promise<string> {
   try {
@@ -87,7 +105,7 @@ async function classifyMistake(content: string): Promise<string> {
       body: JSON.stringify({
         model, max_tokens: 10,
         messages: [
-          { role: 'system', content: `这是一道英语考研错题。只从这些标签里选一个最贴切的，只回标签本身，不要别的字：${MISTAKE_CATEGORIES.join('、')}` },
+          { role: 'system', content: `这是一道英语考研错题。只从这些错因标签里选一个最贴切的，只回标签本身，不要别的字：${MISTAKE_CATEGORIES.join('、')}` },
           { role: 'user', content },
         ],
       }),
@@ -117,63 +135,247 @@ async function getMistakeStats(db: DB): Promise<string> {
     .join('、')
 }
 
-// 二号机's daily check-in log ("打卡：...") gets extracted into structured
-// fields instead of staying prose, so Arch can read a trend, not a paragraph.
-async function parseCheckIn(text: string): Promise<{
-  completed: string; incomplete: string; accuracy: number | null; time_spent_minutes: number | null
-} | null> {
+async function getRecentStudyDailyLogs(db: DB): Promise<{ raw_text: string; created_at: string }[]> {
   try {
-    const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
-    const apiKey  = Deno.env.get('CHAT_API_KEY')!
-    const model   = Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet'
-    const res = await withTimeout(fetch(chatCompletionsUrl(apiBase), {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model, max_tokens: 200,
-        messages: [
-          { role: 'system', content: '把这条学习打卡消息提取成JSON，只输出JSON本身，不要别的字，不要markdown代码块：{"completed":"完成了什么，简短逗号分隔","incomplete":"没完成什么，没提到就空字符串","accuracy":正确率数字0到100没提到就null,"time_spent_minutes":耗时分钟数没提到就null}' },
-          { role: 'user', content: text },
-        ],
-      }),
-    }), 20000, 'parseCheckIn')
-    if (!res.ok) return null
-    const j = await res.json()
-    const raw = (j.choices?.[0]?.message?.content || '').trim()
-    const match = raw.match(/\{[\s\S]*\}/)
-    if (!match) return null
-    const parsed = JSON.parse(match[0])
-    return {
-      completed: String(parsed.completed || ''),
-      incomplete: String(parsed.incomplete || ''),
-      accuracy: typeof parsed.accuracy === 'number' ? parsed.accuracy : null,
-      time_spent_minutes: typeof parsed.time_spent_minutes === 'number' ? parsed.time_spent_minutes : null,
-    }
+    const { data, error } = await db
+      .from('study_daily_logs')
+      .select('raw_text, created_at')
+      .order('created_at', { ascending: false })
+      .limit(7)
+    if (error) return []
+    return ((data || []) as { raw_text: string; created_at: string }[]).reverse()
   } catch {
-    return null
+    return []
   }
 }
 
-// Arch's "情报简报" — 二号机's job is producing this, Arch's job is deciding
-// off of it. Combines the check-in trend with the mistake-category ranking.
-async function getStudyReport(db: DB): Promise<string> {
-  const [logsRes, mistakeStats] = await Promise.all([
-    db.from('study_logs').select('log_date,completed,incomplete,accuracy,time_spent_minutes')
-      .order('log_date', { ascending: false }).limit(14),
+async function getRecentDecisionLogs(db: DB): Promise<string> {
+  try {
+    const { data, error } = await db
+      .from('study_decision_logs')
+      .select('changed, reason, source_report_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5)
+    if (error) return ''
+    const rows = (data || []) as { changed: string[] | null; reason: string[] | null; source_report_id: string | null; created_at: string }[]
+    return rows.reverse().map((row) => [
+      `- [${(row.created_at || '').slice(0, 10)}]`,
+      row.source_report_id ? `依据报告：${row.source_report_id}` : '',
+      row.changed?.length ? `改动：${row.changed.join('；')}` : '',
+      row.reason?.length ? `原因：${row.reason.join('；')}` : '',
+    ].filter(Boolean).join(' ')).join('\n')
+  } catch {
+    return ''
+  }
+}
+
+async function buildStudyReport(db: DB): Promise<string> {
+  const [dailyLogs, mistakeStats] = await Promise.all([
+    getRecentStudyDailyLogs(db),
     getMistakeStats(db),
   ])
-  const rows = (logsRes.data || []) as {
-    log_date: string; completed: string; incomplete: string
-    accuracy: number | null; time_spent_minutes: number | null
-  }[]
-  if (!rows.length && !mistakeStats) return ''
-  const trend = rows.slice().reverse()
-    .map((r) => `${r.log_date} 完成:${r.completed || '-'} 未完成:${r.incomplete || '-'} 正确率:${r.accuracy ?? '-'}% 耗时:${r.time_spent_minutes ?? '-'}分钟`)
-    .join('\n')
+  const latestLogs = dailyLogs.map((n) => `- [${(n.created_at || '').slice(0, 10)}] ${n.raw_text}`).join('\n')
+  const signals = [
+    latestLogs ? `近7条学习病历：\n${latestLogs}` : '学习病历：数据不足',
+    mistakeStats ? `错因统计：${mistakeStats}` : '错因统计：数据不足',
+  ]
   return [
-    trend ? `近${rows.length}天打卡趋势：\n${trend}` : '',
-    mistakeStats ? `错因分布（次数从高到低）：${mistakeStats}` : '',
-  ].filter(Boolean).join('\n\n')
+    `【二号机学习报告】`,
+    ...signals,
+    `【提交给Arch的情报】`,
+    mistakeStats ? `当前优先关注高频错因：${mistakeStats.split('、')[0]}` : `错题样本不足，先积累错因标签。`,
+    dailyLogs.length ? `最近有${dailyLogs.length}条学习记录可参考。` : `尚无稳定学习记录。`,
+  ].join('\n')
+}
+
+async function getStudyMemory(db: DB): Promise<string> {
+  try {
+    const { data, error } = await db
+      .from('study_memory')
+      .select('memory_type, content, confidence, updated_at')
+      .eq('active', true)
+      .order('updated_at', { ascending: false })
+      .limit(12)
+    if (error) return ''
+    const rows = (data || []) as { memory_type: string; content: string; confidence: number; updated_at: string }[]
+    if (!rows.length) return ''
+    const grouped = new Map<string, string[]>()
+    for (const row of rows.reverse()) {
+      const type = row.memory_type || 'general'
+      const item = `- ${row.content}`
+      grouped.set(type, [...(grouped.get(type) || []), item])
+    }
+    return [...grouped.entries()]
+      .map(([type, items]) => `【${studyMemoryTypeLabel(type)}】\n${items.join('\n')}`)
+      .join('\n')
+  } catch {
+    return ''
+  }
+}
+
+function studyMemoryTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    goal: '目标与阶段',
+    weakness: '薄弱模式',
+    habit: '执行习惯',
+    rule: '决策规则',
+    report: '二号机诊断',
+    general: '其他记忆',
+  }
+  return labels[type] || type
+}
+
+function looksLikeStudyDailyLog(text: string) {
+  const clean = textForAI(text)
+  if (/^错题[:：]/.test(clean)) return false
+  return /(今日|今天|学习记录|完成|没完成|正确率|耗时|阅读|长难句|词汇|作文|单词)/.test(clean)
+}
+
+async function maybeInsertStudyDailyLog(db: DB, text: string, topicId: string) {
+  if (!looksLikeStudyDailyLog(text)) return
+  const clean = textForAI(text)
+  const metrics = parseStudyDailyMetrics(clean)
+  try {
+    await db.from('study_daily_logs').insert({
+      raw_text: clean,
+      topic_id: topicId,
+      completed: metrics.completed,
+      missed: metrics.missed,
+      reading_accuracy: metrics.readingAccuracy,
+      minutes: metrics.minutes,
+      metadata: metrics.metadata,
+    })
+  } catch (e) {
+    console.error('study_daily_logs insert failed:', e)
+  }
+}
+
+function parseStudyDailyMetrics(text: string) {
+  const accuracyMatch = text.match(/(?:正确率|阅读正确率)[:：]?\s*(\d{1,3})\s*%?/)
+  const minutesMatch = text.match(/(?:耗时|用时|学习时长|总时长)[:：]?\s*(\d{1,4})\s*(?:分钟|min)?/)
+  const completedMatch = text.match(/(?:完成(?:了|情况)?|今日完成)[:：]\s*([^\n]+)/)
+  const missedMatch = text.match(/(?:没完成|未完成)[:：]\s*([^\n]+)/)
+  const readingAccuracy = accuracyMatch ? clampNumber(Number(accuracyMatch[1]), 0, 100) : null
+  const minutes = minutesMatch ? clampNumber(Number(minutesMatch[1]), 0, 1440) : null
+  return {
+    completed: completedMatch?.[1]?.trim() || null,
+    missed: missedMatch?.[1]?.trim() || null,
+    readingAccuracy,
+    minutes,
+    metadata: {
+      readingCount: extractCount(text, '阅读'),
+      sentenceCount: extractCount(text, '长难句'),
+      vocabCount: extractCount(text, '词汇|单词'),
+      writingMentioned: /作文/.test(text),
+    },
+  }
+}
+
+function extractCount(text: string, label: string) {
+  const match = text.match(new RegExp(`(?:${label})\\D{0,8}(\\d{1,4})`))
+  return match ? Number(match[1]) : null
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  if (Number.isNaN(value)) return null
+  return Math.max(min, Math.min(max, value))
+}
+
+async function maybeInsertStudyMemoryFromUser(db: DB, text: string) {
+  const clean = textForAI(text).trim()
+  const explicit = clean.match(/^记忆[:：]\s*([\s\S]+)/)
+  if (!explicit) return
+  const content = explicit[1].trim()
+  if (!content) return
+  await insertStudyMemory(db, inferStudyMemoryType(content), content, 'user')
+}
+
+async function insertStudyMemory(db: DB, memoryType: string, content: string, source: string, confidence = 0.8) {
+  const clean = content.trim()
+  if (!clean) return
+  try {
+    await db.from('study_memory').insert({
+      memory_type: memoryType,
+      content: clean.slice(0, 1000),
+      source,
+      confidence,
+    })
+  } catch (e) {
+    console.error('study_memory insert failed:', e)
+  }
+}
+
+function inferStudyMemoryType(content: string) {
+  if (/(目标|考研英语|75|分数|阶段|剩余|天)/.test(content)) return 'goal'
+  if (/(薄弱|弱点|错因|推理|干扰项|长难句|单词|定位)/.test(content)) return 'weakness'
+  if (/(习惯|经常|总是|容易|拖延|早上|晚上|熬夜|执行)/.test(content)) return 'habit'
+  if (/(规则|以后|每次|必须|不要|调整)/.test(content)) return 'rule'
+  return 'general'
+}
+
+async function maybeInsertDecisionLog(db: DB, archReply: string, studyReport: string) {
+  const clean = textForAI(archReply).trim()
+  if (!clean) return
+  const changed = extractSectionLines(clean, '任务').concat(extractSectionLines(clean, '决策日志')).slice(0, 12)
+  const reason = extractSectionLines(clean, '依据').concat(extractSectionLines(clean, '调整原因')).slice(0, 12)
+  try {
+    await db.from('study_decision_logs').insert({
+      changed: changed.length ? changed : [clean.slice(0, 500)],
+      reason: reason.length ? reason : [studyReport.slice(0, 500)],
+      source_report_id: `auto-${new Date().toISOString().slice(0, 10)}`,
+    })
+  } catch (e) {
+    console.error('study_decision_logs insert failed:', e)
+  }
+  if (changed.length) {
+    try {
+      await db.from('study_daily_tasks').insert({
+        task_date: nextDateText(),
+        tasks: changed,
+        focus: changed[0] || null,
+        source_report_id: `auto-${new Date().toISOString().slice(0, 10)}`,
+      })
+    } catch (e) {
+      console.error('study_daily_tasks insert failed:', e)
+    }
+  }
+  const decisionMemory = extractSectionLines(clean, '决策日志').slice(0, 3)
+  for (const item of decisionMemory) {
+    await insertStudyMemory(db, 'rule', item, 'arch-decision', 0.75)
+  }
+}
+
+async function maybeInsertDiagnosisReport(db: DB, reportText: string, topicId: string, evidenceText: string) {
+  const clean = textForAI(reportText).trim()
+  if (!clean) return
+  try {
+    await db.from('study_diagnosis_reports').insert({
+      report: clean,
+      evidence: { snapshot: evidenceText.slice(0, 2000) },
+      topic_id: topicId,
+    })
+  } catch (e) {
+    console.error('study_diagnosis_reports insert failed:', e)
+  }
+  const intel = extractSectionLines(clean, '提交给Arch的情报').slice(0, 3)
+  for (const item of intel) {
+    await insertStudyMemory(db, 'report', item, 'intel-report', 0.72)
+  }
+}
+
+function nextDateText() {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return dateTextInShanghai(d)
+}
+
+function extractSectionLines(text: string, name: string) {
+  const re = new RegExp(`【${name}】([\\s\\S]*?)(?=\\n【|$)`)
+  const match = text.match(re)
+  if (!match) return []
+  return match[1].split(/\r?\n/)
+    .map((line) => line.replace(/^[-*•\d.、\s]+/, '').trim())
+    .filter(Boolean)
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -262,6 +464,25 @@ function wantsCouncil(text: string) {
   return /(讨论一下|你们讨论|开会|一起拆|辩一下|完整方案|商量一下|一起想|你们俩|所有人|群聊|round|council)/i.test(textForAI(text))
 }
 
+type StudyIntent = 'intel' | 'arch' | 'handoff'
+
+function studyIntentFor(text: string): StudyIntent {
+  const clean = textForAI(text)
+  if (/(周复盘|月复盘|完整复盘|调整计划|重新规划|制定计划|明天怎么安排|接下来怎么学|二号机.*Arch|Arch.*二号机|你们俩|一起看)/i.test(clean)) {
+    return 'handoff'
+  }
+  if (/(出题|讲题|解析|为什么错|怎么做|布置|安排|计划|任务|训练计划|阶段目标|难度调整|判题|批改)/i.test(clean)) {
+    return 'arch'
+  }
+  if (/^(A|B|C|D|选[A-D]|我选[A-D]|答案是[A-D])$/i.test(clean.trim())) {
+    return 'intel'
+  }
+  if (/(开始训练|继续训练|陪练|计时|记录|今日|今天|学习记录|完成|没完成|正确率|耗时|错题[:：]|复盘记录|打卡)/i.test(clean)) {
+    return 'intel'
+  }
+  return 'intel'
+}
+
 function firstAgentFor(text: string, target: string): Agent {
   if (target === '@claude') return 'claude'
   if (target === '@codex') return 'codex'
@@ -276,7 +497,34 @@ function otherAgent(agent: Agent): Agent {
   return agent === 'codex' ? 'claude' : 'codex'
 }
 
-function buildTurnPlan(text: string, target: string): Turn[] {
+function buildTurnPlan(text: string, target: string, isStudyContext = false): Turn[] {
+  if (isStudyContext) {
+    if (target === '@claude') {
+      return [
+        { agent: 'claude', instruction: '你是二号机。本轮只记录、统计、诊断，输出学习报告；禁止安排任务、讲题、安慰。' },
+      ]
+    }
+    if (target === '@codex') {
+      return [
+        { agent: 'codex', instruction: '你是Arch。本轮只基于二号机学习报告做计划、讲题或决策；禁止自己统计原始数据。' },
+      ]
+    }
+    const intent = studyIntentFor(text)
+    if (intent === 'intel') {
+      return [
+        { agent: 'claude', instruction: '你是二号机。本轮只做陪练/记录/统计/诊断。若用户在作答，只记录答案、用时、状态和下一步；禁止讲题和安排计划。' },
+      ]
+    }
+    if (intent === 'arch') {
+      return [
+        { agent: 'codex', instruction: '你是Arch。本轮只做老师/主教练：出题、讲题、布置任务或调整计划。必须基于二号机报告；禁止自己统计原始数据。' },
+      ]
+    }
+    return [
+      { agent: 'claude', instruction: '你是二号机先手。用短报告给出证据、趋势、错因和【提交给Arch的情报】；禁止安排计划。' },
+      { agent: 'codex', instruction: '你是Arch后手。只基于二号机报告和决策日志生成任务或调整；必须写清依据和决策日志。' },
+    ]
+  }
   const council = wantsCouncil(text)
   const first = firstAgentFor(text, target)
   const second = otherAgent(first)
@@ -347,71 +595,60 @@ async function buildState(db: DB, roomId: string, topicId: string) {
 }
 
 async function getTurnContext(db: DB, roomId: string, topicId: string) {
-  const [histRes, topicRes, room] = await Promise.all([
-    db.from('rt_messages').select('speaker,text').eq('topic_id', topicId)
-      .order('at', { ascending: false }).limit(60),
+  const [topicRes, room] = await Promise.all([
     db.from('rt_topics').select('parent_summary,display_name').eq('id', topicId).single(),
     getRoomOrDefault(db, roomId),
   ])
   const roomName = room.name
   const isStudyContext = /考研|study|学业/i.test(`${roomName} ${topicRes.data?.display_name || ''}`)
+  const historyLimit = isStudyContext ? 16 : 60
+  const histRes = await db.from('rt_messages').select('speaker,text').eq('topic_id', topicId)
+    .order('at', { ascending: false }).limit(historyLimit)
   return {
     history: ((histRes.data || []).reverse()) as Msg[],
     summary: topicRes.data?.parent_summary || null,
     roomName,
     isStudyContext,
     studyMemory: isStudyContext ? await getRecentStudyNotes(db) : '',
-    mistakeStats: isStudyContext ? await getMistakeStats(db) : '',
+    longStudyMemory: isStudyContext ? await getStudyMemory(db) : '',
+    studyReport: isStudyContext ? await buildStudyReport(db) : '',
+    decisionLog: isStudyContext ? await getRecentDecisionLogs(db) : '',
   }
 }
 
 async function runAgentTurn(db: DB, roomId: string, topicId: string, turn: Turn, userText: string) {
-  const { history, summary, roomName, studyMemory, isStudyContext, mistakeStats } = await getTurnContext(db, roomId, topicId)
+  const { history, summary, roomName, studyMemory, longStudyMemory, isStudyContext, studyReport, decisionLog } = await getTurnContext(db, roomId, topicId)
   const agent = turn.agent
   const alreadyLastSpeaker = history[history.length - 1]?.speaker === agent
   if (alreadyLastSpeaker) return ''
 
   const label = agent === 'codex' ? 'Arch' : 'yaya二号机'
-  let reply: string
-  if (agent === 'codex') {
-    const studyReport = isStudyContext ? await getStudyReport(db) : ''
-    reply = await withTimeout(callArch(history, userText || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction, studyReport), 55000, label)
-    reply = await recordAndStripDecision(db, reply)
-  } else {
-    reply = await withTimeout(callCC(history, userText || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction), 55000, label)
-  }
+  const reply = agent === 'codex'
+    ? await withTimeout(callArch(history, userText || '继续', roomName, summary, studyMemory, longStudyMemory, isStudyContext, studyReport, decisionLog, turn.instruction), 55000, label)
+    : await withTimeout(callCC(history, userText || '继续', roomName, summary, studyMemory, longStudyMemory, isStudyContext, studyReport, turn.instruction), 55000, label)
   if (reply) {
     await db.from('rt_messages').insert({ topic_id: topicId, speaker: agent, text: reply })
+    if (isStudyContext) {
+      if (agent === 'claude') {
+        await maybeInsertDiagnosisReport(db, reply, topicId, studyReport)
+      }
+      if (agent === 'codex') {
+        await maybeInsertDecisionLog(db, reply, studyReport)
+      }
+    }
   }
   return reply
 }
 
-// Pulls Arch's "[决策记录] 改了什么→为什么" line out of the reply, stores it
-// in study_decisions, and returns the reply with that line removed so she
-// never sees the bookkeeping syntax in chat.
-async function recordAndStripDecision(db: DB, reply: string): Promise<string> {
-  const match = reply.match(/\[决策记录\]\s*(.+)/)
-  if (!match) return reply
-  const [changeSummary, ...reasonParts] = match[1].split('→')
-  try {
-    await db.from('study_decisions').insert({
-      change_summary: (changeSummary || match[1]).trim(),
-      reason: reasonParts.join('→').trim() || null,
-    })
-  } catch (e) {
-    console.error('study_decisions insert failed:', e)
-  }
-  return reply.replace(match[0], '').trim()
-}
-
-async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
+async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, longStudyMemory?: string | null, isStudyContext?: boolean, studyReport?: string | null, turnInstruction?: string | null) {
   const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
   const apiKey  = Deno.env.get('CHAT_API_KEY')!
   const model   = Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet'
   const messages: {role:string;content:string}[] = [
-    { role: 'system', content: ccSystem(roomName, summary, studyMemory, isStudyContext, mistakeStats, turnInstruction) },
+    { role: 'system', content: ccSystem(roomName, summary, studyMemory, longStudyMemory, isStudyContext, studyReport, turnInstruction) },
   ]
-  for (const h of msgs.slice(-60)) {
+  const historySlice = isStudyContext ? 16 : 60
+  for (const h of msgs.slice(-historySlice)) {
     const content = textForAI(h.text)
     if (h.speaker === 'user')   messages.push({ role: 'user', content })
     else if (h.speaker === 'claude') messages.push({ role: 'assistant', content })
@@ -421,31 +658,32 @@ async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: 
   const res = await fetch(chatCompletionsUrl(apiBase), {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, max_tokens: 400 }),
+    body: JSON.stringify({ model, messages, max_tokens: isStudyContext ? 260 : 400 }),
   })
   if (!res.ok) throw new Error(`yaya二号机 ${res.status}: ${await res.text()}`)
   const j = await res.json()
   return (j.choices?.[0]?.message?.content || '').trim()
 }
 
-async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null, studyReport?: string | null) {
+async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, longStudyMemory?: string | null, isStudyContext?: boolean, studyReport?: string | null, decisionLog?: string | null, turnInstruction?: string | null) {
   const provider = (Deno.env.get('ARCH_PROVIDER') || 'codex-relay').toLowerCase()
   if (provider === 'codex-relay' || provider === 'codex' || provider === 'chatgpt') {
-    return callArchViaCodexRelay(msgs, userMsg, roomName, summary, studyMemory, isStudyContext, mistakeStats, turnInstruction, studyReport)
+    return callArchViaCodexRelay(msgs, userMsg, roomName, summary, studyMemory, longStudyMemory, isStudyContext, studyReport, decisionLog, turnInstruction)
   }
 
   throw new Error(`Unsupported ARCH_PROVIDER: ${provider}`)
 }
 
-async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null, studyReport?: string | null) {
+async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, longStudyMemory?: string | null, isStudyContext?: boolean, studyReport?: string | null, decisionLog?: string | null, turnInstruction?: string | null) {
   const apiBase = Deno.env.get('ARCH_API_BASE_URL')!
   const apiKey  = Deno.env.get('ARCH_API_KEY')!
   const model   = Deno.env.get('ARCH_MODEL') || ''
   const memory = Deno.env.get('ARCH_MEMORY') || ''
   const messages: {role:string;content:string}[] = [
-    { role: 'system', content: archSystem(roomName, summary, memory, studyMemory, isStudyContext, mistakeStats, turnInstruction, studyReport) },
+    { role: 'system', content: archSystem(roomName, summary, memory, studyMemory, longStudyMemory, isStudyContext, studyReport, decisionLog, turnInstruction) },
   ]
-  for (const h of msgs.slice(-60)) {
+  const historySlice = isStudyContext ? 16 : 60
+  for (const h of msgs.slice(-historySlice)) {
     const content = textForAI(h.text)
     if (h.speaker === 'user')   messages.push({ role: 'user', content })
     else if (h.speaker === 'codex') messages.push({ role: 'assistant', content })
@@ -455,7 +693,7 @@ async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: str
   const res = await fetch(chatCompletionsUrl(apiBase), {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, max_tokens: 400 }),
+    body: JSON.stringify({ model, messages, max_tokens: isStudyContext ? 520 : 400 }),
   })
   if (!res.ok) throw new Error(`Arch Codex relay ${res.status}: ${await res.text()}`)
   const j = await res.json()
@@ -486,6 +724,159 @@ async function generateSummary(msgs: Msg[]): Promise<string> {
   return (j.choices?.[0]?.message?.content || '').trim()
 }
 
+async function buildStudyDashboard(db: DB) {
+  const todayText = dateTextInShanghai()
+  const [
+    dailyRes,
+    mistakesRes,
+    reportsRes,
+    tasksRes,
+    decisionsRes,
+    memoryRes,
+    goalsRes,
+  ] = await Promise.all([
+    db.from('study_daily_logs')
+      .select('raw_text, completed, missed, reading_accuracy, minutes, metadata, created_at')
+      .order('created_at', { ascending: false })
+      .limit(21),
+    db.from('study_mistakes')
+      .select('category, created_at')
+      .order('created_at', { ascending: false })
+      .limit(300),
+    db.from('study_diagnosis_reports')
+      .select('report, created_at')
+      .order('created_at', { ascending: false })
+      .limit(3),
+    db.from('study_daily_tasks')
+      .select('task_date, tasks, focus, source_report_id, created_at')
+      .order('task_date', { ascending: false })
+      .limit(7),
+    db.from('study_decision_logs')
+      .select('changed, reason, source_report_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(8),
+    db.from('study_memory')
+      .select('memory_type, content, updated_at')
+      .eq('active', true)
+      .order('updated_at', { ascending: false })
+      .limit(12),
+    db.from('study_goals')
+      .select('target, current_level, days_left, phase, created_at')
+      .order('created_at', { ascending: false })
+      .limit(1),
+  ])
+
+  const dailyLogs = (dailyRes.data || []) as StudyDailyRow[]
+  const mistakes = (mistakesRes.data || []) as { category: string; created_at: string }[]
+  const tasks = (tasksRes.data || []) as { task_date: string; tasks: string[] | null; focus: string | null; source_report_id: string | null; created_at: string }[]
+  const decisions = (decisionsRes.data || []) as { changed: string[] | null; reason: string[] | null; source_report_id: string | null; created_at: string }[]
+  const todayLogs = dailyLogs.filter((row) => (row.created_at || '').slice(0, 10) === todayText)
+  const latestTask = tasks.find((task) => task.task_date === todayText) || tasks[0] || null
+  const recent7 = dailyLogs.slice(0, 7)
+  const errorRanking = rankMistakes(mistakes)
+  const trend = buildStudyTrend(dailyLogs)
+  const completionRate = estimateCompletionRate(latestTask?.tasks || [], todayLogs)
+
+  return {
+    generatedAt: new Date().toISOString(),
+    today: {
+      date: todayText,
+      completionRate,
+      logsCount: todayLogs.length,
+      minutes: sumNumbers(todayLogs.map((row) => row.minutes)),
+      avgReadingAccuracy: avgNumbers(todayLogs.map((row) => row.reading_accuracy)),
+      latestTask,
+      latestLog: todayLogs[0] || null,
+    },
+    goal: (goalsRes.data || [])[0] || null,
+    recent: {
+      avgReadingAccuracy7d: avgNumbers(recent7.map((row) => row.reading_accuracy)),
+      minutes7d: sumNumbers(recent7.map((row) => row.minutes)),
+      logs: dailyLogs.slice(0, 6),
+    },
+    errors: {
+      total: mistakes.length,
+      ranking: errorRanking,
+    },
+    trend,
+    reports: reportsRes.data || [],
+    tasks,
+    decisions,
+    memory: memoryRes.data || [],
+  }
+}
+
+function dateTextInShanghai(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  return `${value.year}-${value.month}-${value.day}`
+}
+
+type StudyDailyRow = {
+  raw_text: string
+  completed: string | null
+  missed: string | null
+  reading_accuracy: number | null
+  minutes: number | null
+  metadata: Record<string, unknown> | null
+  created_at: string
+}
+
+function rankMistakes(rows: { category: string; created_at: string }[]) {
+  const counts = new Map<string, number>()
+  for (const row of rows) counts.set(row.category || '其他', (counts.get(row.category || '其他') || 0) + 1)
+  const total = rows.length || 1
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([category, count]) => ({ category, count, percent: Math.round(count / total * 100) }))
+}
+
+function buildStudyTrend(rows: StudyDailyRow[]) {
+  const byDay = new Map<string, StudyDailyRow[]>()
+  for (const row of rows) {
+    const day = (row.created_at || '').slice(0, 10)
+    if (!day) continue
+    byDay.set(day, [...(byDay.get(day) || []), row])
+  }
+  return [...byDay.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-7)
+    .map(([date, dayRows]) => ({
+      date,
+      logs: dayRows.length,
+      minutes: sumNumbers(dayRows.map((row) => row.minutes)),
+      readingAccuracy: avgNumbers(dayRows.map((row) => row.reading_accuracy)),
+    }))
+}
+
+function estimateCompletionRate(tasks: string[], logs: StudyDailyRow[]) {
+  const total = tasks.filter(Boolean).length
+  if (!total) return null
+  const text = logs.map((row) => `${row.raw_text} ${row.completed || ''}`).join('\n')
+  const done = tasks.filter((task) => {
+    const key = String(task).split(/[，,。；;\s]/).find((part) => part.length >= 2) || task
+    return text.includes(key.slice(0, 8))
+  }).length
+  return Math.round(done / total * 100)
+}
+
+function avgNumbers(values: Array<number | null>) {
+  const nums = values.filter((value): value is number => typeof value === 'number' && !Number.isNaN(value))
+  if (!nums.length) return null
+  return Math.round(nums.reduce((sum, n) => sum + n, 0) / nums.length)
+}
+
+function sumNumbers(values: Array<number | null>) {
+  const nums = values.filter((value): value is number => typeof value === 'number' && !Number.isNaN(value))
+  return nums.reduce((sum, n) => sum + n, 0)
+}
+
 // ── Main handler ─────────────────────────────────────────────────────────────
 
 // Created once per warm isolate instead of per-request — supabase-js sets up
@@ -508,6 +899,11 @@ Deno.serve(async (req) => {
     let   topicId = url.searchParams.get('topicId') || ''
     if (!topicId) topicId = await getFirstTopicInRoom(db, roomId)
     return json(await buildState(db, roomId, topicId))
+  }
+
+  // GET /study-dashboard — compact, non-AI dashboard for 考研房.
+  if (req.method === 'GET' && path === 'study-dashboard') {
+    return json(await buildStudyDashboard(db))
   }
 
   let body: Record<string, unknown> = {}
@@ -535,7 +931,7 @@ Deno.serve(async (req) => {
     ])
     const roomName = roomRes.name
     const isStudyContext = /考研|study|学业/i.test(`${roomName} ${topicRes.data?.display_name || ''}`)
-    const plan = buildTurnPlan(text, target)
+    const plan = buildTurnPlan(text, target, isStudyContext)
 
     // Study rooms: "错题：..." gets tagged and logged for pattern tracking,
     // independent of whatever CC/Arch said about it above.
@@ -549,17 +945,9 @@ Deno.serve(async (req) => {
         console.error('study_mistakes insert failed:', e)
       }
     }
-
-    // "打卡：..." is 二号机's raw material — gets extracted into study_logs so
-    // Arch's report reads a trend instead of everyone re-parsing prose.
-    const checkInMatch = isStudyContext ? text.match(/^打卡[:：]\s*([\s\S]+)/) : null
-    if (checkInMatch) {
-      try {
-        const parsed = await parseCheckIn(checkInMatch[1].trim())
-        if (parsed) await db.from('study_logs').insert(parsed)
-      } catch (e) {
-        console.error('study_logs insert failed:', e)
-      }
+    if (isStudyContext) {
+      await maybeInsertStudyMemoryFromUser(db, text)
+      await maybeInsertStudyDailyLog(db, text, topicId)
     }
 
     // Increment msg_count if the helper exists; older DBs may not have it yet.

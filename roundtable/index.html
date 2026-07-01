@@ -51,6 +51,8 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
 #h-topic{font-size:12px;color:var(--text3);font-family:'Cinzel',serif;}
 .export-btn{background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;display:flex;align-items:center;flex-shrink:0;}
 .export-btn:hover{color:var(--gold);}
+.dash-btn{display:none;background:rgba(201,168,76,.12);border:1px solid var(--gold-dim);border-radius:999px;color:var(--burgundy);font-size:11px;padding:5px 10px;cursor:pointer;flex-shrink:0;}
+.dash-btn.show{display:inline-flex;}
 .msg-export-btn{background:none;border:none;cursor:pointer;color:var(--text3);opacity:.5;padding:2px;display:inline-flex;align-items:center;vertical-align:middle;margin-left:4px;flex-shrink:0;}
 .msg-export-btn:hover{opacity:1;color:var(--gold);}
 .mtime-row{display:flex;align-items:center;gap:2px;}
@@ -97,6 +99,26 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
 .sum-banner-lbl{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.15em;color:var(--gold);margin-bottom:4px;text-transform:uppercase;}
 .empty-hint{text-align:center;color:var(--text3);font-size:12px;font-family:'Cinzel',serif;letter-spacing:.06em;padding:60px 24px;line-height:2.2;}
 
+/* STUDY DASHBOARD */
+#study-dash{display:none;flex-shrink:0;border-bottom:1px solid var(--gold-dim);background:linear-gradient(180deg,rgba(255,253,249,.98),rgba(250,245,237,.96));padding:10px 16px;max-height:42dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#study-dash.open{display:block;}
+.dash-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:10px;align-items:start;}
+.dash-card{border:1px solid var(--gold-dim);background:rgba(255,253,249,.74);border-radius:10px;padding:10px;min-width:0;}
+.dash-card h3{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+.dash-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px;}
+.dash-kpi{border:1px solid rgba(201,168,76,.2);background:rgba(255,255,255,.56);border-radius:8px;padding:8px;min-height:58px;}
+.dash-kpi span{display:block;font-size:10px;color:var(--text3);margin-bottom:4px;}
+.dash-kpi strong{font-size:19px;color:var(--text);}
+.dash-list{display:flex;flex-direction:column;gap:6px;}
+.dash-item{font-size:12px;color:var(--text2);line-height:1.45;border-bottom:1px solid rgba(201,168,76,.14);padding-bottom:6px;}
+.dash-item:last-child{border-bottom:0;padding-bottom:0;}
+.dash-bar{height:7px;background:rgba(201,168,76,.16);border-radius:99px;overflow:hidden;margin-top:5px;}
+.dash-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--burgundy),var(--gold));border-radius:99px;}
+.dash-mini-chart{display:flex;align-items:end;gap:5px;height:54px;margin-top:7px;}
+.dash-mini-chart div{flex:1;min-width:8px;background:rgba(74,122,155,.38);border-radius:3px 3px 0 0;position:relative;}
+.dash-mini-chart div.current{background:rgba(139,30,47,.65);}
+.dash-empty{font-size:12px;color:var(--text3);line-height:1.6;padding:6px 0;}
+
 /* INPUT */
 #input-bar{flex-shrink:0;border-top:1px solid var(--gold-dim);background:rgba(255,253,249,.98);padding:10px 16px max(14px,env(safe-area-inset-bottom));}
 .tbar{display:flex;gap:6px;margin-bottom:8px;}
@@ -134,6 +156,8 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
   #sidebar.open{transform:none;}
   #scrim.open{display:block;}
   #hamburger{display:block;}
+  .dash-grid,.dash-kpis{grid-template-columns:1fr 1fr;}
+  #study-dash{max-height:48dvh;}
 }
 </style>
 </head>
@@ -165,6 +189,7 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
     <span id="h-room">圆桌</span>
     <span id="h-sep">·</span>
     <span id="h-topic">对话 1</span>
+    <button id="study-dash-btn" class="dash-btn" onclick="toggleStudyDash()">仪表盘</button>
     <button id="export-all-btn" class="export-btn" title="导出整个对话" onclick="exportConversation()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     </button>
@@ -173,6 +198,7 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
       <div class="schip"><div class="sdot" id="dot-cc"></div>二号机</div>
     </div>
   </div>
+  <section id="study-dash"></section>
   <div id="messages"></div>
   <div id="input-bar">
     <div class="tbar">
@@ -225,6 +251,8 @@ let selIcon = ICONS[0];
 let pendingFiles = [];
 let livePoll = 0;
 let navSeq = 0;
+let dashOpen = false;
+let dashCache = null;
 const stateCache = new Map();
 const roomCache = new Map();
 const ATT_MARK = '[[RT_ATTACHMENT:';
@@ -267,6 +295,7 @@ function apply(data) {
   renderTopics(data.topics || []);
   lastMessages = data.messages || [];
   renderMsgs(lastMessages, data.parentSummary);
+  syncStudyDash();
 }
 
 function cacheState(data) {
@@ -297,6 +326,131 @@ function renderTopics(topics) {
     b.onclick = () => switchTopic(t.id);
     el.appendChild(b);
   });
+}
+
+function isStudyRoom() {
+  return S.roomId === 'room-study' || /考研|study|学业/i.test(S.roomName || '');
+}
+
+function syncStudyDash() {
+  const btn = document.getElementById('study-dash-btn');
+  const panel = document.getElementById('study-dash');
+  const show = isStudyRoom();
+  btn.classList.toggle('show', show);
+  if (!show) {
+    dashOpen = false;
+    panel.classList.remove('open');
+    return;
+  }
+  if (dashOpen) loadStudyDash();
+}
+
+async function toggleStudyDash() {
+  if (!isStudyRoom()) return;
+  dashOpen = !dashOpen;
+  document.getElementById('study-dash').classList.toggle('open', dashOpen);
+  if (dashOpen) await loadStudyDash();
+}
+
+async function loadStudyDash() {
+  const panel = document.getElementById('study-dash');
+  panel.innerHTML = '<div class="dash-empty">正在读取考研房数据…</div>';
+  try {
+    dashCache = await api('study-dashboard');
+    renderStudyDash(dashCache);
+  } catch (e) {
+    panel.innerHTML = `<div class="dash-empty">仪表盘读取失败：${esc(e.message)}</div>`;
+  }
+}
+
+function renderStudyDash(data) {
+  const panel = document.getElementById('study-dash');
+  const today = data.today || {};
+  const recent = data.recent || {};
+  const errors = data.errors || {};
+  const latestTask = today.latestTask || {};
+  const taskItems = latestTask.tasks || [];
+  const trend = data.trend || [];
+  const maxMinutes = Math.max(30, ...trend.map(x => x.minutes || 0));
+  panel.innerHTML = `
+    <div class="dash-kpis">
+      ${dashKpi('今日完成', pct(today.completionRate))}
+      ${dashKpi('今日耗时', today.minutes ? `${today.minutes}m` : '—')}
+      ${dashKpi('阅读正确率', pct(today.avgReadingAccuracy ?? recent.avgReadingAccuracy7d))}
+      ${dashKpi('错题总数', String(errors.total || 0))}
+    </div>
+    <div class="dash-grid">
+      <div class="dash-card">
+        <h3>Today / Arch</h3>
+        ${taskItems.length ? `<div class="dash-list">${taskItems.map(item => `<div class="dash-item">${esc(item)}</div>`).join('')}</div>` : '<div class="dash-empty">还没有今日任务。叫 Arch 布置一次就会出现在这里。</div>'}
+      </div>
+      <div class="dash-card">
+        <h3>Weakness / 二号机</h3>
+        ${renderErrorBars(errors.ranking || [])}
+      </div>
+      <div class="dash-card">
+        <h3>7 Days</h3>
+        <div class="dash-mini-chart">
+          ${trend.length ? trend.map((x, i) => `<div class="${i === trend.length - 1 ? 'current' : ''}" style="height:${Math.max(8, Math.round((x.minutes || 0) / maxMinutes * 52))}px" title="${esc(x.date)} · ${x.minutes || 0}m"></div>`).join('') : '<div style="height:8px"></div>'}
+        </div>
+        <div class="dash-empty">近7条记录总时长 ${recent.minutes7d || 0}m · 阅读均值 ${pct(recent.avgReadingAccuracy7d)}</div>
+      </div>
+      <div class="dash-card">
+        <h3>Decision Log</h3>
+        ${renderDecisions(data.decisions || [])}
+      </div>
+      <div class="dash-card">
+        <h3>Memory</h3>
+        ${renderMemory(data.memory || [])}
+      </div>
+      <div class="dash-card">
+        <h3>Medical Record</h3>
+        ${renderRecentLogs(recent.logs || [])}
+      </div>
+    </div>
+  `;
+}
+
+function dashKpi(label, value) {
+  return `<div class="dash-kpi"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
+}
+
+function pct(value) {
+  return value === null || value === undefined ? '—' : `${value}%`;
+}
+
+function renderErrorBars(items) {
+  if (!items.length) return '<div class="dash-empty">错题样本不足。</div>';
+  return `<div class="dash-list">${items.map(item => `
+    <div class="dash-item">
+      <div>${esc(item.category)} · ${item.count}次 · ${item.percent}%</div>
+      <div class="dash-bar"><i style="width:${Math.max(4, item.percent)}%"></i></div>
+    </div>`).join('')}</div>`;
+}
+
+function renderDecisions(items) {
+  if (!items.length) return '<div class="dash-empty">还没有 Arch 决策日志。</div>';
+  return `<div class="dash-list">${items.slice(0, 4).map(item => `
+    <div class="dash-item">
+      <strong>${esc((item.created_at || '').slice(0, 10))}</strong><br>
+      ${esc((item.changed || [])[0] || (item.reason || [])[0] || '已记录调整')}
+    </div>`).join('')}</div>`;
+}
+
+function renderMemory(items) {
+  if (!items.length) return '<div class="dash-empty">长期记忆还在积累。</div>';
+  return `<div class="dash-list">${items.slice(0, 4).map(item => `
+    <div class="dash-item">${esc(memLabel(item.memory_type))}：${esc(item.content)}</div>`).join('')}</div>`;
+}
+
+function renderRecentLogs(items) {
+  if (!items.length) return '<div class="dash-empty">二号机还没有学习病历。</div>';
+  return `<div class="dash-list">${items.slice(0, 4).map(item => `
+    <div class="dash-item">${esc((item.created_at || '').slice(5, 16).replace('T', ' '))} · ${esc(item.completed || item.raw_text || '学习记录')}</div>`).join('')}</div>`;
+}
+
+function memLabel(type) {
+  return ({goal:'目标',weakness:'弱点',habit:'习惯',rule:'规则',report:'诊断',general:'记忆'}[type] || type || '记忆');
 }
 
 function renderMsgs(msgs, summary) {
@@ -491,6 +645,7 @@ async function sendMsg() {
     const data = await api('user', {text, topicId:S.topicId, roomId:S.roomId, target});
     lastSig = '';
     apply(data);
+    if (dashOpen && isStudyRoom()) loadStudyDash();
     await runTurnPlan(data.turnPlan || [], text, data.roomId, data.topicId);
   } catch(e) {
     removeTyping('codex'); removeTyping('claude');
@@ -522,6 +677,7 @@ async function runTurnPlan(plan, userText, roomId, topicId) {
       setDot(sp, '');
       lastSig = '';
       apply(data);
+      if (dashOpen && isStudyRoom()) loadStudyDash();
       if (data.lastError) {
         alert('发送失败：' + data.lastError);
         break;
