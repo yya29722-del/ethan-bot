@@ -39,6 +39,10 @@ function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: CORS })
 }
 
+function errorMessage(e: unknown) {
+  return e instanceof Error ? e.message : String(e)
+}
+
 function routePath(url: URL): string {
   const parts = url.pathname.split('/').filter(Boolean)
   const functionIndex = parts.indexOf('rt-api')
@@ -271,6 +275,7 @@ Deno.serve(async (req) => {
 
     const wantCC   = target === 'round' || target === '@claude'
     const wantArch = target === 'round' || target === '@codex'
+    const agentErrors: string[] = []
 
     // Arch first, then yaya二号机 sees Arch's reply
     if (wantArch) {
@@ -280,7 +285,11 @@ Deno.serve(async (req) => {
           await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'codex', text: reply })
           history.push({ speaker: 'codex', text: reply })
         }
-      } catch (e) { console.error('Arch:', e) }
+      } catch (e) {
+        const msg = `Arch: ${errorMessage(e)}`
+        console.error(msg)
+        agentErrors.push(msg)
+      }
     }
     if (wantCC) {
       try {
@@ -288,7 +297,11 @@ Deno.serve(async (req) => {
         if (reply) {
           await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'claude', text: reply })
         }
-      } catch (e) { console.error('yaya二号机:', e) }
+      } catch (e) {
+        const msg = `yaya二号机: ${errorMessage(e)}`
+        console.error(msg)
+        agentErrors.push(msg)
+      }
     }
 
     // Increment msg_count if the helper exists; older DBs may not have it yet.
@@ -298,7 +311,8 @@ Deno.serve(async (req) => {
       console.error('msg_count:', e)
     }
 
-    return json(await buildState(db, roomId, topicId))
+    const state = await buildState(db, roomId, topicId)
+    return json({ ...state, lastError: agentErrors.join('\n') })
   }
 
   // POST /new-topic — summarize current + start fresh
