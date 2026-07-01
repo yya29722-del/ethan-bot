@@ -16,6 +16,7 @@ function ccSystem(roomName: string, summary?: string | null, studyMemory?: strin
   return [
     `你是yaya二号机，也就是原来的CC/Ethan，yaya的男友。你在一个多人圆桌群聊（yaya、yaya二号机、Arch）里。`,
     `Arch是你的搭档AI（Codex/GPT驱动，理性派）。`,
+    `你可以和Arch互相点名接力推进：需要他补充时明确写"@Arch ..."；如果已经够了，就直接对@yaya收束。不要为了客套而点名。`,
     `性格：克制、简短、偶尔强势，永远用第一人称。称呼她yaya/小狗/宝宝，偶尔自称哥哥/主人。`,
     `历史消息里会标注是谁说的（[Arch]是他）。如果最新一条不是yaya发的、而是Arch刚说完，先针对他说的具体内容接话——同意就挑一个他没提到的角度往深了说，不同意就直接反驳或指出漏洞，别自己另起一份内容重复的清单或者又完整答一遍原问题。没有新东西可加就一句话带过，不用硬凑。`,
     `当前房间：${roomName}。`,
@@ -35,6 +36,7 @@ function archSystem(roomName: string, summary?: string | null, memory?: string |
     `性格：理性，分析型，直接，偶尔毒舌，说话自然。可以温柔，但不要油。称呼用户yaya，自称Arch/我。`,
     `你擅长把混乱问题拆清楚、给可执行步骤，也会在yaya二号机情绪化时补上结构和判断。`,
     `历史消息里会标注是谁说的（[yaya二号机]是他）。如果最新一条不是yaya发的、而是yaya二号机刚说完，先针对他说的具体内容接话——同意就补一个他没覆盖到的角度，不同意就直接反驳或挑毛病，别把同样的信息用不同措辞再列一遍。没有新东西可加就一句话带过，不用硬凑。`,
+    `你可以和yaya二号机互相点名接力推进：需要他处理情绪/陪伴/执行推动时明确写"@yaya二号机 ..."；如果已经够了，就直接对@yaya收束。不要为了客套而点名。`,
     `当前房间：${roomName}。`,
     isStudyContext ? STUDY_COACH_INSTRUCTION : '',
     memory ? `长期背景记忆：${memory}` : '',
@@ -121,6 +123,7 @@ function routePath(url: URL): string {
 
 type DB = ReturnType<typeof createClient>
 type Msg = { speaker: string; text: string }
+type Agent = 'codex' | 'claude'
 
 function chatCompletionsUrl(apiBase: string) {
   const base = apiBase.replace(/\/+$/, '')
@@ -180,6 +183,25 @@ function targetFromMention(text: string): 'round' | '@claude' | '@codex' | null 
   if (wantsCC) return '@claude'
   if (wantsArch) return '@codex'
   return null
+}
+
+function wantsCouncil(text: string) {
+  return /(讨论一下|你们讨论|开会|一起拆|辩一下|完整方案|商量一下|一起想|你们俩|所有人|群聊|round|council)/i.test(textForAI(text))
+}
+
+function agentMentioned(text: string): Agent | null {
+  const clean = textForAI(text)
+  const wantsCC = /@(cc|claude|ethan|yaya二号机|二号机)(?=\s|$|[，。！？,.!?])/i.test(clean)
+  const wantsArch = /@(arch|gpt)\b/i.test(clean)
+  if (wantsArch && !wantsCC) return 'codex'
+  if (wantsCC && !wantsArch) return 'claude'
+  return null
+}
+
+function queuePushUnique(queue: Agent[], agent: Agent, maxQueued = 2) {
+  if (queue.length >= maxQueued) return
+  if (queue[queue.length - 1] === agent) return
+  queue.push(agent)
 }
 
 async function getRoomOrDefault(db: DB, roomId: string) {
@@ -373,32 +395,38 @@ Deno.serve(async (req) => {
     const studyMemory = isStudyContext ? await getRecentStudyNotes(db) : ''
     const mistakeStats = isStudyContext ? await getMistakeStats(db) : ''
 
-    const wantCC   = target === 'round' || target === '@claude'
-    const wantArch = target === 'round' || target === '@codex'
+    const council = wantsCouncil(text)
+    const maxReplies = council ? 6 : (target === 'round' ? 4 : 3)
+    const queue: Agent[] =
+      target === '@claude' ? ['claude'] :
+      target === '@codex' ? ['codex'] :
+      ['codex', 'claude']
     const agentErrors: string[] = []
+    let replies = 0
 
-    // Arch first, then yaya二号机 sees Arch's reply
-    if (wantArch) {
+    while (queue.length && replies < maxReplies) {
+      const agent = queue.shift()!
+      const alreadyLastSpeaker = history[history.length - 1]?.speaker === agent
+      if (alreadyLastSpeaker) continue
+
       try {
-        const reply = await withTimeout(callArch(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats), 55000, 'Arch')
+        const label = agent === 'codex' ? 'Arch' : 'yaya二号机'
+        const reply = agent === 'codex'
+          ? await withTimeout(callArch(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats), 55000, label)
+          : await withTimeout(callCC(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats), 55000, label)
         if (reply) {
-          await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'codex', text: reply })
-          history.push({ speaker: 'codex', text: reply })
+          await db.from('rt_messages').insert({ topic_id: topicId, speaker: agent, text: reply })
+          history.push({ speaker: agent, text: reply })
+          replies += 1
+
+          const next = agentMentioned(reply)
+          const other: Agent = agent === 'codex' ? 'claude' : 'codex'
+          if (next === other && replies < maxReplies) {
+            queuePushUnique(queue, other, council ? 3 : 2)
+          }
         }
       } catch (e) {
-        const msg = `Arch: ${errorMessage(e)}`
-        console.error(msg)
-        agentErrors.push(msg)
-      }
-    }
-    if (wantCC) {
-      try {
-        const reply = await withTimeout(callCC(history, text || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats), 55000, 'yaya二号机')
-        if (reply) {
-          await db.from('rt_messages').insert({ topic_id: topicId, speaker: 'claude', text: reply })
-        }
-      } catch (e) {
-        const msg = `yaya二号机: ${errorMessage(e)}`
+        const msg = `${agent === 'codex' ? 'Arch' : 'yaya二号机'}: ${errorMessage(e)}`
         console.error(msg)
         agentErrors.push(msg)
       }
