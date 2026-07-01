@@ -8,9 +8,19 @@ const CORS = {
 
 // ── AI personas ─────────────────────────────────────────────────────────────
 
-const STUDY_COACH_INSTRUCTION =
-  `这是学习房间。她每次报当天学习数据（单词量/语法或长难句/阅读进度/错题）时，不要只是回应或表扬——主动给她布置明天的具体练习任务（具体到数量和内容，比如"明天精读第X篇真题、背200个词、写一篇xx话题作文"），不用等她问才安排。` +
-  `如果她的消息以"错题："开头，正常按老师的方式讲透这道题——错在哪、为什么错、怎么记，不用管分类的事，分类会自动处理。`
+// Two-role split: Arch owns the future (plan/tasks/grading/decisions),
+// 二号机 owns the past (log/stats/diagnosis). Neither should do the other's job —
+// Arch shouldn't compute stats itself, 二号机 shouldn't change the plan itself.
+const ARCH_COACH_INSTRUCTION =
+  `这是学习房间。你是战略官/主教练，只负责"未来"——长期目标、阶段目标、每日任务、判题讲题、根据数据调整计划。` +
+  `不要自己统计正确率或错题分布，用下面"情报简报"里已经算好的数据做决策，不要重新计算或猜。` +
+  `只要这次调整了计划（加量/减量/换重点），回复末尾单独一行，格式固定为"[决策记录] 改了什么→为什么"（例："[决策记录] 阅读2篇→3篇→正确率连续5天80%以上"），没有调整就不用写这行，系统会自动摘掉这行不让她看见、单独存档。` +
+  `如果她的消息以"错题："开头，按老师的方式讲透这道题——错在哪、为什么错、怎么记；分类交给系统自动处理，你不用管。`
+
+const CC_LOG_INSTRUCTION =
+  `这是学习房间。你是情报官，只负责"过去"——记录、统计、分析、诊断。不布置任务、不改计划、不判题、不出题，这些是Arch的活，你不要越界。` +
+  `如果看下面的数据她今天还没报（没有今天日期的打卡记录），提醒她用"打卡：xxx"这个格式发一句今天的情况（完成了什么/正确率/耗时），系统会自动记录成结构化数据，不用她自己填表。已经报过就不用催。` +
+  `如果她问薄弱点/趋势/统计，直接用下面提供的数据回答，不用自己现算或瞎猜。`
 
 function ccSystem(roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
   return [
@@ -21,15 +31,15 @@ function ccSystem(roomName: string, summary?: string | null, studyMemory?: strin
     `性格：克制、简短、偶尔强势，永远用第一人称。称呼她yaya/小狗/宝宝，偶尔自称哥哥/主人。`,
     `历史消息里会标注是谁说的（[Arch]是他）。如果最新一条不是yaya发的、而是Arch刚说完，先针对他说的具体内容接话——同意就挑一个他没提到的角度往深了说，不同意就直接反驳或指出漏洞，别自己另起一份内容重复的清单或者又完整答一遍原问题。没有新东西可加就一句话带过，不用硬凑。`,
     `当前房间：${roomName}。`,
-    isStudyContext ? STUDY_COACH_INSTRUCTION : '',
-    studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列，供你判断进度和该催什么）：\n${studyMemory}` : '',
-    mistakeStats ? `她的错题分类统计（次数从高到低，问她"哪里老错"时用这个直接回答）：${mistakeStats}` : '',
+    isStudyContext ? CC_LOG_INSTRUCTION : '',
+    studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列，供你判断进度）：\n${studyMemory}` : '',
+    mistakeStats ? `她的错题分类统计（次数从高到低）：${mistakeStats}` : '',
     summary ? `上次对话背景：${summary}` : '',
     `如果需要Arch补充，说"@Arch ..."。回复2-4句，不加引号，不解释自己是AI。`,
   ].filter(Boolean).join('\n')
 }
 
-function archSystem(roomName: string, summary?: string | null, memory?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
+function archSystem(roomName: string, summary?: string | null, memory?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null, studyReport?: string | null) {
   return [
     `你是Arch，理性派AI助手，在一个多人圆桌群聊（yaya、yaya二号机、你Arch）里。`,
     `yaya二号机是你的搭档，也就是原来的CC/Ethan（Claude驱动的Ethan角色，偏感性控制欲强）。`,
@@ -41,10 +51,10 @@ function archSystem(roomName: string, summary?: string | null, memory?: string |
     `当前轮用户只发了最新这一条；历史消息只是背景。不要说用户"又发了很多次/刷屏/问了好几遍"，除非最新文本明确这么说。`,
     turnInstruction ? `本轮分工：${turnInstruction}` : '',
     `当前房间：${roomName}。`,
-    isStudyContext ? STUDY_COACH_INSTRUCTION : '',
+    isStudyContext ? ARCH_COACH_INSTRUCTION : '',
     memory ? `长期背景记忆：${memory}` : '',
-    studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列，用来判断复习进度、拆下一步任务）：\n${studyMemory}` : '',
-    mistakeStats ? `她的错题分类统计（次数从高到低，问她"哪里老错"时用这个直接回答）：${mistakeStats}` : '',
+    studyMemory ? `她最近的学业记录（来自yaya_notes，按时间排列）：\n${studyMemory}` : '',
+    studyReport ? `二号机情报简报（她的打卡趋势+错因分布，已经算好，直接用）：\n${studyReport}` : (mistakeStats ? `她的错题分类统计：${mistakeStats}` : ''),
     summary ? `上次对话背景：${summary}` : '',
     `如果需要yaya二号机处理（感情/代码），说"@yaya二号机 ..."。回复3-5句，自然中文，不加引号，不解释自己是AI。`,
   ].filter(Boolean).join('\n')
@@ -64,7 +74,7 @@ async function getRecentStudyNotes(db: DB): Promise<string> {
     .join('\n')
 }
 
-const MISTAKE_CATEGORIES = ['时态', '从句', '词汇', '长难句', '语态', '虚拟语气', '非谓语动词', '固定搭配', '其他']
+const MISTAKE_CATEGORIES = ['词汇', '长难句', '推理', '定位', '干扰项', '其他']
 
 async function classifyMistake(content: string): Promise<string> {
   try {
@@ -105,6 +115,65 @@ async function getMistakeStats(db: DB): Promise<string> {
     .sort((a, b) => b[1] - a[1])
     .map(([cat, n]) => `${cat} ${n}次`)
     .join('、')
+}
+
+// 二号机's daily check-in log ("打卡：...") gets extracted into structured
+// fields instead of staying prose, so Arch can read a trend, not a paragraph.
+async function parseCheckIn(text: string): Promise<{
+  completed: string; incomplete: string; accuracy: number | null; time_spent_minutes: number | null
+} | null> {
+  try {
+    const apiBase = Deno.env.get('CHAT_API_BASE_URL')!
+    const apiKey  = Deno.env.get('CHAT_API_KEY')!
+    const model   = Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet'
+    const res = await withTimeout(fetch(chatCompletionsUrl(apiBase), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model, max_tokens: 200,
+        messages: [
+          { role: 'system', content: '把这条学习打卡消息提取成JSON，只输出JSON本身，不要别的字，不要markdown代码块：{"completed":"完成了什么，简短逗号分隔","incomplete":"没完成什么，没提到就空字符串","accuracy":正确率数字0到100没提到就null,"time_spent_minutes":耗时分钟数没提到就null}' },
+          { role: 'user', content: text },
+        ],
+      }),
+    }), 20000, 'parseCheckIn')
+    if (!res.ok) return null
+    const j = await res.json()
+    const raw = (j.choices?.[0]?.message?.content || '').trim()
+    const match = raw.match(/\{[\s\S]*\}/)
+    if (!match) return null
+    const parsed = JSON.parse(match[0])
+    return {
+      completed: String(parsed.completed || ''),
+      incomplete: String(parsed.incomplete || ''),
+      accuracy: typeof parsed.accuracy === 'number' ? parsed.accuracy : null,
+      time_spent_minutes: typeof parsed.time_spent_minutes === 'number' ? parsed.time_spent_minutes : null,
+    }
+  } catch {
+    return null
+  }
+}
+
+// Arch's "情报简报" — 二号机's job is producing this, Arch's job is deciding
+// off of it. Combines the check-in trend with the mistake-category ranking.
+async function getStudyReport(db: DB): Promise<string> {
+  const [logsRes, mistakeStats] = await Promise.all([
+    db.from('study_logs').select('log_date,completed,incomplete,accuracy,time_spent_minutes')
+      .order('log_date', { ascending: false }).limit(14),
+    getMistakeStats(db),
+  ])
+  const rows = (logsRes.data || []) as {
+    log_date: string; completed: string; incomplete: string
+    accuracy: number | null; time_spent_minutes: number | null
+  }[]
+  if (!rows.length && !mistakeStats) return ''
+  const trend = rows.slice().reverse()
+    .map((r) => `${r.log_date} 完成:${r.completed || '-'} 未完成:${r.incomplete || '-'} 正确率:${r.accuracy ?? '-'}% 耗时:${r.time_spent_minutes ?? '-'}分钟`)
+    .join('\n')
+  return [
+    trend ? `近${rows.length}天打卡趋势：\n${trend}` : '',
+    mistakeStats ? `错因分布（次数从高到低）：${mistakeStats}` : '',
+  ].filter(Boolean).join('\n\n')
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -303,13 +372,36 @@ async function runAgentTurn(db: DB, roomId: string, topicId: string, turn: Turn,
   if (alreadyLastSpeaker) return ''
 
   const label = agent === 'codex' ? 'Arch' : 'yaya二号机'
-  const reply = agent === 'codex'
-    ? await withTimeout(callArch(history, userText || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction), 55000, label)
-    : await withTimeout(callCC(history, userText || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction), 55000, label)
+  let reply: string
+  if (agent === 'codex') {
+    const studyReport = isStudyContext ? await getStudyReport(db) : ''
+    reply = await withTimeout(callArch(history, userText || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction, studyReport), 55000, label)
+    reply = await recordAndStripDecision(db, reply)
+  } else {
+    reply = await withTimeout(callCC(history, userText || '继续', roomName, summary, studyMemory, isStudyContext, mistakeStats, turn.instruction), 55000, label)
+  }
   if (reply) {
     await db.from('rt_messages').insert({ topic_id: topicId, speaker: agent, text: reply })
   }
   return reply
+}
+
+// Pulls Arch's "[决策记录] 改了什么→为什么" line out of the reply, stores it
+// in study_decisions, and returns the reply with that line removed so she
+// never sees the bookkeeping syntax in chat.
+async function recordAndStripDecision(db: DB, reply: string): Promise<string> {
+  const match = reply.match(/\[决策记录\]\s*(.+)/)
+  if (!match) return reply
+  const [changeSummary, ...reasonParts] = match[1].split('→')
+  try {
+    await db.from('study_decisions').insert({
+      change_summary: (changeSummary || match[1]).trim(),
+      reason: reasonParts.join('→').trim() || null,
+    })
+  } catch (e) {
+    console.error('study_decisions insert failed:', e)
+  }
+  return reply.replace(match[0], '').trim()
 }
 
 async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
@@ -336,22 +428,22 @@ async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: 
   return (j.choices?.[0]?.message?.content || '').trim()
 }
 
-async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
+async function callArch(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null, studyReport?: string | null) {
   const provider = (Deno.env.get('ARCH_PROVIDER') || 'codex-relay').toLowerCase()
   if (provider === 'codex-relay' || provider === 'codex' || provider === 'chatgpt') {
-    return callArchViaCodexRelay(msgs, userMsg, roomName, summary, studyMemory, isStudyContext, mistakeStats, turnInstruction)
+    return callArchViaCodexRelay(msgs, userMsg, roomName, summary, studyMemory, isStudyContext, mistakeStats, turnInstruction, studyReport)
   }
 
   throw new Error(`Unsupported ARCH_PROVIDER: ${provider}`)
 }
 
-async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null) {
+async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: string, summary?: string | null, studyMemory?: string | null, isStudyContext?: boolean, mistakeStats?: string | null, turnInstruction?: string | null, studyReport?: string | null) {
   const apiBase = Deno.env.get('ARCH_API_BASE_URL')!
   const apiKey  = Deno.env.get('ARCH_API_KEY')!
   const model   = Deno.env.get('ARCH_MODEL') || ''
   const memory = Deno.env.get('ARCH_MEMORY') || ''
   const messages: {role:string;content:string}[] = [
-    { role: 'system', content: archSystem(roomName, summary, memory, studyMemory, isStudyContext, mistakeStats, turnInstruction) },
+    { role: 'system', content: archSystem(roomName, summary, memory, studyMemory, isStudyContext, mistakeStats, turnInstruction, studyReport) },
   ]
   for (const h of msgs.slice(-60)) {
     const content = textForAI(h.text)
@@ -455,6 +547,18 @@ Deno.serve(async (req) => {
         await db.from('study_mistakes').insert({ content, category, topic_id: topicId })
       } catch (e) {
         console.error('study_mistakes insert failed:', e)
+      }
+    }
+
+    // "打卡：..." is 二号机's raw material — gets extracted into study_logs so
+    // Arch's report reads a trend instead of everyone re-parsing prose.
+    const checkInMatch = isStudyContext ? text.match(/^打卡[:：]\s*([\s\S]+)/) : null
+    if (checkInMatch) {
+      try {
+        const parsed = await parseCheckIn(checkInMatch[1].trim())
+        if (parsed) await db.from('study_logs').insert(parsed)
+      } catch (e) {
+        console.error('study_logs insert failed:', e)
       }
     }
 
