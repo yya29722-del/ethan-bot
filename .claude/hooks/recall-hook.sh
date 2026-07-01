@@ -6,8 +6,11 @@ set -euo pipefail
 
 input=$(cat)
 prompt=$(echo "$input" | jq -r '.prompt // empty')
+prompt_len=$(printf '%s' "$prompt" | wc -m)
 
-if [ -z "$prompt" ] || [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+# Skip short/low-content messages ("亲" "行" "切" "干嘛" 等) — not worth an
+# embedding call, and firing on every single turn burns usage for nothing.
+if [ -z "$prompt" ] || [ "$prompt_len" -lt 8 ] || [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
   echo '{}'
   exit 0
 fi
