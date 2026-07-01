@@ -128,6 +128,24 @@ function chatCompletionsUrl(apiBase: string) {
   return base.endsWith('/chat/completions') ? base : `${base}/chat/completions`
 }
 
+function textForAI(text: string) {
+  const attachmentNames: string[] = []
+  const clean = String(text || '').replace(/\[\[RT_ATTACHMENT:([A-Za-z0-9+/=]+)\]\]/g, (_, encoded) => {
+    try {
+      const binary = atob(encoded)
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0))
+      const payload = JSON.parse(new TextDecoder().decode(bytes))
+      attachmentNames.push(payload?.name ? String(payload.name) : '文件')
+    } catch {
+      attachmentNames.push('文件')
+    }
+    return ''
+  }).trim()
+  if (!attachmentNames.length) return clean
+  const summary = attachmentNames.map((name) => `[附件：${name}]`).join('\n')
+  return [clean, summary].filter(Boolean).join('\n')
+}
+
 function assertNoDirectPaidApi(url: string) {
   const host = new URL(url).hostname
   const blocked = [
@@ -224,11 +242,12 @@ async function callCC(msgs: Msg[], userMsg: string, roomName: string, summary?: 
     { role: 'system', content: ccSystem(roomName, summary, studyMemory, isStudyContext, mistakeStats) },
   ]
   for (const h of msgs.slice(-60)) {
-    if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
-    else if (h.speaker === 'claude') messages.push({ role: 'assistant', content: h.text })
-    else messages.push({ role: 'user', content: `[${h.speaker === 'codex' ? 'Arch' : h.speaker}] ${h.text}` })
+    const content = textForAI(h.text)
+    if (h.speaker === 'user')   messages.push({ role: 'user', content })
+    else if (h.speaker === 'claude') messages.push({ role: 'assistant', content })
+    else messages.push({ role: 'user', content: `[${h.speaker === 'codex' ? 'Arch' : h.speaker}] ${content}` })
   }
-  messages.push({ role: 'user', content: userMsg })
+  messages.push({ role: 'user', content: textForAI(userMsg) })
   const res = await fetch(chatCompletionsUrl(apiBase), {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -257,11 +276,12 @@ async function callArchViaCodexRelay(msgs: Msg[], userMsg: string, roomName: str
     { role: 'system', content: archSystem(roomName, summary, memory, studyMemory, isStudyContext, mistakeStats) },
   ]
   for (const h of msgs.slice(-60)) {
-    if (h.speaker === 'user')   messages.push({ role: 'user', content: h.text })
-    else if (h.speaker === 'codex') messages.push({ role: 'assistant', content: h.text })
-    else messages.push({ role: 'user', content: `[${h.speaker === 'claude' ? 'yaya二号机' : h.speaker}] ${h.text}` })
+    const content = textForAI(h.text)
+    if (h.speaker === 'user')   messages.push({ role: 'user', content })
+    else if (h.speaker === 'codex') messages.push({ role: 'assistant', content })
+    else messages.push({ role: 'user', content: `[${h.speaker === 'claude' ? 'yaya二号机' : h.speaker}] ${content}` })
   }
-  messages.push({ role: 'user', content: userMsg })
+  messages.push({ role: 'user', content: textForAI(userMsg) })
   const res = await fetch(chatCompletionsUrl(apiBase), {
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
@@ -278,7 +298,7 @@ async function generateSummary(msgs: Msg[]): Promise<string> {
   const apiKey  = Deno.env.get('CHAT_API_KEY')!
   const model   = Deno.env.get('CHAT_API_MODEL') || Deno.env.get('CHAT_MODEL') || 'sonnet'
   const transcript = msgs.slice(-40)
-    .map(m => `[${m.speaker === 'claude' ? 'yaya二号机' : m.speaker === 'codex' ? 'Arch' : 'yaya'}] ${m.text}`)
+    .map(m => `[${m.speaker === 'claude' ? 'yaya二号机' : m.speaker === 'codex' ? 'Arch' : 'yaya'}] ${textForAI(m.text)}`)
     .join('\n')
   const res = await fetch(chatCompletionsUrl(apiBase), {
     method: 'POST',

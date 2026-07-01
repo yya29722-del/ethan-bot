@@ -77,6 +77,13 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
 .msg-row.user   .bubble{background:var(--champagne);border:1px solid var(--cc-border);border-radius:14px 14px 4px 14px;}
 .msg-row.claude .bubble{background:var(--cc-bg);border:1px solid var(--cc-border);border-radius:4px 14px 14px 14px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
 .msg-row.codex  .bubble{background:var(--arch-bg);border:1px solid var(--arch-border);border-radius:4px 14px 14px 14px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.bubble-text:empty{display:none;}
+.atts{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.att-img{display:block;max-width:min(280px,70vw);max-height:260px;border-radius:10px;border:1px solid rgba(201,168,76,.25);object-fit:cover;background:#fff;}
+.att-file{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;border:1px solid var(--gold-dim);background:rgba(255,253,249,.58);color:var(--text);text-decoration:none;white-space:normal;}
+.att-ico{font-size:18px;line-height:1;}
+.att-name{font-size:13px;font-weight:600;word-break:break-word;}
+.att-meta{font-size:10px;color:var(--text3);margin-top:1px;}
 .mtime{font-size:10px;color:var(--text3);}
 .msg-row.user .mtime{text-align:right;}
 .typing .bubble{display:flex;align-items:center;gap:4px;padding:12px 16px;}
@@ -97,6 +104,14 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
 .tbtn.active{background:var(--burgundy);color:#fff;border-color:var(--burgundy);}
 .irow{display:flex;gap:8px;align-items:flex-end;}
 #msg-input{flex:1;border:1px solid var(--gold-dim);border-radius:20px;padding:9px 14px;font-size:14px;background:rgba(255,253,249,.95);outline:none;font-family:inherit;color:var(--text);resize:none;max-height:120px;line-height:1.5;overflow-y:auto;}
+#attach-btn{width:36px;height:36px;border-radius:50%;background:rgba(201,168,76,.12);color:var(--text2);border:1px solid var(--gold-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#attach-btn:disabled{opacity:.4;}
+#file-input{display:none;}
+#attach-tray{display:none;gap:6px;flex-wrap:wrap;margin:0 0 8px;}
+#attach-tray.has{display:flex;}
+.chip-file{display:flex;align-items:center;gap:6px;max-width:210px;border:1px solid var(--gold-dim);border-radius:999px;background:rgba(255,253,249,.9);padding:5px 8px;font-size:11px;color:var(--text2);}
+.chip-file span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chip-file button{border:0;background:none;color:var(--burgundy);font-size:14px;cursor:pointer;line-height:1;}
 #send-btn{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--burgundy),#A02540);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 #send-btn:disabled{opacity:.4;}
 
@@ -165,7 +180,14 @@ body{font-family:-apple-system,sans-serif;background:var(--champagne);color:var(
       <button class="tbtn"        data-t="@claude"  onclick="setTarget(this)">@二号机</button>
       <button class="tbtn"        data-t="@codex"   onclick="setTarget(this)">@Arch</button>
     </div>
+    <div id="attach-tray"></div>
     <div class="irow">
+      <input id="file-input" type="file" multiple accept="image/*,.pdf,.txt,.md,.doc,.docx,.xls,.xlsx,.csv,.zip">
+      <button id="attach-btn" type="button" onclick="pickFiles()" title="添加图片或文件">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m21.4 11.6-9.8 9.8a5 5 0 0 1-7.1-7.1l10.4-10.4a3.5 3.5 0 0 1 5 5L9.5 19.3a2 2 0 1 1-2.8-2.8L16.5 6.7"/>
+        </svg>
+      </button>
       <textarea id="msg-input" rows="1" placeholder="说点什么…"
         onkeydown="onKey(event)" oninput="autoResize(this)"></textarea>
       <button id="send-btn" onclick="sendMsg()">
@@ -200,6 +222,10 @@ let S = { roomId:'room-main', topicId:'topic-main-1', roomName:'圆桌', topicNa
 let lastSig = '';
 let lastMessages = [];
 let selIcon = ICONS[0];
+let pendingFiles = [];
+const ATT_MARK = '[[RT_ATTACHMENT:';
+const MAX_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_FILES = 4;
 
 async function api(path, body, timeoutMs) {
   const ac = new AbortController();
@@ -296,6 +322,7 @@ function renderMsgs(msgs, summary) {
 function mkBubble(m) {
   const names    = {user:'yaya', claude:'yaya二号机', codex:'Arch'};
   const initials = {user:'y',    claude:'2', codex:'Ar'};
+  const parsed = parseAttachments(m.text || '');
   const row = document.createElement('div');
   row.className = 'msg-row ' + m.speaker;
   row.dataset.id = m.id;
@@ -304,9 +331,16 @@ function mkBubble(m) {
   av.textContent = initials[m.speaker] || m.speaker[0];
   const body = document.createElement('div');
   body.className = 'mbody';
-  body.innerHTML =
-    `<div class="mname">${names[m.speaker]||m.speaker}</div>` +
-    `<div class="bubble">${esc(m.text||'')}</div>`;
+  const name = document.createElement('div');
+  name.className = 'mname';
+  name.textContent = names[m.speaker] || m.speaker;
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  const text = document.createElement('div');
+  text.className = 'bubble-text';
+  text.textContent = parsed.text;
+  bubble.appendChild(text);
+  if (parsed.attachments.length) bubble.appendChild(renderAttachments(parsed.attachments));
   const timeRow = document.createElement('div');
   timeRow.className = 'mtime-row';
   const time = document.createElement('span');
@@ -319,7 +353,7 @@ function mkBubble(m) {
   exportBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
   exportBtn.onclick = () => exportMessage(m);
   timeRow.append(time, exportBtn);
-  body.append(timeRow);
+  body.append(name, bubble, timeRow);
   row.append(av, body);
   return row;
 }
@@ -406,12 +440,21 @@ function targetFromMention(text) {
 async function sendMsg() {
   if (S.busy) return;
   const inp  = document.getElementById('msg-input');
-  const text = (inp.value||'').trim();
-  if (!text) return;
-  const target = targetFromMention(text) || S.target;
+  const plainText = (inp.value||'').trim();
+  if (!plainText && !pendingFiles.length) return;
+  const target = targetFromMention(plainText) || S.target;
+  let text = plainText;
+  try {
+    text = await composeMessageText(plainText, pendingFiles);
+  } catch(e) {
+    alert(e.message);
+    return;
+  }
   inp.value = '';
   inp.style.height = 'auto';
+  clearPendingFiles();
   document.getElementById('send-btn').disabled = true;
+  document.getElementById('attach-btn').disabled = true;
   S.busy = true;
 
   // Optimistic
@@ -438,8 +481,157 @@ async function sendMsg() {
   } finally {
     S.busy = false;
     document.getElementById('send-btn').disabled = false;
+    document.getElementById('attach-btn').disabled = false;
     document.getElementById('msg-input').focus();
   }
+}
+
+function pickFiles() {
+  if (S.busy) return;
+  document.getElementById('file-input').click();
+}
+
+document.getElementById('file-input').addEventListener('change', (event) => {
+  const files = [...(event.target.files || [])];
+  for (const file of files) {
+    if (pendingFiles.length >= MAX_FILES) {
+      alert(`一次最多添加 ${MAX_FILES} 个文件`);
+      break;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      alert(`${file.name} 太大了，单个文件最多 2MB`);
+      continue;
+    }
+    pendingFiles.push(file);
+  }
+  event.target.value = '';
+  renderPendingFiles();
+});
+
+function renderPendingFiles() {
+  const tray = document.getElementById('attach-tray');
+  tray.innerHTML = '';
+  tray.classList.toggle('has', pendingFiles.length > 0);
+  pendingFiles.forEach((file, index) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip-file';
+    const label = document.createElement('span');
+    label.textContent = `${fileIcon(file.type)} ${file.name}`;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = '×';
+    btn.title = '移除';
+    btn.onclick = () => {
+      pendingFiles.splice(index, 1);
+      renderPendingFiles();
+    };
+    chip.append(label, btn);
+    tray.appendChild(chip);
+  });
+}
+
+function clearPendingFiles() {
+  pendingFiles = [];
+  renderPendingFiles();
+}
+
+async function composeMessageText(text, files) {
+  const chunks = [];
+  for (const file of files) {
+    const dataUrl = await readFileAsDataURL(file);
+    const payload = {
+      name: file.name || 'file',
+      type: file.type || 'application/octet-stream',
+      size: file.size || 0,
+      dataUrl,
+    };
+    chunks.push(`${ATT_MARK}${base64EncodeUtf8(JSON.stringify(payload))}]]`);
+  }
+  return [text, ...chunks].filter(Boolean).join('\n\n');
+}
+
+function parseAttachments(raw) {
+  let text = String(raw || '');
+  const attachments = [];
+  const re = /\[\[RT_ATTACHMENT:([A-Za-z0-9+/=]+)\]\]/g;
+  text = text.replace(re, (_, encoded) => {
+    try {
+      const payload = JSON.parse(base64DecodeUtf8(encoded));
+      if (payload && payload.dataUrl) attachments.push(payload);
+    } catch {
+      // Ignore malformed attachment payloads.
+    }
+    return '';
+  }).trim();
+  return { text, attachments };
+}
+
+function renderAttachments(attachments) {
+  const wrap = document.createElement('div');
+  wrap.className = 'atts';
+  attachments.forEach((att) => {
+    const type = att.type || '';
+    if (type.startsWith('image/')) {
+      const link = document.createElement('a');
+      link.href = att.dataUrl;
+      link.download = att.name || 'image';
+      link.target = '_blank';
+      const img = document.createElement('img');
+      img.className = 'att-img';
+      img.src = att.dataUrl;
+      img.alt = att.name || 'image';
+      link.appendChild(img);
+      wrap.appendChild(link);
+      return;
+    }
+    const link = document.createElement('a');
+    link.className = 'att-file';
+    link.href = att.dataUrl;
+    link.download = att.name || 'file';
+    const ico = document.createElement('div');
+    ico.className = 'att-ico';
+    ico.textContent = fileIcon(type);
+    const box = document.createElement('div');
+    const name = document.createElement('div');
+    name.className = 'att-name';
+    name.textContent = att.name || 'file';
+    const meta = document.createElement('div');
+    meta.className = 'att-meta';
+    meta.textContent = [type || 'file', fmtSize(att.size)].filter(Boolean).join(' · ');
+    box.append(name, meta);
+    link.append(ico, box);
+    wrap.appendChild(link);
+  });
+  return wrap;
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error(`读取文件失败：${file.name || 'file'}`));
+    reader.readAsDataURL(file);
+  });
+}
+
+function base64EncodeUtf8(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = '';
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return btoa(binary);
+}
+
+function base64DecodeUtf8(value) {
+  const binary = atob(value);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function fileIcon(type) {
+  if ((type || '').startsWith('image/')) return '图';
+  if ((type || '').includes('pdf')) return 'PDF';
+  if ((type || '').includes('zip')) return 'ZIP';
+  return 'FILE';
 }
 
 async function switchRoom(id) {
@@ -497,6 +689,13 @@ function autoResize(ta) { ta.style.height='auto'; ta.style.height=Math.min(ta.sc
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fmtTime(iso) { if(!iso)return''; return new Date(iso).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false}); }
 function fmtDate(iso) { if(!iso)return''; return new Date(iso).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'}); }
+function fmtSize(value) {
+  const n = Number(value || 0);
+  if (!n) return '';
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (Math.round(n / 102.4) / 10) + ' KB';
+  return (Math.round(n / 1024 / 102.4) / 10) + ' MB';
+}
 function fmtDay(iso) {
   if(!iso)return'';
   const d=new Date(iso), n=new Date(), diff=Math.floor((n-d)/86400000);
