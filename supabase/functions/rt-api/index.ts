@@ -404,14 +404,20 @@ Deno.serve(async (req) => {
   if (path === 'new-topic') {
     const currentTopicId = String(body.currentTopicId || topicId)
 
-    // Generate summary of current conversation
-    const [{ data: recentMsgs }, { data: currentTopic }, room] = await Promise.all([
+    // Generate summary of current conversation (most recent messages, not the oldest)
+    const [{ data: recentMsgsDesc }, { data: currentTopic }, room] = await Promise.all([
       db.from('rt_messages').select('speaker,text')
-        .eq('topic_id', currentTopicId).order('at', { ascending: true }).limit(60),
+        .eq('topic_id', currentTopicId).order('at', { ascending: false }).limit(60),
       db.from('rt_topics').select('display_name').eq('id', currentTopicId).single(),
       getRoomOrDefault(db, roomId),
     ])
-    const summary = await generateSummary((recentMsgs || []) as Msg[])
+    const recentMsgs = (recentMsgsDesc || []).slice().reverse()
+    let summary = ''
+    try {
+      summary = await withTimeout(generateSummary(recentMsgs as Msg[]), 25000, 'summary')
+    } catch (e) {
+      console.error('generateSummary failed/timed out:', e)
+    }
 
     // Study rooms/topics: also persist the summary permanently so it survives
     // beyond the single-hop parent_summary chain (see getRecentStudyNotes).
