@@ -369,8 +369,28 @@ function mkBubble(m) {
   return row;
 }
 
-function downloadText(filename, content) {
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+function safeFilename(s) {
+  return String(s || '').replace(/[\\/:*?"<>|]/g, '').trim().slice(0, 40) || 'untitled';
+}
+
+// Minimal markdown → HTML: **bold**, paragraph breaks, single line breaks.
+// Word opens HTML saved as .doc directly (a long-supported legacy format),
+// so this needs no external library to produce a real Word-openable file.
+function mdToHtml(text) {
+  return String(text || '')
+    .split(/\n\n+/)
+    .map(block => `<p>${esc(block).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</p>`)
+    .join('');
+}
+
+function downloadDoc(filename, title, bodyHtml) {
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><title>${esc(title)}</title></head>
+<body style="font-family:Calibri,Arial,sans-serif;font-size:14px;line-height:1.6;">
+<h2>${esc(title)}</h2>
+${bodyHtml}
+</body></html>`;
+  const blob = new Blob(['﻿', html], { type: 'application/msword' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -381,27 +401,20 @@ function downloadText(filename, content) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function safeFilename(s) {
-  return String(s || '').replace(/[\\/:*?"<>|]/g, '').trim().slice(0, 40) || 'untitled';
-}
-
 function exportMessage(m) {
   const names = {user:'yaya', claude:'yaya二号机', codex:'Arch'};
   const name = names[m.speaker] || m.speaker;
-  const content = `[${name}] ${fmtTime(m.at)}\n\n${m.text || ''}\n`;
-  downloadText(`${safeFilename(name)}-${Date.now()}.txt`, content);
+  const title = `${name} · ${fmtTime(m.at)} ${fmtDate(m.at)}`;
+  downloadDoc(`${safeFilename(name)}-${Date.now()}.doc`, title, mdToHtml(m.text));
 }
 
 function exportConversation() {
   if (!lastMessages.length) { alert('这个对话还没有消息'); return; }
   const names = {user:'yaya', claude:'yaya二号机', codex:'Arch'};
-  const lines = [`${S.roomName} · ${S.topicName}`, ''];
-  lastMessages.forEach(m => {
-    lines.push(`[${names[m.speaker] || m.speaker}] ${fmtTime(m.at)} ${fmtDate(m.at)}`);
-    lines.push(m.text || '');
-    lines.push('');
-  });
-  downloadText(`${safeFilename(S.topicName)}-${Date.now()}.txt`, lines.join('\n'));
+  const body = lastMessages.map(m =>
+    `<p style="color:#888;font-size:11px;margin-bottom:2px;">[${esc(names[m.speaker] || m.speaker)}] ${fmtTime(m.at)} ${fmtDate(m.at)}</p>${mdToHtml(m.text)}`
+  ).join('<hr>');
+  downloadDoc(`${safeFilename(S.topicName)}-${Date.now()}.doc`, `${S.roomName} · ${S.topicName}`, body);
 }
 
 function addTyping(sp) {
