@@ -83,7 +83,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 function targetFromMention(text: string): 'round' | '@claude' | '@codex' | null {
-  const wantsCC = /@(cc|claude|ethan|yaya二号机|二号机)\b/i.test(text)
+  const wantsCC = /@(cc|claude|ethan|yaya二号机|二号机)(?=\s|$|[，。！？,.!?])/i.test(text)
   const wantsArch = /@(arch|gpt)\b/i.test(text)
   if (wantsCC && wantsArch) return 'round'
   if (wantsCC) return '@claude'
