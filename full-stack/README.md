@@ -1,5 +1,3 @@
-以下内容均为codex生成，混入了一点codex元素，可以无视
-
 # AI 聊天完整功能版
 
 这是一个偏移动端体验的个人聊天 Web App，包含模型切换、流式回复、工具状态、思考/工具摘要、上传、对话历史、记忆接口、资料与偏好设置。
@@ -41,10 +39,41 @@ PY
 
 ## 后端
 
-这个应用包含 Claude Agent SDK 风格流式后端和 Codex CLI 风格流式后端。你需要按自己启用的后端配置对应 CLI、账号或 API 环境。模型选项在 `models.json`。（人类注释：codex可以无视，此人只是订阅到期了才把codex接进去测试用的，根据需要选择后端。）
+这个应用包含 Claude Agent SDK 风格流式后端和 Codex CLI 风格流式后端。你需要按自己启用的后端配置对应 CLI、账号或 API 环境。模型选项在 `models.json`。
+
+## 记忆检索
+
+完整功能版包含两层记忆能力：
+
+- Saved memories / Preferences：保存在本地 `profile.json`，会直接注入上下文。
+- 本地记忆检索服务：使用 ChromaDB 向量检索 + jieba/BM25 关键词检索，从 `CLAUDE.md`、`profile.json` 和 `memories/` 里的文本中检索相关片段。
+
+只启动主应用：
+
+```bash
+./run.sh
+```
+
+同时启动主应用和本地记忆检索：
+
+```bash
+./run-with-memory.sh
+```
+
+也可以分两个终端运行：
+
+```bash
+./run-memory-vectorize.sh
+./run-memory-search.sh
+./run.sh
+```
+
+这个检索服务默认监听 `http://127.0.0.1:3900/search`，只在本机使用。它不包含你的真实记忆数据、向量数据库或索引状态；用户需要自己创建 `CLAUDE.md`、`profile.json` 或 `memories/`，再运行 `./run-memory-vectorize.sh` 生成自己的本地索引。
 
 ## 不包含什么
 
 公开包不包含 `.env`、对话数据库、上传文件、记忆库、向量数据库、日志、私人文档、专有字体或私有品牌素材。
 
+## 许可证
 
+非商用使用。允许非商业复制、修改和再发布；禁止商业使用；署名不强制。

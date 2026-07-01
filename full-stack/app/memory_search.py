@@ -1,16 +1,17 @@
-"""Client for the local memory search service (memory/search.py @ localhost:3900).
+"""Client for the optional local memory search service (memory_search_service @ localhost:3900).
 
 Failures are swallowed silently — memory recall is best-effort context;
 it should never block or break the chat flow.
 """
 import json
+import os
 import logging
 import urllib.error
 import urllib.request
 
 logger = logging.getLogger(__name__)
 
-SEARCH_URL = "http://127.0.0.1:3900/search"
+SEARCH_URL = os.environ.get("MEMORY_SEARCH_URL", "http://127.0.0.1:3900/search")
 TIMEOUT = 1.5  # seconds — bail out rather than block the chat
 MIN_QUERY_CHARS = 4
 
