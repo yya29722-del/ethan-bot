@@ -424,6 +424,43 @@ function textForAI(text: string) {
   return [clean, summary].filter(Boolean).join('\n')
 }
 
+function shouldAttachTrainingPack(instruction: string, userText: string, reply: string) {
+  const combined = `${instruction}\n${userText}\n${reply}`
+  const wantsPlan = /安排|任务|计划|怎么学|从哪开始|下一步|今日|今天|明天|题单|训练包|练习|开写|开始写|Word|word|文档|pdf|PDF/.test(combined)
+  const isOnlyReview = /讲题|解析|判题|批改|为什么错|答案/.test(combined) && !/任务|安排|计划|题单|训练包|文档|Word|word/.test(combined)
+  if (!wantsPlan || isOnlyReview) return false
+  return /【任务】|今日任务|今天|明天|训练包|题单|阅读|长难句|词汇|翻译|作文|开写/.test(reply)
+}
+
+function trainingPackAttachmentMarker(pack: Record<string, unknown>) {
+  const title = String(pack.title || `${dateTextInShanghai()} 考研英语训练包`)
+  const html = String(pack.doc_html || pack.plain_text || title)
+  const fileName = `${safeAttachmentFileName(title)}.doc`
+  const data = base64EncodeUtf8(`\ufeff${html}`)
+  const payload = {
+    name: fileName,
+    type: 'application/msword',
+    size: new TextEncoder().encode(html).length,
+    dataUrl: `data:application/msword;base64,${data}`,
+  }
+  return `[[RT_ATTACHMENT:${base64EncodeUtf8(JSON.stringify(payload))}]]`
+}
+
+function safeAttachmentFileName(value: string) {
+  return String(value || '考研英语训练包')
+    .replace(/[\\/:*?"<>|]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80) || '考研英语训练包'
+}
+
+function base64EncodeUtf8(value: string) {
+  const bytes = new TextEncoder().encode(value)
+  let binary = ''
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return btoa(binary)
+}
+
 function assertNoDirectPaidApi(url: string) {
   const host = new URL(url).hostname
   const blocked = [
@@ -627,7 +664,16 @@ async function runAgentTurn(db: DB, roomId: string, topicId: string, turn: Turn,
     ? await withTimeout(callArch(history, userText || '继续', roomName, summary, studyMemory, longStudyMemory, isStudyContext, studyReport, decisionLog, turn.instruction), 55000, label)
     : await withTimeout(callCC(history, userText || '继续', roomName, summary, studyMemory, longStudyMemory, isStudyContext, studyReport, turn.instruction), 55000, label)
   if (reply) {
-    await db.from('rt_messages').insert({ topic_id: topicId, speaker: agent, text: reply })
+    let replyToStore = reply
+    if (isStudyContext && agent === 'codex' && shouldAttachTrainingPack(turn.instruction, userText, reply)) {
+      try {
+        const pack = await withTimeout(buildTrainingPack(db, dateTextInShanghai()), 90000, 'training pack attachment')
+        replyToStore = `${reply}\n\n${trainingPackAttachmentMarker(pack)}`
+      } catch (e) {
+        console.error('training pack attachment failed', errorMessage(e))
+      }
+    }
+    await db.from('rt_messages').insert({ topic_id: topicId, speaker: agent, text: replyToStore })
     if (isStudyContext) {
       if (agent === 'claude') {
         await maybeInsertDiagnosisReport(db, reply, topicId, studyReport)
