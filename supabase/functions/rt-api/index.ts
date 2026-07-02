@@ -461,6 +461,78 @@ function base64EncodeUtf8(value: string) {
   return btoa(binary)
 }
 
+async function getOrBuildInlineTrainingPack(db: DB, archReply: string) {
+  const packDate = dateTextInShanghai()
+  const existing = await db.from('study_training_packs')
+    .select('id,pack_date,title,focus,tasks,doc_html,plain_text,created_at')
+    .eq('pack_date', packDate)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (existing.data) return existing.data
+
+  const [dashboard, blueprintsRes] = await Promise.all([
+    buildStudyDashboard(db),
+    db.from('study_exam_blueprints')
+      .select('id,title,summary,tags,created_at')
+      .order('created_at', { ascending: false })
+      .limit(3),
+  ])
+  const blueprints = (blueprintsRes.data || []) as Array<{ id: string; title: string; summary: string | null; tags: string[] | null }>
+  const tasks = extractArchTasksForDoc(archReply)
+  const topError = String(((dashboard.errors as Record<string, unknown> | undefined)?.ranking as Array<Record<string, unknown>> | undefined)?.[0]?.category || '选项辨析')
+  const refTitle = blueprints[0]?.title || '暂无真题蓝图'
+  const title = `${packDate} Arch今日训练单`
+  const focus = tasks[0] || `快速启动：${topError}`
+  const docHtml = normalizeDocHtml(`
+    <h1>${escapeDocHtml(title)}</h1>
+    <p><b>今日依据：</b>Arch本轮安排 + 二号机错因记录 + 最近真题蓝图。</p>
+    <p><b>高频修复点：</b>${escapeDocHtml(topError)}</p>
+    <p><b>参考蓝图：</b>${escapeDocHtml(refTitle)}</p>
+    <h2>一、今日任务</h2>
+    ${tasks.length ? `<ol>${tasks.map((task) => `<li>${escapeDocHtml(task)}</li>`).join('')}</ol>` : `<p>${escapeDocHtml(stripAttachmentMarkers(archReply))}</p>`}
+    <h2>二、开写区</h2>
+    <p>阅读/题号：__________ 用时：__________ 正确数：__________</p>
+    <p>答案：1.___ 2.___ 3.___ 4.___ 5.___</p>
+    <p>定位句：</p>
+    <p>1. __________</p><p>2. __________</p><p>3. __________</p><p>4. __________</p><p>5. __________</p>
+    <h2>三、错因回填</h2>
+    <p>把每道错题归类：A 单词 / B 长难句 / C 推理 / D 定位 / E 干扰项。</p>
+    <p>错题1：题号___ 错因___ 证据句___</p>
+    <p>错题2：题号___ 错因___ 证据句___</p>
+    <p>错题3：题号___ 错因___ 证据句___</p>
+    <h2>四、交回二号机</h2>
+    <p>完成后直接把答案、用时、错题和错因发回考研房；二号机只记录和诊断，Arch再据此调整下一天。</p>
+  `, title)
+  const plainText = tasks.join('\n') || stripAttachmentMarkers(archReply)
+  const sourceIds = blueprints.map((bp) => bp.id)
+  const insert = await db.from('study_training_packs').insert({
+    pack_date: packDate,
+    title,
+    focus,
+    tasks,
+    source_blueprint_ids: sourceIds,
+    doc_html: docHtml,
+    plain_text: plainText,
+    metadata: { generatedBy: 'arch-inline', blueprintCount: blueprints.length, quick: true },
+  }).select('id,pack_date,title,focus,tasks,doc_html,plain_text,created_at').single()
+  if (insert.data) return insert.data
+  return { title, focus, tasks, doc_html: docHtml, plain_text: plainText }
+}
+
+function extractArchTasksForDoc(text: string) {
+  const clean = stripAttachmentMarkers(text)
+  const taskSection = clean.match(/【任务】([\s\S]*?)(?=\n【|$)/)?.[1] || clean
+  return taskSection.split(/\r?\n/)
+    .map((line) => line.replace(/^\s*(?:[-*•]|\d+[.、])\s*/, '').trim())
+    .filter((line) => line.length >= 4 && !/^【/.test(line))
+    .slice(0, 8)
+}
+
+function stripAttachmentMarkers(text: string) {
+  return String(text || '').replace(/\[\[RT_ATTACHMENT:([A-Za-z0-9+/=]+)\]\]/g, '').trim()
+}
+
 function assertNoDirectPaidApi(url: string) {
   const host = new URL(url).hostname
   const blocked = [
@@ -667,7 +739,7 @@ async function runAgentTurn(db: DB, roomId: string, topicId: string, turn: Turn,
     let replyToStore = reply
     if (isStudyContext && agent === 'codex' && shouldAttachTrainingPack(turn.instruction, userText, reply)) {
       try {
-        const pack = await withTimeout(buildTrainingPack(db, dateTextInShanghai()), 90000, 'training pack attachment')
+        const pack = await getOrBuildInlineTrainingPack(db, reply)
         replyToStore = `${reply}\n\n${trainingPackAttachmentMarker(pack)}`
       } catch (e) {
         console.error('training pack attachment failed', errorMessage(e))
