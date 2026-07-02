@@ -422,6 +422,14 @@ function renderStudyDash(data) {
         <h3>Daily Pack</h3>
         ${renderPackTools(data.exam || {})}
       </div>
+      <div class="dash-card">
+        <h3>Long Plan</h3>
+        ${renderLongPlan(data.plan || {})}
+      </div>
+      <div class="dash-card">
+        <h3>Coverage Matrix</h3>
+        ${renderCoverageMatrix(data.plan || {})}
+      </div>
     </div>
   `;
 }
@@ -491,6 +499,42 @@ function renderPackTools(exam) {
     </div>
     <div id="pack-status" class="dash-status">${packs[0] ? `最近：${esc(packs[0].title)}` : '还没有训练包。'}</div>
     ${packs.length ? `<div class="dash-list" style="margin-top:8px">${packs.slice(0,3).map(pack => `<div class="dash-item"><strong>${esc(pack.pack_date || '')}</strong> ${esc(pack.title)}<br>${esc(pack.focus || '')}</div>`).join('')}</div>` : ''}
+  `;
+}
+
+function renderLongPlan(plan) {
+  const phase = plan.currentPhase || {};
+  const summary = plan.coverageSummary || {};
+  const phases = plan.phases || [];
+  if (!phase.phase_name && !phases.length) return '<div class="dash-empty">长线计划还没有初始化。</div>';
+  return `
+    <div class="dash-item">
+      <strong>${esc(phase.phase_name || '当前阶段')}</strong><br>
+      ${esc((phase.start_date || '').slice(5))} - ${esc((phase.end_date || '').slice(5))}
+      <div class="dash-bar"><i style="width:${Math.max(3, summary.percent || 0)}%"></i></div>
+      覆盖完成 ${summary.completed || 0}/${summary.total || 0} · 已安排 ${summary.planned || 0}
+    </div>
+    <div class="dash-list">
+      ${phases.slice(0,5).map(item => `<div class="dash-item">${item.status === 'active' ? '▶ ' : ''}${esc(item.phase_name)} · ${esc(item.status)}</div>`).join('')}
+    </div>
+  `;
+}
+
+function renderCoverageMatrix(plan) {
+  const gaps = plan.gaps || [];
+  const recent = plan.recent || [];
+  if (!gaps.length && !recent.length) return '<div class="dash-empty">覆盖矩阵还没有数据。</div>';
+  return `
+    <div class="dash-item"><strong>优先缺口</strong></div>
+    <div class="dash-list">
+      ${gaps.slice(0,5).map(item => `
+        <div class="dash-item">
+          ${esc(item.module)} / ${esc(item.point)}
+          <div class="dash-bar"><i style="width:${Math.min(100, Math.round((item.planned_count || 0) / Math.max(1, item.target_count || 1) * 100))}%"></i></div>
+          计划 ${item.planned_count || 0}/${item.target_count || 0} · 掌握 ${item.mastery || 0}
+        </div>`).join('')}
+    </div>
+    ${recent.length ? `<div class="dash-item"><strong>近期已安排</strong><br>${recent.slice(0,4).map(item => `${esc(item.module)}/${esc(item.point)}`).join(' · ')}</div>` : ''}
   `;
 }
 

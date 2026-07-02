@@ -814,12 +814,13 @@ function fallbackExamAnalysis(title: string, rawText: string, reason: string) {
 
 async function buildTrainingPack(db: DB, requestedDate?: string) {
   const packDate = requestedDate || dateTextInShanghai()
-  const [dashboard, blueprintsRes] = await Promise.all([
+  const [dashboard, blueprintsRes, coverageContext] = await Promise.all([
     buildStudyDashboard(db),
     db.from('study_exam_blueprints')
       .select('id,title,summary,tags,blueprint,created_at')
       .order('created_at', { ascending: false })
       .limit(5),
+    getCoverageContext(db),
   ])
   const blueprints = (blueprintsRes.data || []) as ExamBlueprintRow[]
   const compactBlueprints = blueprints.map((bp) => ({
@@ -839,6 +840,9 @@ async function buildTrainingPack(db: DB, requestedDate?: string) {
         recent: dashboard.recent,
         memory: (dashboard.memory || []).slice(0, 6),
         goal: dashboard.goal,
+        phase: coverageContext.currentPhase,
+        coverage_gaps: coverageContext.gaps,
+        recently_planned: coverageContext.recent,
       },
     },
     exam_blueprints: compactBlueprints,
@@ -855,8 +859,10 @@ async function buildTrainingPack(db: DB, requestedDate?: string) {
     result = await withTimeout(callStudyJson(
       [
         '你是Arch，考研英语主教练。',
-        '基于真题蓝图和二号机病历生成每日训练包。',
-        '必须省token：只使用给你的蓝图摘要，不要求读取完整真题。',
+      '基于真题蓝图和二号机病历生成每日训练包。',
+      '必须读取当前阶段和覆盖矩阵缺口，保证考前覆盖完整，不要每天无脑重复。',
+      '训练包内容比例：60%当前阶段推进，25%高频错因修复，15%复习/防遗忘。',
+      '必须省token：只使用给你的蓝图摘要，不要求读取完整真题。',
         '训练包必须具体可写：阅读材料/题目/选项/长难句/词汇/翻译句都要给出来。',
         '题目应为原创仿真题，不抄原真题原文；但结构、考点、干扰项模式要参考蓝图。',
         '作文若当前策略暂缓，可只保留低阻力句型/素材，不强制整篇。',
@@ -872,6 +878,7 @@ async function buildTrainingPack(db: DB, requestedDate?: string) {
   const title = String(result.title || `${packDate} 考研英语训练包`)
   const tasks = Array.isArray(result.tasks) ? result.tasks.map(String) : []
   const focus = String(result.focus || tasks[0] || '真题蓝图定制训练')
+  const coveragePoints = normalizeCoveragePoints(result.coverage_points, coverageContext)
   const docHtml = normalizeDocHtml(String(result.doc_html || result.plain_text || title), title)
   const plainText = String(result.plain_text || tasks.join('\n'))
   const sourceIds = blueprints.map((bp) => bp.id)
@@ -883,15 +890,16 @@ async function buildTrainingPack(db: DB, requestedDate?: string) {
     source_blueprint_ids: sourceIds,
     doc_html: docHtml,
     plain_text: plainText,
-    metadata: { generatedBy: 'arch', blueprintCount: blueprints.length },
+    metadata: { generatedBy: 'arch', blueprintCount: blueprints.length, coveragePoints },
   }).select('id,pack_date,title,focus,tasks,doc_html,plain_text,created_at').single()
   if (error) throw new Error(error.message)
+  await markCoveragePlanned(db, coveragePoints, packDate)
   await db.from('study_daily_tasks').insert({
     task_date: packDate,
     tasks,
     focus,
     source_report_id: `pack-${data.id}`,
-    metadata: { trainingPackId: data.id, sourceBlueprintIds: sourceIds },
+    metadata: { trainingPackId: data.id, sourceBlueprintIds: sourceIds, coveragePoints },
   })
   await db.from('study_decision_logs').insert({
     changed: tasks,
@@ -903,6 +911,105 @@ async function buildTrainingPack(db: DB, requestedDate?: string) {
     source_report_id: `pack-${data.id}`,
   })
   return data
+}
+
+async function getCoverageContext(db: DB) {
+  const [phaseRes, coverageRes] = await Promise.all([
+    db.from('study_phase_plan')
+      .select('phase_name,start_date,end_date,goals,focus_modules,exit_conditions,status,sort_order')
+      .order('sort_order', { ascending: true }),
+    db.from('study_coverage_matrix')
+      .select('module,point,target_count,planned_count,completed_count,mastery,priority,status,last_planned_at,last_completed_at')
+      .order('priority', { ascending: true })
+      .order('planned_count', { ascending: true })
+      .limit(80),
+  ])
+  const phases = (phaseRes.data || []) as PhaseRow[]
+  const coverage = (coverageRes.data || []) as CoverageRow[]
+  const currentPhase = phases.find((p) => p.status === 'active') || phases[0] || null
+  const activeModules = new Set((currentPhase?.focus_modules || []).map(String))
+  const gaps = coverage
+    .filter((item) => item.completed_count < item.target_count)
+    .sort((a, b) => coverageScore(b, activeModules) - coverageScore(a, activeModules))
+    .slice(0, 12)
+  const recent = coverage
+    .filter((item) => item.last_planned_at || item.last_completed_at)
+    .sort((a, b) => String(b.last_planned_at || b.last_completed_at).localeCompare(String(a.last_planned_at || a.last_completed_at)))
+    .slice(0, 8)
+  return { phases, currentPhase, coverage, gaps, recent }
+}
+
+type PhaseRow = {
+  phase_name: string
+  start_date: string | null
+  end_date: string | null
+  goals: string[] | null
+  focus_modules: string[] | null
+  exit_conditions: string[] | null
+  status: string
+  sort_order: number
+}
+
+type CoverageRow = {
+  module: string
+  point: string
+  target_count: number
+  planned_count: number
+  completed_count: number
+  mastery: number
+  priority: string
+  status: string
+  last_planned_at: string | null
+  last_completed_at: string | null
+}
+
+function coverageScore(item: CoverageRow, activeModules: Set<string>) {
+  const priority = item.priority === 'high' ? 30 : item.priority === 'medium' ? 15 : 0
+  const phase = activeModules.has(item.module) ? 35 : 0
+  const gap = Math.max(0, item.target_count - item.completed_count)
+  const notPlanned = Math.max(0, item.target_count - item.planned_count)
+  const masteryPenalty = Math.max(0, 80 - (item.mastery || 0)) / 4
+  return phase + priority + gap + notPlanned + masteryPenalty
+}
+
+function normalizeCoveragePoints(value: unknown, context: Awaited<ReturnType<typeof getCoverageContext>>) {
+  const raw = Array.isArray(value) ? value : []
+  const known = new Map(context.coverage.map((item) => [`${item.module}:${item.point}`, item]))
+  const parsed = raw.map((item) => {
+    if (typeof item === 'string') {
+      const [module, point] = item.includes(':') ? item.split(':', 2) : ['', item]
+      return { module: module.trim(), point: point.trim() }
+    }
+    const obj = item as Record<string, unknown>
+    return { module: String(obj.module || '').trim(), point: String(obj.point || obj.name || '').trim() }
+  }).filter((item) => item.module && item.point && known.has(`${item.module}:${item.point}`))
+  if (parsed.length) return parsed.slice(0, 8)
+  return context.gaps.slice(0, 4).map((item) => ({ module: item.module, point: item.point }))
+}
+
+async function markCoveragePlanned(db: DB, points: Array<{ module: string; point: string }>, date: string) {
+  for (const item of points) {
+    try {
+      await db.rpc('increment_study_coverage_planned', {
+        p_module: item.module,
+        p_point: item.point,
+        p_date: date,
+      })
+    } catch {
+      const { data } = await db.from('study_coverage_matrix')
+        .select('planned_count,completed_count,target_count')
+        .eq('module', item.module)
+        .eq('point', item.point)
+        .single()
+      if (!data) continue
+      const nextPlanned = Number(data.planned_count || 0) + 1
+      const nextStatus = Number(data.completed_count || 0) > 0 ? 'in_progress' : 'planned'
+      await db.from('study_coverage_matrix')
+        .update({ planned_count: nextPlanned, last_planned_at: date, status: nextStatus })
+        .eq('module', item.module)
+        .eq('point', item.point)
+    }
+  }
 }
 
 function fallbackTrainingPack(packDate: string, blueprints: Array<Record<string, unknown>>, dashboard: Record<string, unknown>, reason: string) {
@@ -1014,6 +1121,7 @@ async function buildStudyDashboard(db: DB) {
     goalsRes,
     blueprintsRes,
     packsRes,
+    coverageContext,
   ] = await Promise.all([
     db.from('study_daily_logs')
       .select('raw_text, completed, missed, reading_accuracy, minutes, metadata, created_at')
@@ -1052,6 +1160,7 @@ async function buildStudyDashboard(db: DB) {
       .select('id,pack_date,title,focus,tasks,created_at')
       .order('created_at', { ascending: false })
       .limit(5),
+    getCoverageContext(db),
   ])
 
   const dailyLogs = (dailyRes.data || []) as StudyDailyRow[]
@@ -1095,6 +1204,27 @@ async function buildStudyDashboard(db: DB) {
       blueprints: blueprintsRes.data || [],
       packs: packsRes.data || [],
     },
+    plan: {
+      phases: coverageContext.phases,
+      currentPhase: coverageContext.currentPhase,
+      gaps: coverageContext.gaps.slice(0, 10),
+      recent: coverageContext.recent.slice(0, 8),
+      coverageSummary: summarizeCoverage(coverageContext.coverage),
+    },
+  }
+}
+
+function summarizeCoverage(items: CoverageRow[]) {
+  const total = items.length
+  const completed = items.filter((item) => item.completed_count >= item.target_count).length
+  const planned = items.filter((item) => item.planned_count > 0).length
+  const weak = items.filter((item) => item.status === 'weak' || item.mastery < 50).length
+  return {
+    total,
+    completed,
+    planned,
+    weak,
+    percent: total ? Math.round(completed / total * 100) : 0,
   }
 }
 

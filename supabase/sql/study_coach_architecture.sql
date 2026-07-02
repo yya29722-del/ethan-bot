@@ -153,6 +153,131 @@ create table if not exists study_submissions (
 
 create index if not exists study_submissions_created_at_idx on study_submissions (created_at desc);
 
+-- long-range plan / 长线阶段计划
+create table if not exists study_phase_plan (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  sort_order integer not null default 0,
+  phase_name text not null,
+  start_date date,
+  end_date date,
+  goals text[] not null default array[]::text[],
+  focus_modules text[] not null default array[]::text[],
+  entry_conditions text[] not null default array[]::text[],
+  exit_conditions text[] not null default array[]::text[],
+  status text not null default 'pending',
+  adjustment_reason text,
+  metadata jsonb not null default '{}'::jsonb
+);
+
+create index if not exists study_phase_plan_status_idx on study_phase_plan (status, sort_order);
+
+-- coverage matrix / 考点覆盖矩阵
+create table if not exists study_coverage_matrix (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  module text not null,
+  point text not null,
+  target_count integer not null default 8,
+  planned_count integer not null default 0,
+  completed_count integer not null default 0,
+  mastery integer not null default 0,
+  priority text not null default 'medium',
+  status text not null default 'not_started',
+  last_planned_at date,
+  last_completed_at date,
+  metadata jsonb not null default '{}'::jsonb,
+  unique(module, point)
+);
+
+create index if not exists study_coverage_matrix_status_idx on study_coverage_matrix (status, priority, module);
+
+create or replace function increment_study_coverage_planned(p_module text, p_point text, p_date date)
+returns void
+language sql
+as $$
+  update study_coverage_matrix
+  set planned_count = planned_count + 1,
+      last_planned_at = p_date,
+      status = case
+        when completed_count > 0 then 'in_progress'
+        else 'planned'
+      end,
+      updated_at = now()
+  where module = p_module and point = p_point;
+$$;
+
+-- Default phase map. Dates can be adjusted by Arch later.
+insert into study_phase_plan (sort_order, phase_name, start_date, end_date, goals, focus_modules, entry_conditions, exit_conditions, status) values
+  (1, '阅读基础期', '2026-07-01', '2026-07-31',
+   array['阅读正确率稳定到70%', '建立词汇与长难句基础', '形成每日训练节奏'],
+   array['阅读', '词汇', '长难句'],
+   array['开始考研房训练'],
+   array['阅读正确率连续7天达到70%', '阅读训练连续7天完成'],
+   'active'),
+  (2, '阅读强化与翻译启动期', '2026-08-01', '2026-08-31',
+   array['阅读稳定到75%', '推理题和干扰项显著下降', '翻译断句与主干识别成型'],
+   array['阅读', '翻译', '长难句'],
+   array['阅读基础期达标或7月结束'],
+   array['阅读限时稳定', '翻译基础模块覆盖过半'],
+   'pending'),
+  (3, '作文启动与套题过渡期', '2026-09-01', '2026-09-30',
+   array['作文结构成型', '套题节奏开始稳定', '阅读错因进入压缩阶段'],
+   array['作文', '阅读', '翻译'],
+   array['阅读基础稳定', '作文启动阻力下降'],
+   array['大小作文模板完成', '至少完成4套组合训练'],
+   'pending'),
+  (4, '真题二刷与弱项专项期', '2026-10-01', '2026-10-31',
+   array['二刷真题并压缩高频错因', '专项补齐薄弱题型', '稳定限时表现'],
+   array['阅读', '翻译', '作文'],
+   array['主要模块已启动'],
+   array['高频错因下降', '整套训练完成率稳定'],
+   'pending'),
+  (5, '整卷模拟与冲刺期', '2026-11-01', '2026-12-20',
+   array['整卷时间管理稳定', '作文可稳定输出', '错题库压缩复盘'],
+   array['整卷', '作文', '错题复盘'],
+   array['基础模块覆盖完成'],
+   array['考前状态稳定'],
+   'pending')
+on conflict do nothing;
+
+insert into study_coverage_matrix (module, point, target_count, priority, status) values
+  ('阅读', '细节题', 20, 'high', 'not_started'),
+  ('阅读', '推理题', 18, 'high', 'not_started'),
+  ('阅读', '主旨题', 12, 'medium', 'not_started'),
+  ('阅读', '态度题', 10, 'medium', 'not_started'),
+  ('阅读', '词义题', 10, 'medium', 'not_started'),
+  ('阅读', '例证题', 8, 'medium', 'not_started'),
+  ('阅读', '篇章结构题', 8, 'medium', 'not_started'),
+  ('阅读', '干扰项辨析', 20, 'high', 'not_started'),
+  ('长难句', '定语从句', 12, 'high', 'not_started'),
+  ('长难句', '状语从句', 10, 'medium', 'not_started'),
+  ('长难句', '名词性从句', 10, 'medium', 'not_started'),
+  ('长难句', '非谓语', 12, 'high', 'not_started'),
+  ('长难句', '插入语', 8, 'medium', 'not_started'),
+  ('长难句', '比较结构', 8, 'medium', 'not_started'),
+  ('长难句', '倒装', 6, 'low', 'not_started'),
+  ('长难句', '省略', 6, 'low', 'not_started'),
+  ('长难句', '并列结构', 8, 'medium', 'not_started'),
+  ('词汇', '熟词僻义', 16, 'high', 'not_started'),
+  ('词汇', '核心动词', 16, 'high', 'not_started'),
+  ('词汇', '逻辑连接词', 10, 'medium', 'not_started'),
+  ('词汇', '态度词', 8, 'medium', 'not_started'),
+  ('词汇', '替换表达', 12, 'medium', 'not_started'),
+  ('翻译', '断句', 12, 'high', 'not_started'),
+  ('翻译', '主干识别', 12, 'high', 'not_started'),
+  ('翻译', '修饰成分处理', 12, 'high', 'not_started'),
+  ('翻译', '词义选择', 10, 'medium', 'not_started'),
+  ('翻译', '中文重组', 10, 'medium', 'not_started'),
+  ('作文', '小作文格式', 8, 'low', 'not_started'),
+  ('作文', '大作文结构', 10, 'low', 'not_started'),
+  ('作文', '论证句', 10, 'low', 'not_started'),
+  ('作文', '例证句', 8, 'low', 'not_started'),
+  ('作文', '替换表达', 10, 'low', 'not_started'),
+  ('作文', '图表描述', 8, 'low', 'not_started')
+on conflict (module, point) do nothing;
+
 -- Seed the study room for Round Table.
 insert into rt_rooms (id, name, icon, sort_order) values
   ('room-study', '考研房', '📚', 2)
