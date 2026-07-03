@@ -434,14 +434,14 @@ function shouldAttachTrainingPack(instruction: string, userText: string, reply: 
 
 function trainingPackAttachmentMarker(pack: Record<string, unknown>) {
   const title = String(pack.title || `${dateTextInShanghai()} 考研英语训练包`)
-  const html = String(pack.doc_html || pack.plain_text || title)
-  const fileName = `${safeAttachmentFileName(title)}.doc`
-  const data = base64EncodeUtf8(`\ufeff${html}`)
+  const pdf = makePdfBytes(title, packTextForPdf(pack))
+  const fileName = `${safeAttachmentFileName(title)}.pdf`
+  const data = base64EncodeAscii(pdf)
   const payload = {
     name: fileName,
-    type: 'application/msword',
-    size: new TextEncoder().encode(html).length,
-    dataUrl: `data:application/msword;base64,${data}`,
+    type: 'application/pdf',
+    size: pdf.length,
+    dataUrl: `data:application/pdf;base64,${data}`,
   }
   return `[[RT_ATTACHMENT:${base64EncodeUtf8(JSON.stringify(payload))}]]`
 }
@@ -459,6 +459,115 @@ function base64EncodeUtf8(value: string) {
   let binary = ''
   for (const byte of bytes) binary += String.fromCharCode(byte)
   return btoa(binary)
+}
+
+function base64EncodeAscii(value: string) {
+  return btoa(value)
+}
+
+function packTextForPdf(pack: Record<string, unknown>) {
+  const tasks = Array.isArray(pack.tasks) ? pack.tasks.map(String).join('\n') : ''
+  return htmlToPlainText(String(pack.doc_html || '')) || String(pack.plain_text || '') || tasks || String(pack.title || '')
+}
+
+function htmlToPlainText(value: string) {
+  return String(value || '')
+    .replace(/<(h[1-6]|p|div|section|tr|li|br)\b[^>]*>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n')
+}
+
+function makePdfBytes(title: string, body: string) {
+  const lines = pdfLines(`${title}\n\n${body}`)
+  const pages: string[] = []
+  let current: string[] = []
+  let y = 790
+  for (const line of lines) {
+    const lineHeight = line.startsWith('# ') ? 22 : 16
+    if (y < 56) {
+      pages.push(pdfContentStream(current))
+      current = []
+      y = 790
+    }
+    const fontSize = line.startsWith('# ') ? 16 : 11
+    const text = line.replace(/^#\s+/, '')
+    current.push(`BT /F1 ${fontSize} Tf 50 ${y} Td <${utf16Hex(text)}> Tj ET`)
+    y -= lineHeight
+  }
+  if (current.length) pages.push(pdfContentStream(current))
+
+  const objects: string[] = ['']
+  const add = (value: string) => {
+    objects.push(value)
+    return objects.length - 1
+  }
+  const descriptorId = add('<< /Type /FontDescriptor /FontName /STSong-Light /Flags 4 /FontBBox [0 -200 1000 900] /ItalicAngle 0 /Ascent 880 /Descent -120 /CapHeight 880 /StemV 80 >>')
+  const cidFontId = add(`<< /Type /Font /Subtype /CIDFontType0 /BaseFont /STSong-Light /CIDSystemInfo << /Registry (Adobe) /Ordering (GB1) /Supplement 2 >> /FontDescriptor ${descriptorId} 0 R >>`)
+  const fontId = add(`<< /Type /Font /Subtype /Type0 /BaseFont /STSong-Light /Encoding /UniGB-UCS2-H /DescendantFonts [${cidFontId} 0 R] >>`)
+  const pageIds: number[] = []
+  for (const stream of pages) {
+    const contentId = add(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`)
+    const pageId = add(`<< /Type /Page /Parent PAGES_ID 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`)
+    pageIds.push(pageId)
+  }
+  const pagesId = add(`<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`)
+  for (const pageId of pageIds) objects[pageId] = objects[pageId].replace('PAGES_ID', String(pagesId))
+  const catalogId = add(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`)
+  let pdf = '%PDF-1.4\n'
+  const offsets = [0]
+  for (let i = 1; i < objects.length; i += 1) {
+    offsets[i] = pdf.length
+    pdf += `${i} 0 obj\n${objects[i]}\nendobj\n`
+  }
+  const xref = pdf.length
+  pdf += `xref\n0 ${objects.length}\n0000000000 65535 f \n`
+  for (let i = 1; i < objects.length; i += 1) pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`
+  pdf += `trailer\n<< /Size ${objects.length} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF`
+  return pdf
+}
+
+function pdfLines(value: string) {
+  const out: string[] = []
+  for (const raw of String(value || '').split(/\r?\n/)) {
+    const line = raw.trim()
+    if (!line) {
+      out.push(' ')
+      continue
+    }
+    const width = line.length > 26 && /^第|^一、|^二、|^三、|^四、|^五、/.test(line) ? 32 : 38
+    for (let i = 0; i < line.length; i += width) out.push((i === 0 && out.length === 0 ? '# ' : '') + line.slice(i, i + width))
+  }
+  return out
+}
+
+function pdfContentStream(lines: string[]) {
+  return lines.join('\n')
+}
+
+function utf16Hex(value: string) {
+  const bytes = new TextEncoder().encode(value)
+  const text = new TextDecoder('utf-8').decode(bytes)
+  let hex = ''
+  for (const char of text) {
+    const code = char.codePointAt(0) || 0
+    if (code > 0xffff) {
+      const high = Math.floor((code - 0x10000) / 0x400) + 0xd800
+      const low = ((code - 0x10000) % 0x400) + 0xdc00
+      hex += high.toString(16).padStart(4, '0') + low.toString(16).padStart(4, '0')
+    } else {
+      hex += code.toString(16).padStart(4, '0')
+    }
+  }
+  return hex.toUpperCase()
 }
 
 async function getOrBuildInlineTrainingPack(db: DB, archReply: string) {
@@ -968,7 +1077,7 @@ async function buildTrainingPack(db: DB, requestedDate?: string) {
       title: '训练包标题',
       focus: '今日重点',
       tasks: ['任务1', '任务2'],
-      doc_html: 'Word可打开的完整HTML正文，含标题、答题区、阅读/长难句/词汇/翻译等模块',
+      doc_html: '用于转成PDF的完整HTML正文，含标题、答题区、阅读/长难句/词汇/翻译等模块',
       plain_text: '纯文本摘要',
     },
   }
@@ -984,7 +1093,7 @@ async function buildTrainingPack(db: DB, requestedDate?: string) {
         '训练包必须具体可写：阅读材料/题目/选项/长难句/词汇/翻译句都要给出来。',
         '题目应为原创仿真题，不抄原真题原文；但结构、考点、干扰项模式要参考蓝图。',
         '作文若当前策略暂缓，可只保留低阻力句型/素材，不强制整篇。',
-        'doc_html必须是完整HTML片段，可以被保存为.doc用Word打开。',
+        'doc_html必须是完整HTML片段，后续会自动转成PDF附件。',
       ].join('\n'),
       JSON.stringify(prompt),
       2200,
@@ -1022,7 +1131,7 @@ async function buildTrainingPack(db: DB, requestedDate?: string) {
   await db.from('study_decision_logs').insert({
     changed: tasks,
     reason: [
-      `生成每日Word训练包：${title}`,
+      `生成每日PDF训练包：${title}`,
       blueprints.length ? `参考${blueprints.length}份真题蓝图` : '暂无真题蓝图，使用基础考研英语结构',
       dashboard.errors?.ranking?.[0] ? `结合高频错因：${dashboard.errors.ranking[0].category}` : '错因样本不足',
     ],
@@ -1498,7 +1607,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  // POST /generate-training-pack — create a Word-compatible daily pack.
+  // POST /generate-training-pack — create a PDF-downloadable daily pack.
   if (path === 'generate-training-pack') {
     try {
       const pack = await withTimeout(buildTrainingPack(db, String(body.date || '') || undefined), 90000, 'training pack')

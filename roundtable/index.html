@@ -492,9 +492,9 @@ function renderExamBank(exam) {
 function renderPackTools(exam) {
   const packs = exam.packs || [];
   return `
-    <div class="dash-empty">基于真题蓝图、近期错因和长线计划生成可直接写的 Word 训练包。</div>
+    <div class="dash-empty">基于真题蓝图、近期错因和长线计划生成可直接写的 PDF 训练包。</div>
     <div class="dash-actions">
-      <button class="dash-action primary" onclick="generateTrainingPack()">生成今日Word</button>
+      <button class="dash-action primary" onclick="generateTrainingPack()">生成今日PDF</button>
       ${packs[0] ? `<button class="dash-action" onclick="downloadPack('${escAttr(packs[0].id)}')">下载最近训练包</button>` : ''}
     </div>
     <div id="pack-status" class="dash-status">${packs[0] ? `最近：${esc(packs[0].title)}` : '还没有训练包。'}</div>
@@ -565,7 +565,7 @@ async function ingestExam() {
 
 async function generateTrainingPack() {
   const status = document.getElementById('pack-status');
-  status.textContent = 'Arch正在生成今日Word训练包…';
+  status.textContent = 'Arch正在生成今日PDF训练包…';
   try {
     const data = await api('generate-training-pack', { date: todayLocalText() }, 120000);
     const pack = data.pack;
@@ -590,12 +590,13 @@ async function downloadPack(id) {
 }
 
 function downloadTrainingDoc(pack) {
-  const html = pack.doc_html || `<html><body><pre>${esc(pack.plain_text || '')}</pre></body></html>`;
-  const blob = new Blob(['﻿', html], { type: 'application/msword' });
+  const title = pack.title || '考研训练包';
+  const text = htmlToPlainText(pack.doc_html || '') || pack.plain_text || (pack.tasks || []).join('\n') || title;
+  const blob = makePdfBlob(title, text);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${safeFilename(pack.title || '考研训练包')}.doc`;
+  a.download = `${safeFilename(title)}.pdf`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -684,24 +685,19 @@ function safeFilename(s) {
   return String(s || '').replace(/[\\/:*?"<>|]/g, '').trim().slice(0, 40) || 'untitled';
 }
 
-// Minimal markdown → HTML: **bold**, paragraph breaks, single line breaks.
-// Word opens HTML saved as .doc directly (a long-supported legacy format),
-// so this needs no external library to produce a real Word-openable file.
-function mdToHtml(text) {
-  return String(text || '')
-    .split(/\n\n+/)
-    .map(block => `<p>${esc(block).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</p>`)
-    .join('');
+function htmlToPlainText(value) {
+  const div = document.createElement('div');
+  div.innerHTML = String(value || '')
+    .replace(/<(h[1-6]|p|div|section|tr|li|br)\b[^>]*>/gi, '\n$&');
+  return (div.textContent || '')
+    .split(/\r?\n/)
+    .map(line => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
 }
 
-function downloadDoc(filename, title, bodyHtml) {
-  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head><meta charset='utf-8'><title>${esc(title)}</title></head>
-<body style="font-family:Calibri,Arial,sans-serif;font-size:14px;line-height:1.6;">
-<h2>${esc(title)}</h2>
-${bodyHtml}
-</body></html>`;
-  const blob = new Blob(['﻿', html], { type: 'application/msword' });
+function downloadPdf(filename, title, text) {
+  const blob = makePdfBlob(title, text);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -712,20 +708,101 @@ ${bodyHtml}
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function makePdfBlob(title, body) {
+  const pdf = makePdfBytes(title || 'Round Table', `${title || 'Round Table'}\n\n${body || ''}`);
+  const bytes = new Uint8Array(pdf.length);
+  for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i);
+  return new Blob([bytes], { type: 'application/pdf' });
+}
+
+function makePdfBytes(title, body) {
+  const lines = pdfLines(body);
+  const pages = [];
+  let current = [];
+  let y = 790;
+  lines.forEach((line, index) => {
+    const isTitle = index === 0;
+    const lineHeight = isTitle ? 22 : 16;
+    if (y < 56) {
+      pages.push(current.join('\n'));
+      current = [];
+      y = 790;
+    }
+    const fontSize = isTitle ? 16 : 11;
+    current.push(`BT /F1 ${fontSize} Tf 50 ${y} Td <${utf16Hex(line)}> Tj ET`);
+    y -= lineHeight;
+  });
+  if (current.length) pages.push(current.join('\n'));
+
+  const objects = [''];
+  const add = value => { objects.push(value); return objects.length - 1; };
+  const descriptorId = add('<< /Type /FontDescriptor /FontName /STSong-Light /Flags 4 /FontBBox [0 -200 1000 900] /ItalicAngle 0 /Ascent 880 /Descent -120 /CapHeight 880 /StemV 80 >>');
+  const cidFontId = add(`<< /Type /Font /Subtype /CIDFontType0 /BaseFont /STSong-Light /CIDSystemInfo << /Registry (Adobe) /Ordering (GB1) /Supplement 2 >> /FontDescriptor ${descriptorId} 0 R >>`);
+  const fontId = add(`<< /Type /Font /Subtype /Type0 /BaseFont /STSong-Light /Encoding /UniGB-UCS2-H /DescendantFonts [${cidFontId} 0 R] >>`);
+  const pageIds = [];
+  pages.forEach(stream => {
+    const contentId = add(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
+    const pageId = add(`<< /Type /Page /Parent PAGES_ID 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`);
+    pageIds.push(pageId);
+  });
+  const pagesId = add(`<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`);
+  pageIds.forEach(id => { objects[id] = objects[id].replace('PAGES_ID', String(pagesId)); });
+  const catalogId = add(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+  for (let i = 1; i < objects.length; i++) {
+    offsets[i] = pdf.length;
+    pdf += `${i} 0 obj\n${objects[i]}\nendobj\n`;
+  }
+  const xref = pdf.length;
+  pdf += `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+  for (let i = 1; i < objects.length; i++) pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  pdf += `trailer\n<< /Size ${objects.length} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  return pdf;
+}
+
+function pdfLines(value) {
+  const out = [];
+  String(value || '').split(/\r?\n/).forEach(raw => {
+    const line = raw.trim();
+    if (!line) {
+      out.push(' ');
+      return;
+    }
+    for (let i = 0; i < line.length; i += 38) out.push(line.slice(i, i + 38));
+  });
+  return out;
+}
+
+function utf16Hex(value) {
+  let hex = '';
+  for (const char of String(value || '')) {
+    const code = char.codePointAt(0) || 0;
+    if (code > 0xffff) {
+      const high = Math.floor((code - 0x10000) / 0x400) + 0xd800;
+      const low = ((code - 0x10000) % 0x400) + 0xdc00;
+      hex += high.toString(16).padStart(4, '0') + low.toString(16).padStart(4, '0');
+    } else {
+      hex += code.toString(16).padStart(4, '0');
+    }
+  }
+  return hex.toUpperCase();
+}
+
 function exportMessage(m) {
   const names = {user:'yaya', claude:'yaya二号机', codex:'Arch'};
   const name = names[m.speaker] || m.speaker;
   const title = `${name} · ${fmtTime(m.at)} ${fmtDate(m.at)}`;
-  downloadDoc(`${safeFilename(name)}-${Date.now()}.doc`, title, mdToHtml(m.text));
+  downloadPdf(`${safeFilename(name)}-${Date.now()}.pdf`, title, parseAttachments(m.text || '').text);
 }
 
 function exportConversation() {
   if (!lastMessages.length) { alert('这个对话还没有消息'); return; }
   const names = {user:'yaya', claude:'yaya二号机', codex:'Arch'};
   const body = lastMessages.map(m =>
-    `<p style="color:#888;font-size:11px;margin-bottom:2px;">[${esc(names[m.speaker] || m.speaker)}] ${fmtTime(m.at)} ${fmtDate(m.at)}</p>${mdToHtml(m.text)}`
-  ).join('<hr>');
-  downloadDoc(`${safeFilename(S.topicName)}-${Date.now()}.doc`, `${S.roomName} · ${S.topicName}`, body);
+    `[${names[m.speaker] || m.speaker}] ${fmtTime(m.at)} ${fmtDate(m.at)}\n${parseAttachments(m.text || '').text}`
+  ).join('\n\n----------------\n\n');
+  downloadPdf(`${safeFilename(S.topicName)}-${Date.now()}.pdf`, `${S.roomName} · ${S.topicName}`, body);
 }
 
 function addTyping(sp) {
