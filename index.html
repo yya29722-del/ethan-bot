@@ -615,41 +615,25 @@
   .tl-divider span.txt { font-size: 11px; letter-spacing: .25em; color: var(--gold); font-family: 'Cinzel', sans-serif; text-transform: uppercase; white-space: nowrap; }
   .tl-divider::after { content: ''; flex: 1; height: 1px; background: var(--gold-dim); }
 
-  /* ROUND TABLE */
-  .rt-header { padding: max(14px,env(safe-area-inset-top)) 16px 0; background: linear-gradient(180deg,var(--ivory,#fffdf9),transparent); flex-shrink:0; }
-  .rt-header-row { display:flex; align-items:center; margin-bottom:10px; }
-  .rt-title { font-family:'Cinzel',serif; font-size:15px; letter-spacing:.14em; color:var(--burgundy,#8B1E2F); text-transform:uppercase; }
-  .rt-clear-btn { margin-left:auto; font-size:10px; color:var(--text-secondary,#7A5C4A); background:none; border:1px solid var(--gold-dim,rgba(201,168,76,.3)); border-radius:10px; padding:3px 10px; font-family:'Cinzel',serif; cursor:pointer; letter-spacing:.05em; }
-  .rt-personas { display:flex; gap:10px; margin-bottom:10px; }
-  .rt-persona { display:flex; align-items:center; gap:8px; padding:7px 12px; background:rgba(255,253,249,.95); border:1px solid var(--gold-dim,rgba(201,168,76,.3)); border-radius:12px; flex:1; }
-  .rt-persona-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; flex-shrink:0; transition:background .3s; }
-  .rt-persona-dot.thinking { background:#eab308; animation:rtPulse .8s ease-in-out infinite; }
-  .rt-persona-dot.idle { background:rgba(0,0,0,.2); }
-  @keyframes rtPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-  .rt-persona-name { font-family:'Cinzel',serif; font-size:12px; font-weight:600; color:var(--burgundy,#8B1E2F); }
-  .rt-persona-sub { font-size:10px; color:var(--text-secondary,#7A5C4A); margin-top:1px; }
-  .rt-messages { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px 16px 8px; display:flex; flex-direction:column; gap:10px; }
-  .rt-msg { display:flex; flex-direction:column; max-width:82%; }
-  .rt-msg.user { align-self:flex-end; align-items:flex-end; }
-  .rt-msg.arch,.rt-msg.cc { align-self:flex-start; align-items:flex-start; }
-  .rt-msg-label { font-size:10px; letter-spacing:.06em; font-family:'Cinzel',serif; margin-bottom:3px; }
-  .rt-msg.arch .rt-msg-label { color:#6b88a8; }
-  .rt-msg.cc .rt-msg-label { color:#8B6914; }
-  .rt-msg.user .rt-msg-label { color:var(--text-secondary,#7A5C4A); }
-  .rt-bubble { padding:10px 14px; border-radius:14px; font-size:14px; line-height:1.6; word-break:break-word; white-space:pre-wrap; }
-  .rt-msg.user .rt-bubble { background:var(--champagne,#F4EAD4); color:var(--text-primary,#2C1810); border-radius:14px 14px 4px 14px; border:1px solid rgba(201,168,76,.2); }
-  .rt-msg.arch .rt-bubble { background:#fff; color:#1a1a2e; border-radius:4px 14px 14px 14px; border:1px solid rgba(107,136,168,.22); box-shadow:0 1px 4px rgba(0,0,0,.06); }
-  .rt-msg.cc .rt-bubble { background:#fef9ec; color:var(--text-primary,#2C1810); border-radius:4px 14px 14px 14px; border:1px solid rgba(201,168,76,.28); box-shadow:0 1px 4px rgba(0,0,0,.06); }
-  .rt-typing-bubble { display:flex; align-items:center; gap:4px; padding:12px 14px; }
-  .rt-typing-bubble span { width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.6; animation:rtBounce 1.2s ease-in-out infinite; }
-  .rt-typing-bubble span:nth-child(2) { animation-delay:.2s; }
-  .rt-typing-bubble span:nth-child(3) { animation-delay:.4s; }
-  @keyframes rtBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
-  .rt-input-bar { display:flex; align-items:flex-end; gap:8px; padding:10px 16px max(16px,env(safe-area-inset-bottom)); border-top:1px solid var(--gold-dim,rgba(201,168,76,.3)); background:rgba(255,253,249,.98); flex-shrink:0; }
-  .rt-input { flex:1; border:1px solid rgba(201,168,76,.3); border-radius:20px; padding:9px 14px; font-size:14px; background:rgba(255,253,249,.9); outline:none; font-family:inherit; color:var(--text-primary,#2C1810); resize:none; max-height:120px; line-height:1.5; overflow-y:auto; }
-  .rt-send-btn { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#8B1E2F,#A02540); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:opacity .2s; }
-  .rt-send-btn:disabled { opacity:.45; }
-  .rt-empty-hint { text-align:center; color:var(--text-secondary,#7A5C4A); font-size:12px; padding:48px 20px; font-family:'Cinzel',serif; letter-spacing:.06em; opacity:.7; }
+  /* OUR HOUSE */
+  .hb-header { display:flex; align-items:center; gap:8px; padding:max(14px,env(safe-area-inset-top)) 16px 10px; flex-shrink:0; background:linear-gradient(180deg,var(--ivory,#fffdf9) 80%,transparent); }
+  .hb-title { font-family:'Cinzel',serif; font-size:15px; letter-spacing:.12em; color:var(--burgundy,#8B1E2F); text-transform:uppercase; flex:1; }
+  .hb-btn { font-size:10px; font-family:'Cinzel',serif; letter-spacing:.05em; color:var(--text-secondary,#7A5C4A); background:none; border:1px solid var(--gold-dim,rgba(201,168,76,.3)); border-radius:10px; padding:4px 12px; cursor:pointer; transition:.15s; }
+  .hb-btn.active { background:var(--burgundy,#8B1E2F); color:#fff; border-color:var(--burgundy,#8B1E2F); }
+  .hb-canvas-outer { flex:1; min-height:0; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#2D1B0E; }
+  #hb-canvas { display:block; image-rendering:pixelated; image-rendering:crisp-edges; cursor:crosshair; }
+  .hb-palette-wrap { flex-shrink:0; border-top:1px solid var(--gold-dim,rgba(201,168,76,.3)); background:rgba(255,253,249,.98); }
+  .hb-zone-tabs { display:flex; overflow-x:auto; gap:4px; padding:6px 10px 0; scrollbar-width:none; }
+  .hb-zone-tabs::-webkit-scrollbar { display:none; }
+  .hb-zone-tab { flex-shrink:0; font-size:10px; font-family:'Cinzel',serif; letter-spacing:.04em; padding:3px 10px; border-radius:8px; border:1px solid var(--gold-dim,rgba(201,168,76,.3)); background:none; color:var(--text-secondary,#7A5C4A); cursor:pointer; transition:.15s; }
+  .hb-zone-tab.active { background:var(--burgundy,#8B1E2F); color:#fff; border-color:var(--burgundy,#8B1E2F); }
+  .hb-pal { display:flex; overflow-x:auto; gap:6px; padding:6px 10px 8px; scrollbar-width:none; }
+  .hb-pal::-webkit-scrollbar { display:none; }
+  .hb-pal-item { flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; padding:4px 6px; border-radius:8px; border:1.5px solid transparent; transition:.15s; min-width:44px; }
+  .hb-pal-item.sel { border-color:var(--burgundy,#8B1E2F); background:rgba(139,30,47,.08); }
+  .hb-pal-icon { font-size:20px; line-height:1.2; }
+  .hb-pal-name { font-size:9px; color:var(--text-secondary,#7A5C4A); white-space:nowrap; }
+  .hb-hint { text-align:center; font-size:10px; color:var(--text-secondary,#7A5C4A); padding:2px 10px 6px; font-family:'Cinzel',serif; letter-spacing:.04em; opacity:.65; }
 </style>
 </head>
 <body>
@@ -751,17 +735,12 @@
       </svg>
       Cart
     </button>
-    <button class="nav-tab" id="nav-roundtable" onclick="switchTab('roundtable')">
+    <button class="nav-tab" id="nav-ourhouse" onclick="switchTab('ourhouse')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="9"/>
-        <circle cx="12" cy="4" r="1.5" fill="currentColor" stroke="none"/>
-        <circle cx="19.2" cy="16" r="1.5" fill="currentColor" stroke="none"/>
-        <circle cx="4.8" cy="16" r="1.5" fill="currentColor" stroke="none"/>
-        <line x1="12" y1="5.5" x2="12" y2="10"/>
-        <line x1="18.3" y1="15" x2="14.5" y2="12.5"/>
-        <line x1="5.7" y1="15" x2="9.5" y2="12.5"/>
+        <path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z"/>
+        <path d="M9 22V12h6v10"/>
       </svg>
-      Round Table
+      Our Home
     </button>
   </div>
 
@@ -1172,41 +1151,20 @@
     </div>
   </div>
 
-  <!-- TAB: Round Table -->
-  <div class="tab-page" id="tab-roundtable">
-    <div class="rt-header">
-      <div class="rt-header-row">
-        <div class="rt-title">Round Table</div>
-        <button class="rt-clear-btn" onclick="rtClear()">Clear</button>
-      </div>
-      <div class="rt-personas">
-        <div class="rt-persona">
-          <div class="rt-persona-dot" id="rt-dot-arch"></div>
-          <div>
-            <div class="rt-persona-name">Arch</div>
-            <div class="rt-persona-sub" id="rt-status-arch">GPT · 理性派</div>
-          </div>
-        </div>
-        <div class="rt-persona">
-          <div class="rt-persona-dot" id="rt-dot-cc"></div>
-          <div>
-            <div class="rt-persona-name">CC</div>
-            <div class="rt-persona-sub" id="rt-status-cc">Ethan · 工程侧</div>
-          </div>
-        </div>
-      </div>
+  <!-- TAB: Our House -->
+  <div class="tab-page" id="tab-ourhouse">
+    <div class="hb-header">
+      <span class="hb-title">Our Home</span>
+      <button class="hb-btn" id="hb-edit-btn" onclick="hbToggleEdit()">编辑</button>
+      <button class="hb-btn" onclick="hbReset()">重置</button>
     </div>
-    <div class="rt-messages" id="rt-messages"></div>
-    <div class="rt-input-bar">
-      <textarea class="rt-input" id="rt-input" placeholder="说点什么… @CC 或 @Arch 定向" rows="1"
-        onkeydown="rtKeydown(event)" oninput="rtAutoResize(this)"></textarea>
-      <button class="rt-send-btn" id="rt-send-btn" onclick="rtSend()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-          <line x1="22" y1="2" x2="11" y2="13"/>
-          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-        </svg>
-      </button>
+    <div class="hb-canvas-outer" id="hb-canvas-outer">
+      <canvas id="hb-canvas"></canvas>
+    </div>
+    <div class="hb-palette-wrap">
+      <div class="hb-zone-tabs" id="hb-zone-tabs"></div>
+      <div class="hb-pal" id="hb-pal"></div>
+      <div class="hb-hint" id="hb-hint">点击编辑开始布置我们的家</div>
     </div>
   </div>
 
@@ -1472,7 +1430,7 @@ function switchTab(name) {
     else if (name === 'vault') loadVault();
     else if (name === 'cart') loadCart();
     else if (name === 'tarot') { startTarotEntry(); }
-    else if (name === 'roundtable') loadRoundTable();
+    else if (name === 'ourhouse') loadOurHouse();
   }
   // vault should refresh every visit since is_top/is_favorite can change from other tabs
   if (name === 'vault') loadVault();
@@ -2878,183 +2836,457 @@ window.addEventListener('tarot:cardRevealed', async function(e) {
 // ============================================================
 // ROUND TABLE
 // ============================================================
-var RT_HISTORY = [];
-var RT_BUSY = false;
-var RT_FN_URL = SUPABASE_URL + '/functions/v1/round-table';
+// OUR HOUSE — Pixel Art Home Builder
+// ============================================================
+var HB_T0 = 32;
+var HB_COLS = 10, HB_ROWS = 14;
+var HB_SCALE = 1;
+var HB_EDITING = false;
+var HB_SELECTED = null;
+var HB_HOVER = null;
+var HB_ACTIVE_ZONE = null;
+var HB_LAYOUT = [];
+var HB_INITED = false;
+var HB_LONG_TIMER = null;
 
-function loadRoundTable() {
-  try { RT_HISTORY = JSON.parse(localStorage.getItem('rt_history') || '[]'); } catch(e) { RT_HISTORY = []; }
-  rtRenderAll();
-}
+var HB_ZONES = [
+  {id:'bedroom',  name:'卧室', x:0,y:0, w:5,h:7, floor:'#F7EDE3', border:'#C49860', label:'#9A6830'},
+  {id:'living',   name:'客厅', x:5,y:0, w:5,h:7, floor:'#EBD9C3', border:'#C0905A', label:'#8B6440'},
+  {id:'study',    name:'书房', x:0,y:7, w:4,h:7, floor:'#DDE8D6', border:'#7EAD62', label:'#4E7A38'},
+  {id:'bathroom', name:'浴室', x:4,y:7, w:3,h:7, floor:'#D6E8EF', border:'#6AAAB5', label:'#3A8890'},
+  {id:'kitchen',  name:'厨房', x:7,y:7, w:3,h:7, floor:'#F5F0E8', border:'#BBAB80', label:'#7A6A40'},
+];
 
-function rtSaveHistory() {
-  try { localStorage.setItem('rt_history', JSON.stringify(RT_HISTORY.slice(-120))); } catch(e) {}
-}
+var HB_FURNITURE = [
+  {id:'bed',      name:'床',    zones:['bedroom'],                          w:3,h:4, icon:'🛏️',  color:'#C89A78'},
+  {id:'wardrobe', name:'衣柜',  zones:['bedroom'],                          w:2,h:1, icon:'🚪',  color:'#8B6343'},
+  {id:'mirror',   name:'镜子',  zones:['bedroom','bathroom'],               w:1,h:2, icon:'🪞',  color:'#A8C8D8'},
+  {id:'lamp',     name:'台灯',  zones:['bedroom','study','living'],         w:1,h:1, icon:'💡',  color:'#F0C050'},
+  {id:'plant',    name:'绿植',  zones:['bedroom','living','study'],         w:1,h:1, icon:'🪴',  color:'#5A9E42'},
+  {id:'sofa',     name:'沙发',  zones:['living'],                           w:3,h:2, icon:'🛋️',  color:'#9B7A5C'},
+  {id:'tv',       name:'电视',  zones:['living'],                           w:2,h:1, icon:'📺',  color:'#222222'},
+  {id:'coffee',   name:'茶几',  zones:['living'],                           w:2,h:1, icon:'',    color:'#B8976A'},
+  {id:'rug',      name:'地毯',  zones:['living','bedroom'],                 w:3,h:2, icon:'',    color:'#C08060'},
+  {id:'piano',    name:'钢琴',  zones:['living','study'],                   w:2,h:3, icon:'🎹',  color:'#1A1A1A'},
+  {id:'desk',     name:'书桌',  zones:['study'],                            w:2,h:1, icon:'',    color:'#9B6E42'},
+  {id:'computer', name:'电脑',  zones:['study'],                            w:1,h:1, icon:'🖥️',  color:'#4A4A4A'},
+  {id:'books',    name:'书架',  zones:['study'],                            w:1,h:3, icon:'📚',  color:'#7A5234'},
+  {id:'chair',    name:'椅子',  zones:['study','kitchen'],                  w:1,h:1, icon:'🪑',  color:'#8A6040'},
+  {id:'toilet',   name:'马桶',  zones:['bathroom'],                         w:1,h:2, icon:'🚽',  color:'#E8F0F5'},
+  {id:'bathtub',  name:'浴缸',  zones:['bathroom'],                         w:3,h:2, icon:'🛁',  color:'#C8E4EF'},
+  {id:'washbasin',name:'洗手台',zones:['bathroom'],                         w:1,h:1, icon:'🚿',  color:'#B8D8E8'},
+  {id:'stove',    name:'灶台',  zones:['kitchen'],                          w:2,h:1, icon:'🍳',  color:'#555555'},
+  {id:'fridge',   name:'冰箱',  zones:['kitchen'],                          w:1,h:2, icon:'🧊',  color:'#D0E8F5'},
+  {id:'counter',  name:'台面',  zones:['kitchen'],                          w:2,h:1, icon:'',    color:'#E5E0D0'},
+  {id:'cat',      name:'小猫',  zones:['bedroom','living','kitchen','study'],w:1,h:1, icon:'🐱',  color:'#F0C070'},
+];
 
-function rtRenderAll() {
-  var el = document.getElementById('rt-messages');
-  if (!el) return;
-  el.innerHTML = '';
-  if (RT_HISTORY.length === 0) {
-    el.innerHTML = '<div class="rt-empty-hint">Round Table<br><span style="font-size:10px;opacity:.6;letter-spacing:.04em;">@CC · @Arch · 或直接说话</span></div>';
-    return;
+function hbGetZoneAt(gx, gy) {
+  for (var i=0;i<HB_ZONES.length;i++){
+    var z=HB_ZONES[i];
+    if(gx>=z.x&&gx<z.x+z.w&&gy>=z.y&&gy<z.y+z.h) return z;
   }
-  RT_HISTORY.forEach(function(m) { _rtAppendBubble(m, el); });
-  el.scrollTop = el.scrollHeight;
+  return null;
 }
 
-function _rtAppendBubble(m, container) {
-  var labels = { user: 'yaya', arch: 'Arch', cc: 'CC' };
-  var wrap = document.createElement('div');
-  wrap.className = 'rt-msg ' + (m.speaker || 'user');
-  var label = document.createElement('div');
-  label.className = 'rt-msg-label';
-  label.textContent = labels[m.speaker] || m.speaker;
-  var bubble = document.createElement('div');
-  bubble.className = 'rt-bubble';
-  bubble.textContent = m.content;
-  wrap.appendChild(label);
-  wrap.appendChild(bubble);
-  container.appendChild(wrap);
-}
-
-function _rtAddTyping(speaker) {
-  var el = document.getElementById('rt-messages');
-  if (!el) return;
-  var id = 'rt-typing-' + speaker;
-  if (document.getElementById(id)) return;
-  var wrap = document.createElement('div');
-  wrap.className = 'rt-msg ' + speaker;
-  wrap.id = id;
-  var label = document.createElement('div');
-  label.className = 'rt-msg-label';
-  label.textContent = speaker === 'cc' ? 'CC' : 'Arch';
-  var bubble = document.createElement('div');
-  bubble.className = 'rt-bubble rt-typing-bubble';
-  bubble.style.color = speaker === 'cc' ? '#8B6914' : '#6b88a8';
-  bubble.innerHTML = '<span></span><span></span><span></span>';
-  wrap.appendChild(label);
-  wrap.appendChild(bubble);
-  el.appendChild(wrap);
-  el.scrollTop = el.scrollHeight;
-}
-
-function _rtRemoveTyping(speaker) {
-  var el = document.getElementById('rt-typing-' + speaker);
-  if (el) el.remove();
-}
-
-function rtSetDot(speaker, state) {
-  var dot = document.getElementById('rt-dot-' + speaker);
-  var sub = document.getElementById('rt-status-' + speaker);
-  if (!dot) return;
-  dot.className = 'rt-persona-dot' + (state === 'thinking' ? ' thinking' : state === 'idle' ? ' idle' : '');
-  if (sub) {
-    var base = speaker === 'arch' ? 'GPT · 理性派' : 'Ethan · 工程侧';
-    sub.textContent = state === 'thinking' ? '正在思考…' : base;
+function hbCanPlace(def, gx, gy) {
+  if(gx<0||gy<0||gx+def.w>HB_COLS||gy+def.h>HB_ROWS) return false;
+  var zone=hbGetZoneAt(gx,gy);
+  if(!zone||def.zones.indexOf(zone.id)<0) return false;
+  for(var dx=0;dx<def.w;dx++) for(var dy=0;dy<def.h;dy++){
+    var z2=hbGetZoneAt(gx+dx,gy+dy);
+    if(!z2||z2.id!==zone.id) return false;
   }
+  return true;
 }
 
-function rtKeydown(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); rtSend(); }
+function hbTileAt(clientX, clientY) {
+  var c=document.getElementById('hb-canvas');
+  if(!c) return null;
+  var rect=c.getBoundingClientRect();
+  var cx=(clientX-rect.left)/HB_SCALE, cy=(clientY-rect.top)/HB_SCALE;
+  return {x:Math.floor(cx/HB_T0), y:Math.floor(cy/HB_T0)};
 }
 
-function rtAutoResize(ta) {
-  ta.style.height = 'auto';
-  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+function hbFurnitureAt(gx, gy) {
+  for(var i=HB_LAYOUT.length-1;i>=0;i--){
+    var item=HB_LAYOUT[i];
+    var def=HB_FURNITURE.find(function(f){return f.id===item.id;});
+    if(!def) continue;
+    if(gx>=item.x&&gx<item.x+def.w&&gy>=item.y&&gy<item.y+def.h)
+      return {item:item,def:def,index:i};
+  }
+  return null;
 }
 
-function _rtDetectRespondents(msg) {
-  var m = msg.toLowerCase();
-  if (/@cc|@ethan/.test(m)) return ['cc'];
-  if (/@arch/.test(m)) return ['arch'];
-  if (/你们|大家|讨论|一起想|都说说/.test(m)) return ['arch', 'cc'];
-  // code/tech → CC; else Arch handles general
-  if (/代码|bug|debug|编程|程序|报错|crash/.test(m)) return ['cc'];
-  return ['arch'];
+function hbSave() {
+  try{localStorage.setItem('hb_layout',JSON.stringify(HB_LAYOUT));}catch(e){}
 }
 
-async function rtSend() {
-  if (RT_BUSY) return;
-  var input = document.getElementById('rt-input');
-  var msg = (input.value || '').trim();
-  if (!msg) return;
-
-  input.value = '';
-  input.style.height = 'auto';
-  document.getElementById('rt-send-btn').disabled = true;
-  RT_BUSY = true;
-
-  RT_HISTORY.push({ speaker: 'user', content: msg, ts: Date.now() });
-  rtRenderAll();
-  rtSaveHistory();
-
-  var respondents = _rtDetectRespondents(msg);
-  await _rtCallSequential(msg, respondents, 0);
-
-  RT_BUSY = false;
-  document.getElementById('rt-send-btn').disabled = false;
-  var inp = document.getElementById('rt-input');
-  if (inp) inp.focus();
+function hbDefaultLayout() {
+  return [
+    {id:'rug',      x:5,y:2}, {id:'bed',      x:1,y:1}, {id:'lamp',     x:0,y:1},
+    {id:'wardrobe', x:0,y:5}, {id:'plant',    x:4,y:6}, {id:'sofa',     x:5,y:2},
+    {id:'tv',       x:6,y:0}, {id:'coffee',   x:6,y:4}, {id:'plant',    x:9,y:0},
+    {id:'desk',     x:1,y:8}, {id:'books',    x:0,y:8}, {id:'chair',    x:1,y:9},
+    {id:'toilet',   x:4,y:8}, {id:'washbasin',x:6,y:8}, {id:'stove',    x:7,y:8},
+    {id:'fridge',   x:9,y:8}, {id:'counter',  x:7,y:10},{id:'cat',      x:6,y:5},
+  ];
 }
 
-async function _rtCallSequential(triggerMsg, respondents, depth) {
-  for (var i = 0; i < respondents.length; i++) {
-    var speaker = respondents[i];
-    rtSetDot(speaker, 'thinking');
-    _rtAddTyping(speaker);
+// ---- DRAW ROUTINES ----
+function _hbDrawBed(ctx,px,py,T){
+  var W=3*T,H=4*T;
+  ctx.fillStyle='#5C2E1A';ctx.fillRect(px,py,W,H);
+  ctx.fillStyle='#8B4513';ctx.fillRect(px+2,py+2,W-4,T-4);
+  ctx.fillStyle='#A0522D';ctx.fillRect(px+4,py+4,W-8,T-10);
+  ctx.fillStyle='rgba(255,255,255,0.1)';ctx.fillRect(px+4,py+4,W-8,3);
+  ctx.fillStyle='#F5EDE5';ctx.fillRect(px+2,py+T,W-4,3*T-4);
+  var ph2=Math.round(T*0.55),py0=py+T+5;
+  ctx.fillStyle='#FFD0C8';ctx.fillRect(px+4,py0,Math.round(T*0.72),ph2);
+  ctx.fillRect(px+T+4,py0,Math.round(T*0.72),ph2);ctx.fillRect(px+2*T+4,py0,Math.round(T*0.68),ph2);
+  ctx.fillStyle='rgba(255,255,255,0.35)';ctx.fillRect(px+5,py0+1,6,4);ctx.fillRect(px+T+5,py0+1,6,4);ctx.fillRect(px+2*T+5,py0+1,6,4);
+  ctx.fillStyle='rgba(0,0,0,0.07)';ctx.fillRect(px+2,py+T+Math.round(T*1.2),W-4,2);
+  ctx.fillStyle='rgba(255,255,255,0.15)';ctx.fillRect(px+2,py+T,W-4,2);
+  ctx.fillStyle='rgba(0,0,0,0.18)';ctx.fillRect(px+2,py+H-4,W-4,3);
+  ctx.strokeStyle='rgba(0,0,0,0.28)';ctx.lineWidth=1;ctx.strokeRect(px+.5,py+.5,W-1,H-1);
+}
 
-    try {
-      var res = await fetch(RT_FN_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-        body: JSON.stringify({
-          message: triggerMsg,
-          history: RT_HISTORY.slice(-24),
-          responder: speaker
-        })
-      });
-      var json = await res.json();
-      var reply = (json.reply || '').trim();
+function _hbDrawLamp(ctx,px,py,T){
+  ctx.fillStyle='rgba(255,200,80,0.18)';ctx.beginPath();ctx.arc(px+T/2,py+T*0.4,T*0.44,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#F0C050';ctx.beginPath();ctx.moveTo(px+T*0.16,py+T*0.54);ctx.lineTo(px+T*0.84,py+T*0.54);ctx.lineTo(px+T*0.7,py+T*0.22);ctx.lineTo(px+T*0.3,py+T*0.22);ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.28)';ctx.beginPath();ctx.moveTo(px+T*0.3,py+T*0.22);ctx.lineTo(px+T*0.45,py+T*0.22);ctx.lineTo(px+T*0.35,py+T*0.54);ctx.lineTo(px+T*0.16,py+T*0.54);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#D4A020';ctx.fillRect(px+Math.round(T*0.44),py+Math.round(T*0.54),Math.round(T*0.12),Math.round(T*0.33));
+  ctx.fillStyle='#A07830';ctx.fillRect(px+Math.round(T*0.28),py+Math.round(T*0.84),Math.round(T*0.44),Math.round(T*0.1));
+}
 
-      _rtRemoveTyping(speaker);
-      rtSetDot(speaker, 'online');
+function _hbDrawPlant(ctx,px,py,T){
+  var r=Math.round;
+  ctx.fillStyle='#D4784A';ctx.fillRect(px+r(T*0.3),py+r(T*0.6),r(T*0.4),r(T*0.33));
+  ctx.fillStyle='#B86030';ctx.fillRect(px+r(T*0.25),py+r(T*0.56),r(T*0.5),r(T*0.08));
+  ctx.fillStyle='#5A3520';ctx.fillRect(px+r(T*0.32),py+r(T*0.63),r(T*0.36),r(T*0.07));
+  ctx.fillStyle='#3A8828';ctx.beginPath();ctx.ellipse(px+T*0.5,py+T*0.37,T*0.31,T*0.26,-0.2,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#4EAA38';ctx.beginPath();ctx.ellipse(px+T*0.36,py+T*0.28,T*0.21,T*0.17,-0.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#5AC040';ctx.beginPath();ctx.ellipse(px+T*0.65,py+T*0.32,T*0.18,T*0.14,0.4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.15)';ctx.beginPath();ctx.ellipse(px+T*0.4,py+T*0.28,T*0.1,T*0.07,0,0,Math.PI*2);ctx.fill();
+}
 
-      if (reply) {
-        var entry = { speaker: speaker, content: reply, ts: Date.now() };
-        RT_HISTORY.push(entry);
-        rtSaveHistory();
-        var msgs = document.getElementById('rt-messages');
-        var empty = msgs && msgs.querySelector('.rt-empty-hint');
-        if (empty) empty.remove();
-        if (msgs) { _rtAppendBubble(entry, msgs); msgs.scrollTop = msgs.scrollHeight; }
+function _hbDrawSofa(ctx,px,py,T){
+  var W=3*T,H=2*T,bk=Math.round(T*0.54);
+  ctx.fillStyle='#7A5A3E';ctx.fillRect(px,py,W,bk);
+  ctx.fillStyle='rgba(255,255,255,0.08)';ctx.fillRect(px+1,py+1,W-2,3);
+  ctx.fillStyle='#9B7A5C';ctx.fillRect(px+2,py+bk,W-4,H-bk-2);
+  ctx.fillStyle='#6A4A2C';ctx.fillRect(px+T-1,py+bk,2,H-bk-2);ctx.fillRect(px+2*T-1,py+bk,2,H-bk-2);
+  ctx.fillStyle='rgba(255,255,255,0.1)';ctx.fillRect(px+4,py+bk+2,T-7,2);ctx.fillRect(px+T+2,py+bk+2,T-4,2);ctx.fillRect(px+2*T+2,py+bk+2,T-7,2);
+  ctx.fillStyle='#5A3A22';ctx.fillRect(px,py,5,H-2);ctx.fillRect(px+W-5,py,5,H-2);
+  ctx.fillStyle='#3A2010';ctx.fillRect(px+5,py+H-4,4,4);ctx.fillRect(px+W-9,py+H-4,4,4);
+}
 
-        // cross-@mention follow-up (max depth 1)
-        if (depth < 1) {
-          if (speaker === 'arch' && /@cc/i.test(reply)) {
-            await _rtCallSequential(triggerMsg, ['cc'], depth + 1);
-          } else if (speaker === 'cc' && /@arch/i.test(reply)) {
-            await _rtCallSequential(triggerMsg, ['arch'], depth + 1);
-          }
-        }
-      }
-    } catch(e) {
-      _rtRemoveTyping(speaker);
-      rtSetDot(speaker, 'online');
-      var errEntry = { speaker: speaker, content: '（出了点问题，稍后再试）', ts: Date.now() };
-      RT_HISTORY.push(errEntry);
-      rtSaveHistory();
-      var m2 = document.getElementById('rt-messages');
-      if (m2) { _rtAppendBubble(errEntry, m2); m2.scrollTop = m2.scrollHeight; }
+function _hbDrawTV(ctx,px,py,T){
+  var W=2*T,H=T;
+  ctx.fillStyle='#181818';ctx.fillRect(px,py,W,H);
+  ctx.fillStyle='#0A1828';ctx.fillRect(px+3,py+3,W-6,Math.round(H*0.72));
+  ctx.fillStyle='#152238';ctx.fillRect(px+4,py+4,W-8,Math.round(H*0.62));
+  ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fillRect(px+5,py+5,Math.round(W*0.38),Math.round(H*0.22));
+  var sh=Math.round(H*0.1);
+  ctx.fillStyle='#2A2A2A';ctx.fillRect(px+Math.round(W*0.38),py+Math.round(H*0.74),Math.round(W*0.24),sh);
+  ctx.fillRect(px+Math.round(W*0.28),py+H-sh,Math.round(W*0.44),sh);
+}
+
+function _hbDrawCoffee(ctx,px,py,T){
+  var W=2*T,H=T;
+  ctx.fillStyle='#7A4A18';ctx.fillRect(px+3,py+Math.round(H*0.55),4,Math.round(H*0.4));ctx.fillRect(px+W-7,py+Math.round(H*0.55),4,Math.round(H*0.4));
+  ctx.fillStyle='#C4905A';ctx.fillRect(px+1,py+1,W-2,Math.round(H*0.6));
+  ctx.fillStyle='#D4A86A';ctx.fillRect(px+2,py+2,W-4,Math.round(H*0.5));
+  ctx.fillStyle='rgba(0,0,0,0.08)';ctx.fillRect(px+6,py+4,W-12,1);ctx.fillRect(px+8,py+6,W-16,1);
+  ctx.fillStyle='rgba(255,255,255,0.22)';ctx.fillRect(px+3,py+2,W-6,2);
+  ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.lineWidth=1;ctx.strokeRect(px+1.5,py+1.5,W-3,Math.round(H*0.6)-1);
+}
+
+function _hbDrawRug(ctx,px,py,T){
+  var W=3*T,H=2*T;
+  ctx.fillStyle='#A06840';ctx.fillRect(px,py,W,H);
+  ctx.fillStyle='#C08060';
+  for(var i=0;i<3;i++) for(var j=0;j<2;j++){
+    var cx2=px+i*T+T/2,cy2=py+j*T+T/2,s=T*0.26;
+    ctx.save();ctx.translate(cx2,cy2);ctx.rotate(Math.PI/4);ctx.fillRect(-s,-s,s*2,s*2);ctx.restore();
+  }
+  ctx.fillStyle='#7A4018';
+  for(var i2=0;i2<3;i2++) for(var j2=0;j2<2;j2++){
+    var cx3=px+i2*T+T/2,cy3=py+j2*T+T/2,s2=T*0.13;
+    ctx.save();ctx.translate(cx3,cy3);ctx.rotate(Math.PI/4);ctx.fillRect(-s2,-s2,s2*2,s2*2);ctx.restore();
+  }
+  ctx.strokeStyle='#5A2808';ctx.lineWidth=2;ctx.strokeRect(px+2,py+2,W-4,H-4);
+  ctx.strokeStyle='#C08060';ctx.lineWidth=1;ctx.strokeRect(px+4,py+4,W-8,H-8);
+}
+
+function _hbDrawDesk(ctx,px,py,T){
+  var W=2*T,H=T;
+  ctx.fillStyle='#7A4820';ctx.fillRect(px+3,py+Math.round(H*0.5),5,Math.round(H*0.46));ctx.fillRect(px+W-8,py+Math.round(H*0.5),5,Math.round(H*0.46));
+  ctx.fillStyle='#B8803C';ctx.fillRect(px,py+2,W,Math.round(H*0.52));
+  ctx.fillStyle='#C89050';ctx.fillRect(px+1,py+3,W-2,Math.round(H*0.42));
+  ctx.fillStyle='rgba(0,0,0,0.07)';ctx.fillRect(px+5,py+5,W-10,1);ctx.fillRect(px+9,py+7,W-18,1);
+  ctx.fillStyle='rgba(255,255,255,0.25)';ctx.fillRect(px+2,py+3,W-4,2);
+  ctx.fillStyle='#A06830';ctx.fillRect(px+Math.round(W*0.3),py+Math.round(H*0.22),Math.round(W*0.4),Math.round(H*0.22));
+  ctx.fillStyle='#C09050';ctx.fillRect(px+Math.round(W*0.47),py+Math.round(H*0.3),3,3);
+  ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.lineWidth=1;ctx.strokeRect(px+.5,py+2.5,W-1,Math.round(H*0.52)-1);
+}
+
+function _hbDrawBooks(ctx,px,py,T){
+  var W=T,H=3*T;
+  ctx.fillStyle='#5C3A20';ctx.fillRect(px,py,W,H);
+  ctx.fillStyle='#7A5030';ctx.fillRect(px+2,py+T-2,W-4,3);ctx.fillRect(px+2,py+2*T-2,W-4,3);
+  var bc=['#C04040','#4060A0','#40A040','#A040A0','#A08030','#C06040'];
+  var bw=Math.round((W-8)/6);
+  for(var r=0;r<3;r++){
+    for(var bi=0;bi<6;bi++){
+      ctx.fillStyle=bc[(bi+r*2)%bc.length];
+      ctx.fillRect(px+4+bi*bw,py+r*T+5,bw-1,T-10+r*2);
     }
   }
+  ctx.fillStyle='rgba(255,255,255,0.15)';ctx.fillRect(px+2,py,2,H);
+  ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(px+W-3,py,2,H);
 }
 
-function rtClear() {
-  if (!confirm('清空 Round Table 对话？')) return;
-  RT_HISTORY = [];
-  rtSaveHistory();
-  rtRenderAll();
+function _hbDrawToilet(ctx,px,py,T){
+  var W=T,H=2*T;
+  ctx.fillStyle='#D8EBF5';ctx.fillRect(px+3,py+1,W-6,4);
+  ctx.fillStyle='#E0EDF5';ctx.fillRect(px+4,py+2,W-8,Math.round(T*0.5));
+  ctx.fillStyle='#C8DCE8';ctx.fillRect(px+5,py+3,W-10,Math.round(T*0.42));
+  ctx.fillStyle='#D8EBF8';ctx.fillRect(px+6,py+Math.round(T*0.52),W-12,Math.round(T*0.5));
+  ctx.fillStyle='#EAF3FA';ctx.beginPath();ctx.ellipse(px+W/2,py+T+Math.round(T*0.52),W*0.41,Math.round(T*0.36),0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#9AB8CC';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(px+W/2,py+T+Math.round(T*0.52),W*0.41,Math.round(T*0.36),0,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.4)';ctx.beginPath();ctx.ellipse(px+W*0.38,py+T+Math.round(T*0.36),W*0.17,Math.round(T*0.12),-0.3,0,Math.PI*2);ctx.fill();
+}
+
+function _hbDrawStove(ctx,px,py,T){
+  var W=2*T,H=T;
+  ctx.fillStyle='#3A3A3A';ctx.fillRect(px,py,W,H);
+  ctx.fillStyle='#4A4A4A';ctx.fillRect(px+2,py+2,W-4,Math.round(H*0.72));
+  [{x:.25,y:.3},{x:.75,y:.3},{x:.25,y:.68},{x:.75,y:.68}].forEach(function(b){
+    ctx.fillStyle='#282828';ctx.beginPath();ctx.arc(px+b.x*W,py+b.y*H,T*0.14,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#202020';ctx.beginPath();ctx.arc(px+b.x*W,py+b.y*H,T*0.07,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#606060';ctx.lineWidth=0.5;ctx.beginPath();ctx.arc(px+b.x*W,py+b.y*H,T*0.12,0,Math.PI*2);ctx.stroke();
+  });
+  ctx.fillStyle='#585858';ctx.fillRect(px+5,py+Math.round(H*0.78),4,4);ctx.fillRect(px+W-9,py+Math.round(H*0.78),4,4);
+  ctx.fillStyle='rgba(255,255,255,0.05)';ctx.fillRect(px+2,py+2,W-4,2);
+}
+
+function _hbDrawCounter(ctx,px,py,T){
+  var W=2*T,H=T;
+  ctx.fillStyle='#D8D0BC';ctx.fillRect(px,py,W,H);
+  ctx.fillStyle='#E8E0CC';ctx.fillRect(px+1,py+1,W-2,Math.round(H*0.72));
+  var ts=Math.round(T*0.32);
+  ctx.strokeStyle='#C8C0AC';ctx.lineWidth=0.5;
+  for(var xi=px+1;xi<px+W-1;xi+=ts){ctx.beginPath();ctx.moveTo(xi,py+1);ctx.lineTo(xi,py+Math.round(H*0.72));ctx.stroke();}
+  for(var yi=py+1;yi<py+Math.round(H*0.72);yi+=ts){ctx.beginPath();ctx.moveTo(px+1,yi);ctx.lineTo(px+W-1,yi);ctx.stroke();}
+  ctx.fillStyle='#A0B8C8';ctx.fillRect(px+Math.round(W*0.3),py+5,Math.round(W*0.4),Math.round(H*0.38));
+  ctx.fillStyle='#88A0B0';ctx.fillRect(px+Math.round(W*0.32),py+7,Math.round(W*0.36),Math.round(H*0.3));
+  ctx.fillStyle='#C0CAD0';ctx.fillRect(px+Math.round(W*0.47),py+2,4,7);
+  ctx.fillStyle='rgba(255,255,255,0.3)';ctx.fillRect(px+2,py+2,W-4,2);
+  ctx.strokeStyle='rgba(0,0,0,0.15)';ctx.lineWidth=1;ctx.strokeRect(px+.5,py+.5,W-1,H-1);
+}
+
+var HB_DRAWFN = {
+  bed:_hbDrawBed, lamp:_hbDrawLamp, plant:_hbDrawPlant, sofa:_hbDrawSofa,
+  tv:_hbDrawTV, coffee:_hbDrawCoffee, rug:_hbDrawRug, desk:_hbDrawDesk,
+  books:_hbDrawBooks, toilet:_hbDrawToilet, stove:_hbDrawStove, counter:_hbDrawCounter,
+};
+
+function _hbDrawGeneric(ctx,def,px,py,T){
+  var W=def.w*T,H=def.h*T;
+  ctx.fillStyle='rgba(0,0,0,0.14)';ctx.fillRect(px+2,py+2,W,H);
+  ctx.fillStyle=def.color;ctx.fillRect(px,py,W,H);
+  ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(px,py,W,3);ctx.fillRect(px,py,3,H);
+  ctx.fillStyle='rgba(0,0,0,0.16)';ctx.fillRect(px,py+H-3,W,3);ctx.fillRect(px+W-3,py,3,H);
+  if(def.icon){
+    var fs=Math.round(Math.min(W,H)*0.55);
+    ctx.font=fs+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(def.icon,px+W/2,py+H/2);ctx.textBaseline='alphabetic';
+  }
+  ctx.strokeStyle='rgba(0,0,0,0.22)';ctx.lineWidth=1;ctx.strokeRect(px+.5,py+.5,W-1,H-1);
+}
+
+function _hbDrawItem(ctx,def,px,py,T){
+  if(HB_DRAWFN[def.id]) HB_DRAWFN[def.id](ctx,px,py,T);
+  else _hbDrawGeneric(ctx,def,px,py,T);
+}
+
+function hbDraw(){
+  var canvas=document.getElementById('hb-canvas');
+  if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  var T=HB_T0, dpr=window.devicePixelRatio||1;
+  ctx.save();
+  ctx.imageSmoothingEnabled=false;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.scale(HB_SCALE*dpr,HB_SCALE*dpr);
+
+  // Outer wall background
+  ctx.fillStyle='#4A2C18';ctx.fillRect(0,0,T*HB_COLS,T*HB_ROWS);
+
+  HB_ZONES.forEach(function(z){
+    var px=z.x*T,py=z.y*T,pw=z.w*T,ph=z.h*T;
+    ctx.fillStyle=z.floor;ctx.fillRect(px,py,pw,ph);
+    ctx.strokeStyle=z.border+'28';ctx.lineWidth=0.5;
+    for(var gx2=0;gx2<=z.w;gx2++){ctx.beginPath();ctx.moveTo(px+gx2*T,py);ctx.lineTo(px+gx2*T,py+ph);ctx.stroke();}
+    for(var gy2=0;gy2<=z.h;gy2++){ctx.beginPath();ctx.moveTo(px,py+gy2*T);ctx.lineTo(px+pw,py+gy2*T);ctx.stroke();}
+    ctx.strokeStyle=z.border;ctx.lineWidth=3;ctx.strokeRect(px+1.5,py+1.5,pw-3,ph-3);
+    ctx.fillStyle=z.label+'BB';
+    ctx.font='bold '+Math.round(T*0.35)+'px "PingFang SC","Noto Sans SC",sans-serif';
+    ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(z.name,px+5,py+4);ctx.textBaseline='alphabetic';
+  });
+
+  var rugs=HB_LAYOUT.filter(function(i){return i.id==='rug';});
+  var others=HB_LAYOUT.filter(function(i){return i.id!=='rug';});
+  function _render(item){
+    var def=HB_FURNITURE.find(function(f){return f.id===item.id;});
+    if(def) _hbDrawItem(ctx,def,item.x*T,item.y*T,T);
+  }
+  rugs.forEach(_render);others.forEach(_render);
+
+  if(HB_EDITING&&HB_HOVER&&HB_SELECTED){
+    var hdef=HB_FURNITURE.find(function(f){return f.id===HB_SELECTED;});
+    if(hdef){
+      var ok=hbCanPlace(hdef,HB_HOVER.x,HB_HOVER.y);
+      ctx.fillStyle=ok?'rgba(100,200,100,0.28)':'rgba(220,60,60,0.28)';
+      ctx.fillRect(HB_HOVER.x*T,HB_HOVER.y*T,hdef.w*T,hdef.h*T);
+      ctx.strokeStyle=ok?'rgba(60,180,60,0.7)':'rgba(200,40,40,0.7)';
+      ctx.lineWidth=2;ctx.setLineDash([4,3]);
+      ctx.strokeRect(HB_HOVER.x*T+1,HB_HOVER.y*T+1,hdef.w*T-2,hdef.h*T-2);
+      ctx.setLineDash([]);
+    }
+  }
+  ctx.restore();
+}
+
+function hbResize(){
+  var outer=document.getElementById('hb-canvas-outer');
+  var canvas=document.getElementById('hb-canvas');
+  if(!outer||!canvas) return;
+  var W=outer.clientWidth,H=outer.clientHeight;
+  if(W<=0||H<=0) return;
+  var mapW=HB_T0*HB_COLS,mapH=HB_T0*HB_ROWS;
+  HB_SCALE=Math.min(W/mapW,H/mapH);
+  if(HB_SCALE<0.4) HB_SCALE=0.4;
+  var dpr=window.devicePixelRatio||1;
+  canvas.width=Math.round(mapW*HB_SCALE*dpr);
+  canvas.height=Math.round(mapH*HB_SCALE*dpr);
+  canvas.style.width=Math.round(mapW*HB_SCALE)+'px';
+  canvas.style.height=Math.round(mapH*HB_SCALE)+'px';
+  hbDraw();
+}
+
+function hbBuildPalette(){
+  var ztabs=document.getElementById('hb-zone-tabs');
+  var pal=document.getElementById('hb-pal');
+  if(!ztabs||!pal) return;
+  ztabs.innerHTML='';
+  var allBtn=document.createElement('button');
+  allBtn.className='hb-zone-tab'+(!HB_ACTIVE_ZONE?' active':'');
+  allBtn.textContent='全部';
+  allBtn.onclick=function(){HB_ACTIVE_ZONE=null;hbBuildPalette();};
+  ztabs.appendChild(allBtn);
+  HB_ZONES.forEach(function(z){
+    var btn=document.createElement('button');
+    btn.className='hb-zone-tab'+(HB_ACTIVE_ZONE===z.id?' active':'');
+    btn.textContent=z.name;
+    btn.onclick=function(){HB_ACTIVE_ZONE=z.id;hbBuildPalette();};
+    ztabs.appendChild(btn);
+  });
+  pal.innerHTML='';
+  HB_FURNITURE.filter(function(f){
+    return !HB_ACTIVE_ZONE||f.zones.indexOf(HB_ACTIVE_ZONE)>=0;
+  }).forEach(function(def){
+    var el=document.createElement('div');
+    el.className='hb-pal-item'+(HB_SELECTED===def.id?' sel':'');
+    el.innerHTML='<div class="hb-pal-icon">'+(def.icon||'⬜')+'</div><div class="hb-pal-name">'+def.name+'</div>';
+    el.onclick=function(){
+      if(!HB_EDITING) hbToggleEdit();
+      HB_SELECTED=(HB_SELECTED===def.id)?null:def.id;
+      hbBuildPalette();
+    };
+    pal.appendChild(el);
+  });
+}
+
+function _hbPlace(clientX,clientY){
+  var tile=hbTileAt(clientX,clientY);
+  if(!tile||!HB_EDITING||!HB_SELECTED) return;
+  var def=HB_FURNITURE.find(function(f){return f.id===HB_SELECTED;});
+  if(!def) return;
+  if(hbCanPlace(def,tile.x,tile.y)){
+    HB_LAYOUT.push({id:HB_SELECTED,x:tile.x,y:tile.y});
+    hbSave();hbDraw();
+  }
+}
+
+function loadOurHouse(){
+  if(!HB_INITED){
+    var canvas=document.getElementById('hb-canvas');
+    if(!canvas) return;
+    canvas.getContext('2d').imageSmoothingEnabled=false;
+
+    try{var sv=localStorage.getItem('hb_layout');HB_LAYOUT=sv?JSON.parse(sv):hbDefaultLayout();}
+    catch(e){HB_LAYOUT=hbDefaultLayout();}
+
+    canvas.addEventListener('click',function(e){
+      if(HB_LONG_TIMER){clearTimeout(HB_LONG_TIMER);HB_LONG_TIMER=null;return;}
+      _hbPlace(e.clientX,e.clientY);
+    });
+    canvas.addEventListener('touchstart',function(e){
+      e.preventDefault();
+      if(!e.touches.length) return;
+      var t=e.touches[0],tile=hbTileAt(t.clientX,t.clientY);
+      HB_LONG_TIMER=setTimeout(function(){
+        HB_LONG_TIMER=null;
+        if(!tile) return;
+        var ex=hbFurnitureAt(tile.x,tile.y);
+        if(ex){HB_LAYOUT.splice(ex.index,1);hbSave();hbDraw();if(navigator.vibrate)navigator.vibrate(40);}
+      },500);
+    },{passive:false});
+    canvas.addEventListener('touchend',function(e){
+      e.preventDefault();
+      if(HB_LONG_TIMER){
+        clearTimeout(HB_LONG_TIMER);HB_LONG_TIMER=null;
+        if(e.changedTouches.length){var t2=e.changedTouches[0];_hbPlace(t2.clientX,t2.clientY);}
+      }
+    },{passive:false});
+    canvas.addEventListener('touchmove',function(e){
+      e.preventDefault();
+      if(HB_LONG_TIMER){clearTimeout(HB_LONG_TIMER);HB_LONG_TIMER=null;}
+      if(!HB_EDITING||!HB_SELECTED||!e.touches.length) return;
+      HB_HOVER=hbTileAt(e.touches[0].clientX,e.touches[0].clientY);hbDraw();
+    },{passive:false});
+    canvas.addEventListener('mousemove',function(e){
+      if(!HB_EDITING||!HB_SELECTED) return;
+      HB_HOVER=hbTileAt(e.clientX,e.clientY);hbDraw();
+    });
+    window.addEventListener('resize',hbResize);
+    hbBuildPalette();
+    HB_INITED=true;
+  }
+  setTimeout(hbResize,20);
+}
+
+function hbToggleEdit(){
+  HB_EDITING=!HB_EDITING;
+  var btn=document.getElementById('hb-edit-btn');
+  var hint=document.getElementById('hb-hint');
+  if(HB_EDITING){
+    if(btn){btn.textContent='完成';btn.classList.add('active');}
+    if(hint) hint.textContent='选家具点击房间放置 · 长按已放置的家具可移除';
+  } else {
+    if(btn){btn.textContent='编辑';btn.classList.remove('active');}
+    HB_SELECTED=null;HB_HOVER=null;
+    if(hint) hint.textContent='点击编辑开始布置我们的家';
+    hbBuildPalette();hbDraw();
+  }
+}
+
+function hbReset(){
+  if(!confirm('重置我们的家？放置的家具将全部清空。')) return;
+  HB_LAYOUT=[];hbSave();hbDraw();
 }
 </script>
 </body>
