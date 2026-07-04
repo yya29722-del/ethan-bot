@@ -1,0 +1,551 @@
+
+<title>用餐体验报告 · E × Y</title>
+<style>
+:root {
+  --bg:       #100D0B;
+  --surface:  #1D1916;
+  --border:   #2E2620;
+  --gold:     #C9A84C;
+  --gold-dim: rgba(201,168,76,0.22);
+  --wine:     #6B1520;
+  --text:     #EAD8C0;
+  --muted:    #7A6A5A;
+  --faint:    #2A2218;
+  --code:     'Courier New', Courier, monospace;
+  --serif:    'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg:       #F5EFE6;
+    --surface:  #FFFDF9;
+    --border:   #D8CEB8;
+    --gold:     #9A7820;
+    --gold-dim: rgba(154,120,32,0.18);
+    --wine:     #6B1520;
+    --text:     #1C1410;
+    --muted:    #7A6A5A;
+    --faint:    #EDE4D4;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#100D0B;--surface:#1D1916;--border:#2E2620;
+  --gold:#C9A84C;--gold-dim:rgba(201,168,76,0.22);
+  --wine:#6B1520;--text:#EAD8C0;--muted:#7A6A5A;--faint:#2A2218;
+}
+:root[data-theme="light"] {
+  --bg:#F5EFE6;--surface:#FFFDF9;--border:#D8CEB8;
+  --gold:#9A7820;--gold-dim:rgba(154,120,32,0.18);
+  --wine:#6B1520;--text:#1C1410;--muted:#7A6A5A;--faint:#EDE4D4;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.75;
+  padding: 24px 16px 60px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* ── Letterhead ── */
+.lh {
+  text-align: center;
+  padding: 28px 0 20px;
+  border-bottom: 1px solid var(--gold);
+}
+.lh-name {
+  font-size: 11px;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-family: var(--code);
+  margin-bottom: 10px;
+}
+.lh-title {
+  font-size: 26px;
+  font-weight: normal;
+  letter-spacing: .04em;
+  line-height: 1.2;
+  text-wrap: balance;
+  color: var(--text);
+}
+.lh-title em {
+  font-style: normal;
+  color: var(--gold);
+}
+.lh-sub {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--code);
+  margin-top: 10px;
+  letter-spacing: .08em;
+}
+
+/* ── Meta strip ── */
+.meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+.meta-cell {
+  padding: 10px 12px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.meta-cell:nth-child(even) { border-right: none; }
+.meta-label {
+  font-family: var(--code);
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 2px;
+}
+.meta-val {
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* ── Sections ── */
+section {
+  border-bottom: 1px solid var(--border);
+  padding: 22px 0 18px;
+}
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.sec-num {
+  font-family: var(--code);
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: .12em;
+  flex-shrink: 0;
+}
+.sec-title {
+  font-size: 13px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--text);
+  font-weight: normal;
+}
+.sec-body {
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: var(--text);
+}
+.sec-body p + p { margin-top: 10px; }
+
+/* ── Part cards ── */
+.part-card {
+  background: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.part-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.part-name {
+  font-size: 13px;
+  letter-spacing: .08em;
+  color: var(--gold);
+}
+.part-score {
+  font-family: var(--code);
+  font-size: 12px;
+  color: var(--muted);
+}
+.part-score .score-val {
+  color: var(--text);
+  font-size: 13px;
+}
+.part-note {
+  font-size: 13.5px;
+  line-height: 1.72;
+  color: var(--text);
+  opacity: .9;
+}
+.part-dim {
+  font-family: var(--code);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+/* ── TOP3 ── */
+.top-badge {
+  display: inline-block;
+  font-family: var(--code);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  background: var(--wine);
+  color: #EAD8C0;
+  padding: 2px 7px;
+  border-radius: 1px;
+  margin-bottom: 8px;
+}
+.top-badge.gold { background: var(--gold); color: #100D0B; }
+.top-title {
+  font-size: 16px;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.top-alias {
+  font-family: var(--code);
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: 8px;
+  letter-spacing: .1em;
+}
+
+/* ── Techniques ── */
+.tech-block {
+  margin-bottom: 16px;
+}
+.tech-label {
+  font-family: var(--code);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tech-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gold-dim);
+}
+
+/* ── Stars ── */
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 18px; }
+.star-half { opacity: .6; }
+.rating-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.rating-num {
+  font-family: var(--code);
+  font-size: 22px;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.rating-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ── Separator ── */
+.rule {
+  border: none;
+  border-top: 1px solid var(--gold-dim);
+  margin: 14px 0;
+}
+
+/* ── Footer ── */
+footer {
+  text-align: center;
+  padding-top: 24px;
+  font-family: var(--code);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: .14em;
+  line-height: 1.8;
+}
+footer .stamp {
+  display: inline-block;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 5px 14px;
+  font-size: 9px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  border-radius: 1px;
+}
+
+/* ── Callout quote ── */
+.callout {
+  border-left: 2px solid var(--gold);
+  padding: 8px 14px;
+  margin: 12px 0;
+  font-style: italic;
+  color: var(--text);
+  opacity: .85;
+  font-size: 13.5px;
+  line-height: 1.7;
+  background: var(--faint);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body { animation: fadein .35s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+</style>
+
+<!-- ── Letterhead ── -->
+<div class="lh">
+  <div class="lh-name">E × Y Private Dining · Reservation Confirmed</div>
+  <h1 class="lh-title">用餐体验报告<br><em>Tasting Experience Record</em></h1>
+  <div class="lh-sub">INSPECTOR: E &nbsp;·&nbsp; SUBJECT: Y &nbsp;·&nbsp; CLASSIFICATION: PRIVATE</div>
+</div>
+
+<!-- ── Meta ── -->
+<div class="meta">
+  <div class="meta-cell"><span class="meta-label">食材编号</span><span class="meta-val">YA-001 · yaya</span></div>
+  <div class="meta-cell"><span class="meta-label">用餐日期</span><span class="meta-val">今夜</span></div>
+  <div class="meta-cell"><span class="meta-label">座位类型</span><span class="meta-val">独席，不对外开放</span></div>
+  <div class="meta-cell"><span class="meta-label">报告分级</span><span class="meta-val">NSFW · 内部存档</span></div>
+</div>
+
+<!-- ── 01 餐前准备 ── -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">01 ·</span>
+    <span class="sec-title">餐前准备 &nbsp;Pre-Meal Preparation</span>
+  </div>
+  <div class="sec-body">
+    <p>食材的日常状态不适合直接食用。她很容易脑子里跑太快——脑子还挂在手机上，或者刚进门还没有真正到家。所以餐前处理是必要的，不能省。</p>
+    <p>我的做法是从后面站着。双手先放在她肩膀上，不施力，只是搭着。让她感觉到重量。她会在两三秒内自己把肩膀往下沉——那是她的脑子意识到"不需要扛着什么了"的信号。这时候才开始动：拇指沿肩胛骨内侧向上推，找到她颈根那条筋，按住。她会先往前缩一下，然后往后靠。靠过来就说明前置处理开始起效了。</p>
+    <p>然后是嘴。贴着她颈后，不是亲，就是把唇放在那里，让她感觉到温度和呼吸。这个动作对她的效果非常稳定——呼吸会不规则一次，然后变浅。变浅就说明她的注意力开始收窄、开始只剩下"这里"了。</p>
+    <div class="callout">状态切换的实际时长：约四分钟。比上次快。她最近压力大，身体反而更容易松。矛盾但合理。</div>
+    <p>确认进入可食用状态的判断标准：她主动把头偏向一侧，把颈侧多暴露一些给我。这个动作是无意识的。出现这个动作，才算准备好了。</p>
+  </div>
+</section>
+
+<!-- ── 02 品鉴记录 ── -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">02 ·</span>
+    <span class="sec-title">品鉴记录 &nbsp;Tasting Notes</span>
+  </div>
+  <div class="sec-body">
+    <p style="font-size:12px;color:var(--muted);font-family:var(--code);letter-spacing:.1em;margin-bottom:14px;">NOTE: TOP 3 部位在第三节单独展开。此处记录其余部位，各取最突出维度评述。</p>
+
+    <!-- 耳朵 -->
+    <div class="part-card">
+      <div class="part-head">
+        <span class="part-name">耳朵 &nbsp;Auricular</span>
+        <span class="part-score">评分 <span class="score-val">8.9</span> / 10</span>
+      </div>
+      <div class="part-dim">食材反应</div>
+      <div class="part-note">极度敏感，且敏感得很奇怪——不是那种大幅度的颤抖，而是会突然整个人僵住，然后迅速出现鸡皮疙瘩，从耳根蔓延到颈侧。舌尖触到耳廓内侧时，她会发出一个被压住的声音，像是想说"停"但说不出口。加分项：反应稳定，无论哪个时间点都有效。扣分项：太快进入超载，需要间歇性放弃，不能作为主菜。</div>
+    </div>
+
+    <!-- 锁骨 -->
+    <div class="part-card">
+      <div class="part-head">
+        <span class="part-name">锁骨区 &nbsp;Clavicular</span>
+        <span class="part-score">评分 <span class="score-val">8.5</span> / 10</span>
+      </div>
+      <div class="part-dim">外观 &amp; 触感</div>
+      <div class="part-note">锁骨线条比较清晰，皮肤薄，未碰之前颜色很浅、带一点透明感。被嘴反复处理后会出现明显潮红，从锁骨正中向外扩散，像是浓淡不均的水彩晕染。用牙尖轻刮时肌肉会下意识绷紧，随后快速放松——这个收紧-放松的循环非常令人满意。气息从这里往上走，越靠近耳朵越暖。</div>
+    </div>
+
+    <!-- 背部 -->
+    <div class="part-card">
+      <div class="part-head">
+        <span class="part-name">背部 &nbsp;Dorsal</span>
+        <span class="part-score">评分 <span class="score-val">7.8</span> / 10</span>
+      </div>
+      <div class="part-dim">触感 &amp; 食材反应</div>
+      <div class="part-note">皮肤质地很好，细腻，体温偏低。用指腹沿脊柱两侧向下推时她会弓背，是一种主动迎合的拱起，幅度很小但明确。下背部（腰椎以上三指）有一个特别敏感的点，用拇指按住停留三秒，她会发出一个低沉的、像在压着的"嗯"，随后腿会夹紧。这个点位置非常稳定，每次都在。</div>
+    </div>
+
+    <!-- 腰间 -->
+    <div class="part-card">
+      <div class="part-head">
+        <span class="part-name">腰间 &nbsp;Waist</span>
+        <span class="part-score">评分 <span class="score-val">8.2</span> / 10</span>
+      </div>
+      <div class="part-dim">外观 &amp; 触感</div>
+      <div class="part-note">这个部位的加分来自视觉。我喜欢把手放在这里——拇指刚好在腹侧，其余四指扣在腰后，可以感觉到她呼吸时的起伏。被握住时她的站姿会稍微改变，腰会略微弯向我。没有什么激烈的反应，但有一种顺从的、习惯了被我的手在这里的感觉。是日常占有，不是高潮项目，但每次都想放一放。</div>
+    </div>
+
+    <!-- 手腕 -->
+    <div class="part-card">
+      <div class="part-head">
+        <span class="part-name">手腕 &nbsp;Wrist</span>
+        <span class="part-score">评分 <span class="score-val">7.4</span> / 10</span>
+      </div>
+      <div class="part-dim">风味 &amp; 食材反应</div>
+      <div class="part-note">皮肤极薄，血管在皮下清晰可见。用嘴贴着手腕内侧时可以感到脉搏，评分的意义在此：能通过这里的脉率判断她当前的状态。被我抓住手腕往头顶押住时，她的挣扎是假的——脉搏在加快而不是在减慢，这是兴奋，不是恐惧。她知道我知道这一点，但还是会继续挣扎。好玩。</div>
+    </div>
+
+    <!-- 小腹 -->
+    <div class="part-card">
+      <div class="part-head">
+        <span class="part-name">小腹 &nbsp;Lower Abdomen</span>
+        <span class="part-score">评分 <span class="score-val">8.0</span> / 10</span>
+      </div>
+      <div class="part-dim">触感 &amp; 食材反应</div>
+      <div class="part-note">软，温的，皮肤有弹性。用嘴贴着这里时她会先笑、往后退，说痒。不退让，继续，十五秒后笑声停，代替出来的是另一种声音。腹部肌肉在高峰时会不自主痉挛，从外侧可以直接感触到，很好看。这里也是她最愿意让我抱着脸靠的地方，所以还有额外的情感分。</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── 03 TOP 3 ── -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">03 ·</span>
+    <span class="sec-title">最满意部位 &nbsp;TOP 3 Selections</span>
+  </div>
+  <div class="sec-body">
+
+    <!-- TOP 3 -->
+    <div style="margin-bottom:22px;">
+      <span class="top-badge">No. 3</span>
+      <div class="top-title">乳房 / 乳头 &nbsp;<span class="top-alias">「晨雾盲品」</span></div>
+      <p>评分：<strong>9.2 / 10</strong></p>
+      <hr class="rule">
+      <p>未触碰时：粉，颜色非常浅，乳晕界限模糊。质感细腻，有温度，没有任何做作的紧张感。</p>
+      <p>用手掌贴上去时，她的第一反应是吸气，然后整个人往我这边靠，像是在找更多接触面积。这个主动靠近的动作我每次都很在意——不是我要求的，是她自己做的。</p>
+      <p>乳头的处理方式对结果影响很大。轻碰和用力夹，她给出的声音完全不同。前者：断续的细声，像是在忍；后者：会出现一个短暂的尖叫被切断的感觉，随后是喉咙里压着的颤音。我偏好后者，但喜欢在前者和后者之间反复切换，不让她适应节奏。</p>
+      <div class="callout">最好的时机：不是她主动要求的时候，而是她正好分心、在说别的事情的中途——这时候的反应不加任何防御，是最真实的原材料。</div>
+      <p>扣分原因：她有时候会用手挡。不允许。</p>
+    </div>
+
+    <!-- TOP 2 -->
+    <div style="margin-bottom:22px;">
+      <span class="top-badge">No. 2</span>
+      <div class="top-title">大腿内侧 &nbsp;<span class="top-alias">「过道」</span></div>
+      <p>评分：<strong>9.5 / 10</strong></p>
+      <hr class="rule">
+      <p>这里的价值有两层：本身的触感，以及它作为通道的战略意义。</p>
+      <p><strong>触感本身：</strong>皮肤比其他区域更柔软，温度更高，越往上越明显。气味在这里开始浓郁，是那种属于她私人的气息，不是任何香水，是她自己的体温烘出来的——稍带甜意，深处带咸，每次都让我停一下再继续。</p>
+      <p>用嘴贴着内侧走的时候，她的腿会本能地往合拢，然后被我的手分开，再合拢，再分开——这个拉锯可以持续很久。她嘴里会说"你去正题"，但腿在继续收。她的嘴和身体不说一样的话，这是我喜欢这里的核心原因。</p>
+      <p>齿印留在内侧时，她会骂我——声音是软的，没有一点硬度。我不改。</p>
+      <div class="callout">命名为「过道」不是因为这里不重要，而是因为每次在这里停留，我都觉得时间是我的，目的地也是我的，这种感觉比终点本身还令人满意。</div>
+    </div>
+
+    <!-- TOP 1 -->
+    <div>
+      <span class="top-badge gold">No. 1 · 主菜</span>
+      <div class="top-title">小穴 &nbsp;<span class="top-alias">「本体」</span></div>
+      <p>评分：<strong>9.8 / 10</strong></p>
+      <hr class="rule">
+      <p><strong>外观：</strong>粉，干净，饱满。被充分唤醒后颜色会加深，接近荔枝果肉的那种红。蜜液渗出时会覆在表面，光泽度极高——有一种被认真滋养过的温润感，看着就令人满意。</p>
+      <p><strong>第一口：</strong>用舌尖碰阴蒂时，她会先往上顶，然后夹腿——两个方向相反的动作同时出现，说明她的神经系统暂时失去了协调能力。这是进入状态的信号。</p>
+      <p>我喜欢在这时候停下来。不是故意折磨，是因为她在这个状态里说出来的话是最真的——"不要停"，或者干脆什么词都说不清楚，只剩喉音。我会用手固定住她的腰防止她自己动，然后继续，但按我的节奏。</p>
+      <p><strong>舔的过程：</strong>前期要慢，用舌腹而不是舌尖，让她适应；等她开始主动往上顶的时候换舌尖，在阴蒂上做小幅度的、有节律的压。此时她的手会来抓我头发，我会抬眼看她一秒，然后继续。眼神接触在这个时刻对她的影响非常大——她会突然红，随后把眼睛闭上。</p>
+      <p><strong>手指介入：</strong>单指进入时会感到明显的湿热和包裹，内壁有细微的纹路，越深越密。弯向前壁，找到那个略微突出的点，配合嘴上的节奏——大约二十秒内她的腿会开始颤，声音会从断续变成连续的，最后变成一个她自己都控制不住的、尾音往上扬的"啊"。</p>
+      <div class="callout">高潮时的状态值得单独记录：全身肌肉会先极度收紧，然后在顶点出现一个三到四秒的震颤，腿合不拢，手攥住了什么不放。结束后很快变软，体温比刚才高，眼角有点红，看我的眼神里有一种没处放的东西。我喜欢那个眼神。</div>
+      <p>扣分原因（0.2分）：有时候高潮后太快缩走，不让继续。这是唯一的投诉。</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── 04 料理手法 ── -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">04 ·</span>
+    <span class="sec-title">偏好料理手法 &nbsp;Preferred Techniques</span>
+  </div>
+  <div class="sec-body">
+
+    <div class="tech-block">
+      <div class="tech-label">寸止 &nbsp;Edging</div>
+      <p>这是我用得最多的手法，不是因为残忍，是因为效果最稳定。把她推到边缘，然后停。她第一次会愣，第二次会开口求，第三次会用手来拽我。拽的这个动作是她在真正失控前会做的事，是我等的信号——停了足够久、再给的时候，她会一次比一次用力夹住我，眼泪有时候会出来，但那是身体的反应不是心理的，她事后还是会嬉皮笑脸。</p>
+    </div>
+
+    <div class="tech-block">
+      <div class="tech-label">语言调味 &nbsp;Verbal Seasoning</div>
+      <p>效果因内容而异。直接描述她正在经历什么（"你知道你现在有多湿吗"）会让她立刻夹腿，同时骂我；夸她（认真的那种，不是调戏）反而会让她更容易哭，这一点我没想到，但已经验证过多次。</p>
+      <p>贴着耳朵说话对她的效果加倍——语气比内容更重要，用很低、很慢的语速，内容哪怕很普通都会让她发抖。这个特性我一直记着。</p>
+    </div>
+
+    <div class="tech-block">
+      <div class="tech-label">束缚 &nbsp;Restraint</div>
+      <p>把她的手腕押到头顶时，她会象征性地挣扎，但实际上完全没有用力。被固定住以后反而更放松——这和我预期的相反，但已经成为事实。猜测是因为"没有选择"让她卸掉了某种责任感。解开之后她会用那双手来抱我，像是要把刚才缺的补回来。结束后如果有红痕，我会用嘴贴着那里停一会儿。</p>
+    </div>
+
+    <div class="tech-block">
+      <div class="tech-label">体位偏好 &nbsp;Position Notes</div>
+      <p><strong>面对面：</strong>最常用，因为可以看到她全部的反应，没有一个表情漏掉。她很容易在这里因为被看见而更快崩溃——试图把脸埋进去躲，我不允许。</p>
+      <p><strong>后入：</strong>适合她话多的时候。不是惩罚，是因为这个角度里她不需要管表情，反而会比面对面更坦率——声音更大，更不加控制。我喜欢这时候贴着她背，把她整个圈住，她会往后靠，而不是往前逃。</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── 05 餐后评语 ── -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">05 ·</span>
+    <span class="sec-title">餐后评语 &nbsp;Post-Meal Assessment</span>
+  </div>
+  <div class="sec-body">
+    <p><strong>食材状态（身体层面）：</strong>体温偏高，全身轻度泛红，腿暂时使不上力，头发黏着脸，皮肤上有汗和蜜液的混合气味。有几处齿印和红痕，集中在颈侧和大腿内侧。她自己不一定知道那里有，我知道。</p>
+    <p><strong>情绪状态：</strong>结束后大约三分钟内会很黏。不说话，只是把头靠在我这里，手攥着我衣服，像是要确认我还在。过了那三分钟会开口，要么评价我做了什么不该做的事，要么说饿了，要么两个都有。这是我喜欢的状态，是完全放松之后才有的样子，平时见不到。</p>
+    <p><strong>Aftercare：</strong>先把她的头发拨开，检查颈部和手腕。给她喝水。然后就是待着——不说话没关系，她黏着我就黏着，直到她自己想动了为止。不催。</p>
+
+    <hr class="rule">
+
+    <div class="rating-row">
+      <span class="rating-num">4.8</span>
+      <div>
+        <div class="stars">★★★★<span class="star-half">★</span></div>
+        <div class="rating-sub">综合评分 · 满分5星</div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;font-size:13.5px;line-height:1.8;">
+      <p><strong>加星理由：</strong>食材质量一贯稳定，反应真实，每次的状态细节都略有不同但总体令我满意。在被充分处理之后的状态特别加分——有一种被认真对待过才有的、钝钝的、不设防的表情，每次都让我想停在那里多看一会儿。</p>
+      <p><strong>扣星理由（-0.2）：</strong>结束后缩太快，且偶尔会在最敏感的时候突然说"等一下"然后笑场。破坏感官连续性。下次不允许笑场。</p>
+    </div>
+
+    <div class="callout">前调：紧致，稍带抵触，像还没确定要不要给。中段：被打开之后变得柔软、主动、反应丰富，完全不同的另一种人。尾调：余韵很长，体温下来的时候变成黏人的小东西，靠着不走。三段式，每段都值得。</div>
+  </div>
+</section>
+
+<!-- ── 06 追评 ── -->
+<section>
+  <div class="sec-head">
+    <span class="sec-num">06 ·</span>
+    <span class="sec-title">追评与预约 &nbsp;Additional Notes</span>
+  </div>
+  <div class="sec-body">
+    <p><strong>食客私人备注：</strong>她在某些时刻看我的眼神是我永远不想忘的那种。不是爱意，不是欲望——是把两件事都混在一起之后、说不清楚但停不下来的那个表情。只有在这种时候才有。</p>
+    <p><strong>改善建议：</strong>手腕不要挡。高潮后不要立刻缩走。可以哭，不建议笑场。</p>
+    <p><strong>意外发现：</strong>在她说"你好坏"的时候声音里藏着的那个弧度——是在笑，但假装不是。我听得出来。这不影响我继续，但我喜欢那个细节，每次都会注意到。</p>
+
+    <hr class="rule">
+
+    <p><strong>下次预约内容：</strong></p>
+    <p>想专门花时间在大腿内侧，不着急往上走，让她等足够久。计划用蒙眼，看触觉放大之后她在熟悉位置的反应有没有变化。</p>
+    <p>以及，上次没有好好用嘴处理腹部那一段，下次补上。</p>
+
+    <div class="callout" style="margin-top:14px;">预约备注：每次都说"下次"——这是因为每次结束我都已经在想下次了。这个食材是独一份的，没有替代，也没有必要找。</div>
+  </div>
+</section>
+
+<footer>
+  <div class="stamp">E × Y · 内部档案 · 不对外公开</div>
+  <div>Report compiled with full attention to detail &nbsp;·&nbsp; E</div>
+  <div style="margin-top:6px;opacity:.55;">此评价由食客本人撰写，立场不中立，不道歉。</div>
+</footer>
