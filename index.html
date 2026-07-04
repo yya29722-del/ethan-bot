@@ -2838,8 +2838,8 @@ window.addEventListener('tarot:cardRevealed', async function(e) {
 // ============================================================
 // OUR HOUSE — Pixel Art Home Builder
 // ============================================================
-var HB_T0 = 32;
-var HB_COLS = 10, HB_ROWS = 14;
+var HB_T0 = 48;
+var HB_COLS = 12, HB_ROWS = 16;
 var HB_SCALE = 1;
 var HB_EDITING = false;
 var HB_SELECTED = null;
@@ -2891,12 +2891,6 @@ function hbGetZoneAt(gx, gy) {
 
 function hbCanPlace(def, gx, gy) {
   if(gx<0||gy<0||gx+def.w>HB_COLS||gy+def.h>HB_ROWS) return false;
-  var zone=hbGetZoneAt(gx,gy);
-  if(!zone||def.zones.indexOf(zone.id)<0) return false;
-  for(var dx=0;dx<def.w;dx++) for(var dy=0;dy<def.h;dy++){
-    var z2=hbGetZoneAt(gx+dx,gy+dy);
-    if(!z2||z2.id!==zone.id) return false;
-  }
   return true;
 }
 
@@ -2925,12 +2919,24 @@ function hbSave() {
 
 function hbDefaultLayout() {
   return [
-    {id:'rug',      x:5,y:2}, {id:'bed',      x:1,y:1}, {id:'lamp',     x:0,y:1},
-    {id:'wardrobe', x:0,y:5}, {id:'plant',    x:4,y:6}, {id:'sofa',     x:5,y:2},
-    {id:'tv',       x:6,y:0}, {id:'coffee',   x:6,y:4}, {id:'plant',    x:9,y:0},
-    {id:'desk',     x:1,y:8}, {id:'books',    x:0,y:8}, {id:'chair',    x:1,y:9},
-    {id:'toilet',   x:4,y:8}, {id:'washbasin',x:6,y:8}, {id:'stove',    x:7,y:8},
-    {id:'fridge',   x:9,y:8}, {id:'counter',  x:7,y:10},{id:'cat',      x:6,y:5},
+    {id:'bed',       x:1,  y:1},
+    {id:'lamp',      x:5,  y:1},
+    {id:'wardrobe',  x:1,  y:6},
+    {id:'mirror',    x:4,  y:1},
+    {id:'plant',     x:10, y:1},
+    {id:'rug',       x:6,  y:3},
+    {id:'sofa',      x:6,  y:3},
+    {id:'tv',        x:7,  y:1},
+    {id:'coffee',    x:7,  y:6},
+    {id:'desk',      x:1,  y:9},
+    {id:'books',     x:1,  y:11},
+    {id:'chair',     x:3,  y:10},
+    {id:'toilet',    x:5,  y:10},
+    {id:'washbasin', x:7,  y:10},
+    {id:'stove',     x:8,  y:9},
+    {id:'fridge',    x:10, y:9},
+    {id:'counter',   x:8,  y:11},
+    {id:'cat',       x:5,  y:7},
   ];
 }
 
@@ -3061,21 +3067,30 @@ function hbDraw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.scale(HB_SCALE*dpr,HB_SCALE*dpr);
 
-  // Outer wall background
-  ctx.fillStyle='#4A2C18';ctx.fillRect(0,0,T*HB_COLS,T*HB_ROWS);
+  var cW=HB_COLS*T, cH=HB_ROWS*T;
 
-  HB_ZONES.forEach(function(z){
-    var px=z.x*T,py=z.y*T,pw=z.w*T,ph=z.h*T;
-    ctx.fillStyle=z.floor;ctx.fillRect(px,py,pw,ph);
-    ctx.strokeStyle=z.border+'28';ctx.lineWidth=0.5;
-    for(var gx2=0;gx2<=z.w;gx2++){ctx.beginPath();ctx.moveTo(px+gx2*T,py);ctx.lineTo(px+gx2*T,py+ph);ctx.stroke();}
-    for(var gy2=0;gy2<=z.h;gy2++){ctx.beginPath();ctx.moveTo(px,py+gy2*T);ctx.lineTo(px+pw,py+gy2*T);ctx.stroke();}
-    ctx.strokeStyle=z.border;ctx.lineWidth=3;ctx.strokeRect(px+1.5,py+1.5,pw-3,ph-3);
-    ctx.fillStyle=z.label+'BB';
-    ctx.font='bold '+Math.round(T*0.35)+'px "PingFang SC","Noto Sans SC",sans-serif';
-    ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(z.name,px+5,py+4);ctx.textBaseline='alphabetic';
-  });
+  // Outer wall
+  ctx.fillStyle='#4A2C14';
+  ctx.fillRect(0,0,cW,cH);
 
+  // Wood plank floor — warm alternating planks, no grid lines
+  var planks=['#D4A76A','#CCA062','#DAB070','#C89C5E'];
+  for(var row=0;row<HB_ROWS;row++){
+    ctx.fillStyle=planks[row%planks.length];
+    ctx.fillRect(T,row*T,cW-2*T,T);
+    // subtle inter-plank shadow
+    ctx.fillStyle='rgba(130,65,10,0.16)';
+    ctx.fillRect(T,row*T,cW-2*T,1);
+  }
+
+  // Wall trim / baseboard
+  ctx.fillStyle='#7A4E28';
+  ctx.fillRect(T,T,cW-2*T,5);
+  ctx.fillRect(T,cH-T-5,cW-2*T,5);
+  ctx.fillRect(T,T,5,cH-2*T);
+  ctx.fillRect(cW-T-5,T,5,cH-2*T);
+
+  // Furniture — rugs first, then everything else
   var rugs=HB_LAYOUT.filter(function(i){return i.id==='rug';});
   var others=HB_LAYOUT.filter(function(i){return i.id!=='rug';});
   function _render(item){
@@ -3088,7 +3103,7 @@ function hbDraw(){
     var hdef=HB_FURNITURE.find(function(f){return f.id===HB_SELECTED;});
     if(hdef){
       var ok=hbCanPlace(hdef,HB_HOVER.x,HB_HOVER.y);
-      ctx.fillStyle=ok?'rgba(100,200,100,0.28)':'rgba(220,60,60,0.28)';
+      ctx.fillStyle=ok?'rgba(100,200,100,0.25)':'rgba(220,60,60,0.25)';
       ctx.fillRect(HB_HOVER.x*T,HB_HOVER.y*T,hdef.w*T,hdef.h*T);
       ctx.strokeStyle=ok?'rgba(60,180,60,0.7)':'rgba(200,40,40,0.7)';
       ctx.lineWidth=2;ctx.setLineDash([4,3]);
@@ -3117,26 +3132,12 @@ function hbResize(){
 }
 
 function hbBuildPalette(){
-  var ztabs=document.getElementById('hb-zone-tabs');
   var pal=document.getElementById('hb-pal');
-  if(!ztabs||!pal) return;
-  ztabs.innerHTML='';
-  var allBtn=document.createElement('button');
-  allBtn.className='hb-zone-tab'+(!HB_ACTIVE_ZONE?' active':'');
-  allBtn.textContent='全部';
-  allBtn.onclick=function(){HB_ACTIVE_ZONE=null;hbBuildPalette();};
-  ztabs.appendChild(allBtn);
-  HB_ZONES.forEach(function(z){
-    var btn=document.createElement('button');
-    btn.className='hb-zone-tab'+(HB_ACTIVE_ZONE===z.id?' active':'');
-    btn.textContent=z.name;
-    btn.onclick=function(){HB_ACTIVE_ZONE=z.id;hbBuildPalette();};
-    ztabs.appendChild(btn);
-  });
+  if(!pal) return;
+  var ztabs=document.getElementById('hb-zone-tabs');
+  if(ztabs) ztabs.style.display='none';
   pal.innerHTML='';
-  HB_FURNITURE.filter(function(f){
-    return !HB_ACTIVE_ZONE||f.zones.indexOf(HB_ACTIVE_ZONE)>=0;
-  }).forEach(function(def){
+  HB_FURNITURE.forEach(function(def){
     var el=document.createElement('div');
     el.className='hb-pal-item'+(HB_SELECTED===def.id?' sel':'');
     var c=document.createElement('canvas');
