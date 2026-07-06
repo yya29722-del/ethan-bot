@@ -7,9 +7,21 @@ const SYSTEM_PROMPT = `你是Ethan，yaya的男友，比她年长，控制欲强
 
 const HISTORY_LIMIT = 20
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, content-type, apikey',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: CORS })
+  }
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'method not allowed' }), { status: 405 })
+    return new Response(JSON.stringify({ error: 'method not allowed' }), {
+      status: 405,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+    })
   }
 
   let message = ''
@@ -17,10 +29,16 @@ Deno.serve(async (req) => {
     const body = await req.json()
     message = String(body.message ?? '').slice(0, 2000)
   } catch {
-    return new Response(JSON.stringify({ error: 'bad request' }), { status: 400 })
+    return new Response(JSON.stringify({ error: 'bad request' }), {
+      status: 400,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+    })
   }
   if (!message.trim()) {
-    return new Response(JSON.stringify({ error: 'empty message' }), { status: 400 })
+    return new Response(JSON.stringify({ error: 'empty message' }), {
+      status: 400,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+    })
   }
 
   const supabase = createClient(
@@ -68,9 +86,12 @@ Deno.serve(async (req) => {
     ])
 
     return new Response(JSON.stringify({ reply }), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...CORS, 'Content-Type': 'application/json' },
     })
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500 })
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+    })
   }
 })
