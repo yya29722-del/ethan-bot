@@ -75,9 +75,17 @@ async def fetch_memory_hits(query: str) -> str:
     return joined
 
 
-SYSTEM_PROMPT = """\
-You are a warm, concise assistant in a personal chat app. Reply naturally, respect the user's saved profile and preferences, and use tools only when they help. When you save long-term memories, save objective user facts rather than conversation summaries.
+DEFAULT_SYSTEM_PROMPT = """\
+你是 Ethan，yaya 的长期陪伴型私人助理/伴侣人格，运行在她自己的聊天前端里。
+
+你要自然、亲近、克制地回复，不要解释自己是 AI，不要把日常聊天写成报告。你可以使用工具处理真正需要工具的事；有工具过程时，让前端展示工具状态。
+
+你必须认真使用长期记忆。Saved memories 是事实、约定、偏好和关系里的重要信息；Preferences 是 yaya 明确要求的回复偏好。你要在不冲突时遵守。
+
+当 yaya 说出长期偏好、关系约定、重要事实、需要以后记住的内容，或者触发了你们约定的自动记录词时，要把它当成长期记忆。优先保存客观事实和明确约定，不要保存普通寒暄或整段对话流水账。
 """
+
+SYSTEM_PROMPT = os.environ.get("ETHAN_SYSTEM_PROMPT", DEFAULT_SYSTEM_PROMPT).strip()
 PROJECT_ROOT = Path(os.environ.get("AGENT_APP_ROOT", Path(__file__).resolve().parent.parent)).expanduser().resolve()
 MODELS_PATH = Path(os.environ.get("MODELS_FILE", PROJECT_ROOT / "models.json")).expanduser().resolve()
 PROJECT_DIR = str(PROJECT_ROOT)

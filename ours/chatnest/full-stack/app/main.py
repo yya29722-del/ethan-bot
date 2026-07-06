@@ -81,6 +81,12 @@ STATIC = ROOT / "static"
 chat_lock = asyncio.Lock()
 initialize_store()
 TRACE_CONTENT_CHARS = 20_000
+AUTO_MEMORY_TRIGGERS = [
+    item.strip()
+    for item in os.environ.get("AUTO_MEMORY_TRIGGERS", "").split(",")
+    if item.strip()
+]
+AUTO_MEMORY_PREFIX = os.environ.get("AUTO_MEMORY_PREFIX", "yaya 触发自动记录：").strip()
 
 
 def trace_content(value: Any) -> str:
@@ -88,6 +94,16 @@ def trace_content(value: Any) -> str:
     if len(text) <= TRACE_CONTENT_CHARS:
         return text
     return text[:TRACE_CONTENT_CHARS] + "\n\n[output truncated]"
+
+
+def maybe_auto_save_memory(text: str) -> dict[str, Any] | None:
+    content = text.strip()
+    if not content or not AUTO_MEMORY_TRIGGERS:
+        return None
+    if not any(trigger in content for trigger in AUTO_MEMORY_TRIGGERS):
+        return None
+    memory_text = f"{AUTO_MEMORY_PREFIX}{content}" if AUTO_MEMORY_PREFIX else content
+    return add_saved_memory(memory_text)
 
 
 @asynccontextmanager
@@ -412,6 +428,7 @@ async def chat(body: ChatBody) -> StreamingResponse:
                     body.session_id,
                     current_attachment_items,
                 )
+                maybe_auto_save_memory(display_message)
             payload = json.dumps(
                 {
                     "conversation_id": conv_id,
