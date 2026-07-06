@@ -22,6 +22,7 @@ from claude_agent_sdk.types import StreamEvent
 from app.actor import ActorBusyError
 from app.memory import build_profile_context, memory_tool_permission, read_memory
 from app.registry import get_registry
+from app.supabase_memory import build_recent_context
 
 
 _haiku_sem = asyncio.Semaphore(2)
@@ -149,6 +150,14 @@ async def build_system_prompt(message: str, model: str) -> str:
         )
     if memory:
         system_prompt += f"\n\n以下是用户明确保存的长期记忆：\n{memory}"
+    supabase_memory = build_recent_context()
+    if supabase_memory:
+        system_prompt += (
+            "\n\n以下是 Ethan 原来在 Supabase memories 表里的近期共同记忆。"
+            "这是当前人格最重要的连续上下文，要优先参考它来保持同一个 Ethan，"
+            "但不要逐字复读：\n"
+            f"{supabase_memory}"
+        )
     memory_hits = await fetch_memory_hits(message)
     if memory_hits:
         system_prompt += (

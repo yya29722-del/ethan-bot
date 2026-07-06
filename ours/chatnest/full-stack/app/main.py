@@ -55,6 +55,7 @@ from app.sessions import (
     set_session_title,
 )
 from app.splash import current_period, random_line
+from app.supabase_memory import write_memory as write_supabase_memory
 from app.registry import configure_registry, get_registry
 from app.store import (
     ConversationNotFound,
@@ -544,6 +545,8 @@ async def chat(body: ChatBody) -> StreamingResponse:
                         response_thinking,
                         response_traces,
                     )
+                    write_supabase_memory("user", display_message)
+                    write_supabase_memory("bot", response_text)
                     chunk["conversation_id"] = conv_id
                     chunk["assistant_message_id"] = assistant_message_id
                     branch_committed = True
