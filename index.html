@@ -750,7 +750,7 @@
     <div class="home-brand">
       <div class="brand-label">Y A Y A &nbsp;&amp;&nbsp; E T H A N</div>
       <div class="brand-title">我们的空间</div>
-      <div style="font-size:10px;color:#c9a96e;letter-spacing:2px;margin-top:4px;font-family:'Cinzel',sans-serif;">v7 · 07/07</div>
+      <div style="font-size:10px;color:#c9a96e;letter-spacing:2px;margin-top:4px;font-family:'Cinzel',sans-serif;">v10 · 07/07</div>
       <div class="gold-divider" style="margin:10px 0 0;"><span class="gold-divider-gem"></span></div>
     </div>
     <!-- Days counter hero -->
@@ -1676,7 +1676,7 @@ var CHAT_FN_URL = SUPABASE_URL + '/functions/v1/chat';
 var _chatLoaded = false;
 
 function openChatNestEthan() {
-  window.open('ours/chatnest/index.html?ethan=1', '_blank');
+  window.location.href = 'ours/chatnest/index.html?ethan=1';
 }
 
 function escapeHtml(s) {
@@ -1694,6 +1694,8 @@ function scrollChatToBottom() {
 }
 
 async function openChatModal() {
+  openChatNestEthan();
+  return;
   document.getElementById('chat-modal').classList.add('open');
   if (!_chatLoaded) {
     _chatLoaded = true;
@@ -2375,7 +2377,7 @@ async function loadHomeExtras() {
 }
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/ethan-bot/sw.js?v=7', { updateViaCache: 'none' });
+  navigator.serviceWorker.register('/ethan-bot/sw.js?v=10', { updateViaCache: 'none' });
 }
 
 // TAROT ENTRANCE — organic ink-drop reveal (harmonic blob, destination-out)
