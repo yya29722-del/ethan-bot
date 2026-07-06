@@ -221,7 +221,17 @@ body.sidebar-action-open .rename-dialog input{-webkit-user-select:text;user-sele
 @keyframes egg-in{from{opacity:0;transform:translateY(20px) scale(.7)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes egg-out{to{opacity:0;transform:translateY(8px) scale(.92)}}
 @media(max-width:760px){
+  :root{
+    --phone-top-safe:max(env(safe-area-inset-top),58px);
+    --phone-bottom-safe:max(env(safe-area-inset-bottom),18px)
+  }
+  html,body{min-height:100dvh;background:var(--claude-sidebar-bg)}
   body{background:var(--claude-sidebar-bg)}
+  #chat{height:calc(100dvh + var(--phone-bottom-safe));border-bottom-left-radius:0}
+  #drawer{height:calc(100dvh + var(--phone-bottom-safe));min-height:calc(100dvh + var(--phone-bottom-safe))}
+  .mobile-sidebar-inner{padding-top:calc(var(--phone-top-safe) + 6px);padding-bottom:calc(var(--phone-bottom-safe) + 28px)}
+  .mobile-sidebar-new-chat{bottom:calc(var(--phone-bottom-safe) + 18px)}
+  .topbar{height:calc(var(--phone-top-safe) + 56px);padding-top:var(--phone-top-safe)}
   .topbar{padding-left:max(env(safe-area-inset-left),var(--topbar-side-inset));padding-right:max(env(safe-area-inset-right),var(--topbar-side-inset))}
 }
 </style>
