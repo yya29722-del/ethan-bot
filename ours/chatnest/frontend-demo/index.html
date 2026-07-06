@@ -405,7 +405,11 @@ body.sidebar-action-open .rename-dialog input{-webkit-user-select:text;user-sele
 <div class="toast" id="toast"></div>
 
 <script>
-window.AGENT_APP_DEMO=true;
+window.AGENT_APP_ETHAN=new URLSearchParams(location.search).has('ethan');
+window.AGENT_APP_DEMO=!window.AGENT_APP_ETHAN;
+const OURS_SUPABASE_URL='https://tnhmimwkgmdskacwcona.supabase.co';
+const OURS_SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRuaG1pbXdrZ21kc2thY3djb25hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTk2MDAsImV4cCI6MjA5Njg5NTYwMH0.KUNhT-8Hy2Uy8snd_GaCyl_HFIZwjS_z-CzwSv8daa0';
+const OURS_SUPABASE_HEADERS={'apikey':OURS_SUPABASE_KEY,'Authorization':'Bearer '+OURS_SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'};
 const $=id=>document.getElementById(id);
 const lucidePaths={
   copy:'<path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/>',
@@ -2028,6 +2032,69 @@ addEventListener('resize',closeSessionContextMenu);
 addEventListener('orientationchange',closeSessionContextMenu);
 addEventListener('pagehide',closeSessionContextMenu);
 
+if(window.AGENT_APP_ETHAN){
+  const realFetch=window.fetch.bind(window);
+  const ethanSessionId='ethan-vps-chat';
+  function ethanJson(data,status=200){return Promise.resolve(new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}}))}
+  function ethanSse(events){
+    const enc=new TextEncoder();
+    return Promise.resolve(new Response(new ReadableStream({start(controller){let i=0;function push(){if(i>=events.length){controller.close();return}controller.enqueue(enc.encode(events[i++]));setTimeout(push,80)}push()}}),{status:200,headers:{'Content-Type':'text/event-stream'}}));
+  }
+  async function ethanRest(path,options={}){
+    const r=await realFetch(OURS_SUPABASE_URL+'/rest/v1/'+path,{...options,headers:{...OURS_SUPABASE_HEADERS,...(options.headers||{})}});
+    if(!r.ok)throw Error('Supabase request failed');
+    return r.json();
+  }
+  function ethanRole(role){return role==='bot'||role==='ethan'||role==='assistant'?'assistant':'user'}
+  function ethanText(row){return row?.content||row?.text||''}
+  async function ethanMessages(limit=80){
+    const rows=await ethanRest('memories?select=role,content,created_at&order=created_at.desc&limit='+limit).catch(()=>[]);
+    return rows.reverse().map((m,i)=>({id:i+1,role:ethanRole(m.role),text:ethanText(m),timestamp:m.created_at||new Date().toISOString()}));
+  }
+  window.fetch=async(url,options={})=>{
+    const path=String(url);
+    if(path.endsWith('/api/auth'))return ethanJson({token:'ethan-token'});
+    if(path.endsWith('/api/splash'))return ethanJson({period:'ethan',line:'和 Ethan 聊天'});
+    if(path.endsWith('/api/models'))return ethanJson({models:[{id:'ethan-vps',label:'Ethan',desc:'Ours VPS chat',thinking:'none',primary:true}]});
+    if(path.endsWith('/api/profile'))return ethanJson({profile:{fullName:'',nickname:'',savedMemories:[],preferences:{enabled:false,content:''},claudeExportImport:{},updatedAt:Date.now()}});
+    if(path.endsWith('/api/diary'))return ethanJson({entries:[]});
+    if(path.endsWith('/api/thinking-summary'))return ethanJson({summary:'Ethan 正在想'});
+    if(path.endsWith('/api/tool-caption'))return ethanJson({caption:'Ethan'});
+    if(path.endsWith('/api/upload'))return ethanJson({conversation_id:ethanSessionId,attachments:[]});
+    if(path.endsWith('/api/sessions'))return ethanJson({sessions:[{conv_id:ethanSessionId,title:'和 Ethan 聊天',starred:true,created_at:new Date().toISOString(),updated_at:new Date().toISOString()}]});
+    if(/\/api\/sessions\/[^/]+\/messages/.test(path))return ethanJson({messages:await ethanMessages(),has_more:false,next_before_id:null});
+    if(path.includes('/api/sessions/')&&(options.method==='PATCH'||options.method==='DELETE'))return ethanJson({ok:true});
+    if(path.endsWith('/api/chat')){
+      let message='';
+      try{message=JSON.parse(options.body||'{}').message||''}catch{}
+      const userId='ethan-user-'+Date.now(),assistantId='ethan-assistant-'+Date.now();
+      try{
+        const res=await realFetch(OURS_SUPABASE_URL+'/functions/v1/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OURS_SUPABASE_KEY},body:JSON.stringify({message})});
+        const data=await res.json().catch(()=>({}));
+        if(!res.ok)throw Error(data.error||data.message||'消息没发出去');
+        const reply=data.reply||'…没听清，再说一遍？';
+        return ethanSse([
+          `event: conversation\ndata: ${JSON.stringify({conversation_id:ethanSessionId,user_message_id:userId})}\n\n`,
+          `event: delta\ndata: ${JSON.stringify({text:reply})}\n\n`,
+          `event: done\ndata: ${JSON.stringify({conversation_id:ethanSessionId,assistant_message_id:assistantId})}\n\n`
+        ]);
+      }catch(e){
+        return ethanSse([
+          `event: conversation\ndata: ${JSON.stringify({conversation_id:ethanSessionId,user_message_id:userId})}\n\n`,
+          `event: error\ndata: ${JSON.stringify({message:e.message||'消息没发出去，再试一次'})}\n\n`
+        ]);
+      }
+    }
+    return realFetch(url,options);
+  };
+  state.token='ethan-token';
+  state.model='ethan-vps';
+  state.convId=ethanSessionId;
+  localStorage.setItem('chat_token','ethan-token');
+  localStorage.setItem('chat_model','ethan-vps');
+  localStorage.setItem('chat_conversation',ethanSessionId);
+}
+
 if(window.AGENT_APP_DEMO){
   const demoModels=[
     {id:'demo-balanced',label:'Balanced',desc:'Demo model with mock streaming',thinking:'adaptive',primary:true},
@@ -2076,7 +2143,20 @@ if(window.AGENT_APP_DEMO){
   localStorage.setItem('chat_token','demo-token');
 }
 
-if(state.token)showChat();resetEmpty();loadModels();updateSessionHeader();updateSendButton();
+(async function initApp(){
+  if(state.token)showChat();
+  await resetEmpty();
+  await loadModels();
+  if(window.AGENT_APP_ETHAN){
+    state.convId='ethan-vps-chat';
+    state.currentTitle='和 Ethan 聊天';
+    state.starred=true;
+    localStorage.setItem('chat_conversation',state.convId);
+    await openSession({conv_id:state.convId,title:state.currentTitle,starred:true});
+  }
+  updateSessionHeader();
+  updateSendButton();
+})();
 </script>
 </body>
 </html>

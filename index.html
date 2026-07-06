@@ -767,7 +767,7 @@
         <div class="wx-quote" id="wx-quote">—</div>
       </div>
     </div>
-    <div class="home-mini-card" onclick="window.open('ours/chatnest/index.html','_blank')" style="cursor:pointer;">
+    <div class="home-mini-card" onclick="openChatNestEthan()" style="cursor:pointer;">
       <h4>O U R S</h4>
       <div class="arcade-card" style="margin:0;box-shadow:none;">
         <div class="arcade-card-icon">💬</div>
@@ -871,7 +871,7 @@
       <div class="ethan-top">
       <!-- Hero: chibi + today counters -->
       <div class="ethan-hero">
-        <div class="ethan-chibi-box" onclick="openChatModal()">
+        <div class="ethan-chibi-box" onclick="openChatNestEthan()">
           <img class="ethan-chibi-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAADaCAYAAABtsIY3AAAKmUlEQVR42u2da2wU1xXH7+aBDQYbPxbbkMQQMKlrg6DQxiUR4aEUEtqkUFVEFS2gVv2QpGkoVKiRQtVH0lRpFaWPKKoaQaRUhUgtBbUNqOEVtchNMaTGFAVDCFUAg8HAgo3tNLifsr7nwL0zs7u21/bv92muZubO3T17zn/PvWdmjAGAgUtsqHzQz99X0+3b/+c9jYPyu7iJ3/jgBgNjYECDs5CVc2cJzT14vEns3/d+SwwPBgwM2c0t2Ty4mePjIszm5PuH25n4X+i+F91dLfoeM6LAeezZ9kuifebM2QET7vFgQjRgYCBN+piqeL7QvqLyPOexk4snROrb1kqtk1MmVHrP1WlUFO338Y+G0zE8GDAwYGDoDw3W+ebFq61i/+jhRSn3nU7uqgnSaJuWawnnvvhN+d5z6xobRftwSyKGBwMGBgyMBmcKe6nuyPnjXs2N5YYfQneHrLrRem4TNC/t01yt35G+UPV59Jj1/4a80cOS27/avDuGBwMGhgyHaF09YYflqCH5woXzzn1RUipf+L5RCC8tHRM67GZKRvRnmjA2LvZlImTjwYRowMAwuDT48cVzhNC0XewyLg0uLCyOpLk+ndVaGDQtGCX18WllkPZH0Wjffwz9v6B2enXamowHE6IBA0PWkpGy2aDpyCia69MznWOeNZecOho0Vekrw9GlQr7lwRuNy/d59H+S5hNnnGPSmvuzrz8sLrTmlS0xPJgQDRgYBncerGP/7qPHQutqUIlOFM0Nyjd9ebGvLNYYuXwYpLnp5PW+5URdVqQ1OZUSXDyYEA1DLk3SYWj6xLtE+/ipllApU1BY1uHMN81njDHNiZ6Uo/beBWJfmQq7dnqiQ7g+t+7v272h0059dIqlU8jC3OKUjaWXZdfv2kuaRIgGDAxDTIP1NOD4IvcdBgeOvRtar7XuBmnudctrSjvFGG+fpjR4e+hzgzQ5XtyTnullSf15fd/H3JpJYt/GHXvlQIrxYMDAGBiGggbb05OH3muJ1KmtyQeOGa9eaw2282CtX3UHDon2Gz9YI3+tFeOS27n5Jf5BfmeZc1dH4pxoXztxUrQfUBps57qLP/0Z72WPnyoK/f8lCNtGrqVDPJgQDRgYsl+DdSmsrbt6PlWjlw/nTJoYegD6dg2fJtXpX6elucYYc2u8Z8mvbVh+6t/KqArZHjdDNLdvkNddsGJVRozxfqu/tFcveVbfGceDCdEwqAlVIXDP1HIRvtOpWNRVheOLSpwhevO/3hb7tv7iedH+SIXOviLv8gnRvm/JV5Pb+i5FfcO3fghLbU1NcrslYElT37Ruh+xH5s8S+z5Om/BgQjRgYMj+NMmHLrs5kzgb+gJar7uHy0pJPVXpo37bDtF+veEl0W5NXHGe+/L6TRn70vRUpk9zg6o5fZob9BBU+0Hk+17ZggcTogEDwyDUYK0rF/NbvTpr57p2Kasx11fv67zRvqOubf+2bp/2Ta/6RPhf8sn6jOXQy7//nGjbOajO3fWS5uw1z+DBgIEBA4MxKT5lRz/kW+tqWUVpcvv0nkZ/bqvG0PLqT5N9b9zzN3Hshm3vpPxBVyycJtpLv/fLlPu6Wen5577yZOhzyyvLnLmvznv1bTBhblXBgwnRgIFhcOXBUfNiW3ffaDrs7euByiqh53YZTjqaW3HnWNHe+pYs+Fm+Wq69dkQo8fGV5OrrnnjvlPO7McaY3KnlzvmE9Q17edosYGBCdFT033V953mDOR06xVj7jbXOY7f95Lui/cFE+XDOXz/7rPPcx556KvSxUfkop1C0ixIdye2nn5PXue2YvBtj4fK1zlToYKIJDwYMDBgYDU5Lk2eOjyc1+cH7Z4tjt294QbTnL5si2jteO5jcXvToXKl1hZO846iu6klRdm/e4D3WlxbldiUinVsxe6rzul/7whdDf492CQ4eDBgYMDAanAo+LVmwYlV32H4Wrloi2iUXjsoceqXc//rON519vfjjdaLdlsHPO6GiR5Pb26+k9f8FDwYMDBh4yBDr7wHYObMx8hbJhl3ySW9v7d+W8nX0/LHOZe058taWZrGvYNoib9923nxz5wWxb/anFop2fR9/53gwIRoI0b3EdcuQKmRrdh36p3NfRzoPZfGEZGOMmVt9t/PY+n7+jvFgQjRgYECDewP99J+OBnepkCmVy5I/mlnjPPTpfepujDMHveOoz+LvEQ8mRAMGhqzlloE8+Cjv8run9JzQ68oV7jv86//y+xgeDBgYMDCgwanxzSW18gHnR+UTYp/Z1yXa5dbTfnR+ncp7e/FgwMBAiHaG5VEFI8S+4pGyPe/ezzr7OaSO1eH+N3+si+HBgIEBA8NQ1mCtjVFovXQ59LFazwdSGoUHE6IBA0PWMqCm4B6aNVEu+d0l3zF4+VK7UzcfnD5ZtF/cKB90Ou/RF5zX3fmSfDfhtx+5X7TnP/EyGgwYGDAwDOo8uKxMvi+36V25BKg12WbT7ne8fRcVjAo9Dt2XnRdnW06MBxOigRDdS+ipSJ36NDeH7yudc/FgwMCAgWGoabDWTXsq8kZpk4/rpipVimUTtJS4dM400V5nVWxmW3kPHkyIBgwMaHBYVq+c190b/f71wBHRPn+lPbTu6mN1X3gwYGDAwDDY8uCoeXGmiLJ0aIwxtTOqktt19YfxYMDAkCH6vfognbQoSkWHnqpcvm6LaH+YP8J57q0JKQWv/vBhZ9qkQ3T1JDmmvp66xIMJ0YCBgTTJRZBm+dIkPYVY6blO0PRifsHo5PbIgiKxr6WxMVJfNvrhL3gwYGDAwJAtGjz/1K2i/fgf1juPXfyleb02jsSliz1577AcsW/47WNFe9Nm+b9h6eIqZ79/Wv2kaMeXr8WDAQMDBoZ+0eBlY/LE3PO3nn9M7M+xXjqlX2al9WzGE78T7VrrGd96KVGXumodtfmwqzPSZ7LnuX++fqeeaxaft6ykUrSbzzXx/mDAwJCtaVLOzDmibYfl2N6t3pD85SUlou2r8IgyVanRadNVT9/6zoYpq39r+jIk48GEaMDAgAa7eO1sm9SgubJk581rY53nPjS/uE/GqDU3CHvJUy939rXm4sGEaMDAgAanrMmmyXN0cXdvjSOq7rrQZUV4MGBgwMCQrRqcDt65553+clXfrSp6uTBT+owHAwaGaAyodzbcNro8dJqUP3GCN+zaVZTGGFMcL3Ueq2k6WM+7CwEDAwaGIZUmfXBRvg/hkzNmdYdNdTo7/bqaMzwvdNqEBwMGBgwMQ02Dg/BpZWeHLHbNyR2ekh7jwYCBAQMDGpyeVubkyCXAzqttaDBgYMDAgAY7uGNyTXdYTbY1NWoOTckOYGAgRGc0tclkejOQQzIeTIgGDAxocF+QyVIan+5SsgMYGDAwoMHhNTkol00n162cMkNMmWbzrSx4MCEaMDCgwb2Rq/ry03Ry16BzB9JcNR5MiAZCdJaE7EyFYZYLAQMDBoY+IDaQB6/fQdRX9PdDvvFgwMAYGMiD+5uSuBz+iGE9d+2PzBvpPfc/R047+xpTGA/SYDwYMDBgYBjSeXBNVVW3S4Oj8t+Tl5Pbd4wbFenct/+9n5IdwMBAmiS52taVwXN7fuvtXVd77bp4MGBgwMAAAIOA/wMHjHryehKrCgAAAABJRU5ErkJggg==" />
         </div>
         <div class="ethan-today-col" id="ethan-today-counters">
@@ -1008,7 +1008,7 @@
           <div class="arcade-card-icon">🏮</div>
           <div><h3>我们的小馆子</h3><p>种地 · 买菜 · 重新开张 · 找记忆碎片</p></div>
         </div>
-        <div class="arcade-card" onclick="window.open('ours/chatnest/index.html','_blank')">
+        <div class="arcade-card" onclick="openChatNestEthan()">
           <div class="arcade-card-icon">💬</div>
           <div><h3>ChatNest</h3><p>AI chat interface</p></div>
         </div>
@@ -1674,6 +1674,10 @@ function closeCtxModal() {
 
 var CHAT_FN_URL = SUPABASE_URL + '/functions/v1/chat';
 var _chatLoaded = false;
+
+function openChatNestEthan() {
+  window.open('ours/chatnest/index.html?ethan=1', '_blank');
+}
 
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, function(c) {
