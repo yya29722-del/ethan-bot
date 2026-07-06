@@ -36,6 +36,7 @@ from app.claude import (
     summarize_traces,
 )
 from app.codex_api import stream_codex_chat
+from app.ethan_recorder import record_turn
 from app.memory import (
     MAX_MEMORY_CHARS,
     add_saved_memory,
@@ -547,6 +548,7 @@ async def chat(body: ChatBody) -> StreamingResponse:
                     )
                     write_supabase_memory("user", display_message)
                     write_supabase_memory("bot", response_text)
+                    record_turn(display_message, response_text)
                     chunk["conversation_id"] = conv_id
                     chunk["assistant_message_id"] = assistant_message_id
                     branch_committed = True

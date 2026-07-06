@@ -91,3 +91,32 @@ def write_memory(role: str, content: str) -> bool:
         logger.warning("failed to write Supabase memory: %s", exc)
         return False
 
+
+def write_table(table: str, payload: dict) -> bool:
+    if not enabled():
+        return False
+    body = json.dumps(payload, ensure_ascii=False).encode()
+    try:
+        _request(table, method="POST", body=body)
+        return True
+    except urllib.error.HTTPError as exc:
+        # Older tables may not have every optional column. Retry with the common
+        # minimum so recording still works instead of failing the chat turn.
+        logger.warning("failed to write %s with full payload: %s", table, exc)
+        minimal = {
+            key: value
+            for key, value in payload.items()
+            if key in {"content", "category", "type", "author", "visible_to_other"}
+        }
+        if minimal == payload:
+            return False
+        try:
+            _request(table, method="POST", body=json.dumps(minimal, ensure_ascii=False).encode())
+            return True
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as retry_exc:
+            logger.warning("failed to write %s with minimal payload: %s", table, retry_exc)
+            return False
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:
+        logger.warning("failed to write %s: %s", table, exc)
+        return False
+
