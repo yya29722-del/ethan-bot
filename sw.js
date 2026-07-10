@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'yuwen-home-v69';
+const CACHE_VERSION = 'yuwen-home-v70';
 const APP_SHELL = [
   './',
   './index.html',
