@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="190" viewBox="0 0 640 190">
+  <defs>
+    <filter id="paperShadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#6B5D50" flood-opacity=".13"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 .08"/></feComponentTransfer>
+    </filter>
+  </defs>
+  <g filter="url(#paperShadow)">
+    <path d="M23 23
+      C90 16 152 24 214 18
+      C308 11 390 28 470 20
+      C535 14 590 23 619 20
+      L618 165
+      C552 172 488 162 422 171
+      C330 182 236 166 148 174
+      C87 180 42 170 23 174
+      Z" fill="#FAF6EF"/>
+    <path d="M23 23
+      C90 16 152 24 214 18
+      C308 11 390 28 470 20
+      C535 14 590 23 619 20
+      L618 165
+      C552 172 488 162 422 171
+      C330 182 236 166 148 174
+      C87 180 42 170 23 174
+      Z" fill="#E9DDCC" opacity=".18"/>
+    <path d="M23 23
+      C90 16 152 24 214 18
+      C308 11 390 28 470 20
+      C535 14 590 23 619 20
+      L618 165
+      C552 172 488 162 422 171
+      C330 182 236 166 148 174
+      C87 180 42 170 23 174
+      Z" filter="url(#grain)" opacity=".7"/>
+    <path d="M24 24 C170 18 315 22 618 20" stroke="#C9B89E" stroke-opacity=".3" fill="none"/>
+    <path d="M25 173 C190 165 372 178 618 165" stroke="#C9B89E" stroke-opacity=".24" fill="none"/>
+    <circle cx="320" cy="18" r="13" fill="#B79A73"/>
+    <circle cx="316" cy="14" r="5" fill="#D5C0A2" opacity=".35"/>
+    <path d="M600 155 c12 -3 21 -12 24 -27 l-1 38 c-10 -2 -18 -6 -23 -11z" fill="#E7DCCD" opacity=".45"/>
+  </g>
+</svg>

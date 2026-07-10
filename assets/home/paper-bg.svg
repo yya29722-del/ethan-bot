@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="1600" viewBox="0 0 860 1600">
+  <defs>
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.07"/>
+      </feComponentTransfer>
+    </filter>
+    <radialGradient id="vignette" cx="50%" cy="45%" r="80%">
+      <stop offset="0%" stop-color="#FBF8F2"/>
+      <stop offset="72%" stop-color="#F6F0E7"/>
+      <stop offset="100%" stop-color="#EFE4D5"/>
+    </radialGradient>
+    <linearGradient id="warmWash" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FBF7EF" stop-opacity=".95"/>
+      <stop offset=".55" stop-color="#F7F0E6" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#F3E9DB" stop-opacity=".95"/>
+    </linearGradient>
+  </defs>
+  <rect width="860" height="1600" fill="url(#vignette)"/>
+  <rect width="860" height="1600" fill="url(#warmWash)" opacity=".55"/>
+  <rect width="860" height="1600" filter="url(#noise)" opacity=".6"/>
+  <g opacity="0" stroke="#8E7A66" stroke-width="1">
+    <path d="M0 280 C220 250 410 310 860 265"/>
+    <path d="M0 710 C300 680 540 740 860 700"/>
+    <path d="M0 1180 C280 1150 480 1230 860 1170"/>
+  </g>
+</svg>
