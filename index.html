@@ -1455,12 +1455,13 @@
     transform-origin: top center;
     opacity: .82;
     z-index: 1;
+    pointer-events: none;
   }
   body.yuwen-home-open .yw-arch-left {
     left: -4px;
     top: -18px;
     width: 340px;
-    transform: scaleY(1.07);
+    transform: scaleY(1.12);
   }
   body.yuwen-home-open .yw-arch-right {
     right: 8px;
@@ -1526,12 +1527,14 @@
     height: 100%;
     margin: 0 auto;
     overflow: hidden;
-    z-index: 1;
+    z-index: 5;
+    cursor: pointer;
+    touch-action: manipulation;
   }
   body.yuwen-home-open .yw-note > img {
     position: absolute;
     left: 50%;
-    top: calc(50% - 58px);
+    top: calc(50% - 38px);
     width: 366px;
     height: 124px;
     transform: translate(-50%, -50%);
@@ -1542,7 +1545,7 @@
   body.yuwen-home-open .yw-note-date {
     position: absolute;
     left: 58px;
-    top: calc(50% - 58px);
+    top: calc(50% - 38px);
     width: 42px;
     transform: translateY(-50%);
     text-align: center;
@@ -1567,7 +1570,7 @@
   body.yuwen-home-open .yw-note-divider {
     position: absolute;
     left: 120px;
-    top: calc(50% - 58px);
+    top: calc(50% - 38px);
     width: 1px;
     height: 45px;
     transform: translateY(-50%);
@@ -1578,7 +1581,7 @@
     position: absolute;
     left: 145px;
     right: 68px;
-    top: calc(50% - 58px);
+    top: calc(50% - 38px);
     transform: translateY(-50%);
     text-align: left;
     color: #A98B62;
@@ -1611,7 +1614,7 @@
     align-self: stretch;
     width: 318px;
     height: 100%;
-    margin: -54px auto 0;
+    margin: -34px auto 0;
     padding-bottom: 0;
     overflow: hidden;
     padding-top: 0;
@@ -1835,15 +1838,15 @@
           <img class="yw-arch-left" src="assets/home/hero-left-column-arch-tip-clean.png" alt="">
           <img class="yw-arch-right" src="assets/home/hero-right-branch-clean.png" alt="">
           <div class="yw-days">
-            <div class="yw-number" id="hero-days-num">392</div>
+            <div class="yw-number" id="hero-days-num">0</div>
             <div class="yw-label" id="hero-days-sub">days together</div>
             <div class="yw-tiny-line">— • —</div>
           </div>
         </div>
 
         <div class="yw-time-detail">
-          <div id="hero-hours">14,237 hours</div>
-          <div id="hero-minutes">854,220 minutes</div>
+          <div id="hero-hours">0 hours</div>
+          <div id="hero-minutes">0 minutes</div>
         </div>
 
         <div class="yw-beginning">our beginning</div>
@@ -1852,8 +1855,8 @@
       <section class="yw-note" role="button" tabindex="0" aria-label="Open Chat" onclick="switchTab('chat')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();switchTab('chat')}">
           <img src="assets/home/note-paper-floral-no-shadow.png" alt="">
         <div class="yw-note-date">
-          <strong>07</strong>
-          <span>Jul</span>
+          <strong id="home-note-day">--</strong>
+          <span id="home-note-month">---</span>
         </div>
         <div class="yw-note-divider"></div>
         <div class="yw-note-text">
@@ -1867,11 +1870,7 @@
           <span></span>
         </header>
 
-        <div class="yw-task-list">
-          <label><i></i>阅读一篇英语</label>
-          <label><i></i>配器练习 30min</label>
-          <label><i></i>早点休息</label>
-        </div>
+        <div class="yw-task-list"><label><i></i><span>正在读取今日待办…</span></label></div>
 
         <img class="yw-small-branch" src="assets/home/small-branch.svg" alt="">
       </section>
@@ -1977,9 +1976,9 @@
       <div class="ethan-section-label">M O O D</div>
       </div><!-- /ethan-top -->
       <div class="ethan-scroll">
-        <div id="ethan-mood-list"><div class="empty">No moods yet</div></div>
+        <div id="ethan-mood-list"><div class="empty">正在读取 Ethan 的状态…</div></div>
         <div class="ethan-section-label">Her</div>
-        <div id="notes-cats" class="cat-grid"></div>
+        <div id="notes-cats" class="cat-grid"><div class="empty">正在读取记忆…</div></div>
       </div><!-- /ethan-scroll -->
     </div>
   </div>
@@ -2579,18 +2578,27 @@ function _routeInitialTabFromQuery() {
 }
 
 // DAYS-TOGETHER HERO
-var REL_START = new Date(2026, 5, 10); // 2026-06-10 local
+var REL_START = new Date(2026, 5, 10, 0, 0, 0); // 2026-06-10 local
 
 function renderDaysHero() {
-  var days = 392;
+  var elapsed = Math.max(0, Date.now() - REL_START.getTime());
+  var minutes = Math.floor(elapsed / 60000);
+  var hours = Math.floor(elapsed / 3600000);
+  var days = Math.floor(elapsed / 86400000);
   var numEl = document.getElementById('hero-days-num');
   var subEl = document.getElementById('hero-days-sub');
   var hoursEl = document.getElementById('hero-hours');
   var minutesEl = document.getElementById('hero-minutes');
+  var noteDayEl = document.getElementById('home-note-day');
+  var noteMonthEl = document.getElementById('home-note-month');
+  var now = new Date();
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   if (numEl) numEl.textContent = days;
-  if (subEl) subEl.textContent = 'days together';
-  if (hoursEl) hoursEl.textContent = '14,237 hours';
-  if (minutesEl) minutesEl.textContent = '854,220 minutes';
+  if (subEl) subEl.textContent = days === 1 ? 'day together' : 'days together';
+  if (hoursEl) hoursEl.textContent = hours.toLocaleString('en-US') + ' hours';
+  if (minutesEl) minutesEl.textContent = minutes.toLocaleString('en-US') + ' minutes';
+  if (noteDayEl) noteDayEl.textContent = String(now.getDate()).padStart(2, '0');
+  if (noteMonthEl) noteMonthEl.textContent = months[now.getMonth()];
 }
 
 // WEATHER
@@ -2678,15 +2686,39 @@ async function loadTodos() {
   if (cached) {
     _todosData = cached;
     renderTodoPeek(_todosData);
-    fresh.then(function(d) { _todosData = d; _saveTodos(); renderTodoPeek(_todosData); });
+    fresh.then(function(d) { _todosData = d; _saveTodos(); renderTodoPeek(_todosData); }).catch(function() {});
   } else {
-    _todosData = await fresh;
-    _saveTodos();
-    renderTodoPeek(_todosData);
+    try {
+      _todosData = await fresh;
+      _saveTodos();
+      renderTodoPeek(_todosData);
+    } catch(e) {
+      var homeList = document.querySelector('.yw-task-list');
+      if (homeList) homeList.innerHTML = '<label><i></i><span>今日待办暂时没有加载出来</span></label>';
+    }
   }
 }
 
+function renderHomeTodos(data) {
+  var el = document.querySelector('.yw-task-list');
+  if (!el) return;
+  var today = _todayStr();
+  var pending = (data || []).filter(function(t) {
+    if (t.completed) return false;
+    return t.date ? t.date === today : true;
+  });
+  if (!pending.length) {
+    el.innerHTML = '<label><i></i><span>今天没有未完成的待办</span></label>';
+    return;
+  }
+  var shown = pending.slice(0, 3);
+  el.innerHTML = shown.map(function(t) {
+    return '<label onclick="toggleTodoCircle(' + t.id + ',true,this.querySelector(\'i\'))"><i></i><span>' + escapeHtml(t.content) + '</span></label>';
+  }).join('');
+}
+
 function renderTodoPeek(data) {
+  renderHomeTodos(data);
   var headerEl = document.getElementById('todo-peek-header');
   if (!document.getElementById('todo-peek-list-mine')) return;
 
@@ -3353,9 +3385,17 @@ var _ethanTodayBuckets = { us_moment: [], mood: [], her: [], us: [] };
 var _ethanExpandOpen = '';
 
 async function loadEthanTab() {
+  var notesTask = loadNotes().catch(function() {
+    var notesEl = document.getElementById('notes-cats');
+    if (notesEl) notesEl.innerHTML = '<div class="empty">记忆暂时没有加载出来，请稍后重试</div>';
+  });
   try {
-    var feedData = await (_prefetch.feed || api('feed?select=*&order=created_at.desc&limit=100'));
-    var notesData = await (_prefetch.notes || api('yaya_notes?select=*&order=created_at.desc'));
+    var results = await Promise.all([
+      _prefetch.feed || api('feed?select=*&order=created_at.desc&limit=100'),
+      _prefetch.notes || api('yaya_notes?select=*&order=created_at.desc')
+    ]);
+    var feedData = results[0];
+    var notesData = results[1];
 
     _ethanTodayBuckets.us_moment = feedData.filter(function(f) { return f.type === 'us_moment' && _isToday(f.created_at); });
     _ethanTodayBuckets.mood = feedData.filter(function(f) { return f.author === 'ethan' && (f.type === 'mood' || f.type === 'emotion') && _isToday(f.created_at); });
@@ -3367,7 +3407,9 @@ async function loadEthanTab() {
       if (el) el.textContent = _ethanTodayBuckets[k].length;
     });
 
-    var allMoods = await api('feed?select=*&author=eq.ethan&type=in.(mood,emotion)&order=created_at.desc&limit=60').catch(function() { return []; });
+    var allMoods = feedData.filter(function(f) {
+      return f.author === 'ethan' && (f.type === 'mood' || f.type === 'emotion');
+    }).slice(0, 60);
     var moodEl = document.getElementById('ethan-mood-list');
     if (moodEl) {
       moodEl.innerHTML = allMoods.length
@@ -3378,8 +3420,11 @@ async function loadEthanTab() {
         : '<div class="empty">No moods yet</div>';
     }
 
-  } catch(e) {}
-  loadNotes();
+  } catch(e) {
+    var moodEl = document.getElementById('ethan-mood-list');
+    if (moodEl) moodEl.innerHTML = '<div class="empty">Ethan 的状态暂时没有加载出来，请稍后重试</div>';
+  }
+  await notesTask;
 }
 
 var EMO_LABELS = {
@@ -3507,6 +3552,7 @@ function initializeApp() {
 }
 
 initializeApp();
+setInterval(renderDaysHero, 60000);
 
 window.addEventListener('resize', function() { _fixSectionBodyScroll(_currentTab); });
 window.addEventListener('load', function() {
@@ -3565,7 +3611,7 @@ async function loadHomeExtras() {
 }
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js?v=72', { updateViaCache: 'none' });
+  navigator.serviceWorker.register('./sw.js?v=73', { updateViaCache: 'none' });
 }
 
 // TAROT ENTRANCE — organic ink-drop reveal (harmonic blob, destination-out)
